@@ -1,0 +1,6 @@
+tensorflow
+hdbscan
+numpy
+matplotlib
+plotly
+pandas
