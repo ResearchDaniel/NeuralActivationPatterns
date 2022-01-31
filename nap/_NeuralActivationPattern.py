@@ -23,8 +23,8 @@ class NeuralActivationPattern:
         # Extracts the outputs of the layers
         layer_outputs = [layer.output for layer in layers] 
         # Creates a model that will return these outputs, given the model input
-        from keras import models    
-        self.activation_model = models.Model(inputs=model.input, outputs=layer_outputs) 
+        from tensorflow import keras
+        self.activation_model = keras.models.Model(inputs=model.input, outputs=layer_outputs) 
 
     def get_max_activations(self, layerId, nSamplesPerLayer = 10, agg_func = np.max):
         """ Get indices to the inputs with the highest aggregated activation within specified layer.

@@ -1,0 +1,12 @@
+name: nap
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - tensorflow=2
+  - hdbscan
+  - numpy
+  - matplotlib
+  - plotly
+  - pandas
+  - ipykernel
