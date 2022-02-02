@@ -40,39 +40,65 @@ class NeuralActivationPattern:
         largestActivationsIndices = list(reversed(np.argsort(agg_activations)[-nSamplesPerLayer:]))
 
         return largestActivationsIndices
+    def sorted(self, layerId):
+        """ Returns clusters sorted according to probability of belonging to a cluster
+        """
+        return self.clusters[layerId].sort_values(['clusterId', 'probability'], ascending=False)
 
-    def get_cluster_activations(self, layerId, maxSamplesPerLayer = 10):
-        cluster_sample_indices = []
-        layer_clusters = self.clusters[layerId]
-        cluster_ids = []
-        cluster_sizes = []
-        for clusterId, cluster in layer_clusters.groupby('clusterId'):
-            cluster_size = cluster.size
-            sampleSize = min(cluster_size, maxSamplesPerLayer)
-            image_id_samples = cluster.sample(sampleSize).index
-            cluster_sample_indices.append(image_id_samples)
-            cluster_ids.append(clusterId)
-            cluster_sizes.append(cluster_size)
+    def head(self, layerId, n):
+            """ Returns, from each cluster, the n items most likey to belong to the cluster.
+            """
+            return self.sorted(layerId).groupby('clusterId').head(n)
+    def tail(self, layerId, n):
+            """ Returns, from each cluster, the n items (outliers) least likey to belong to the cluster.
+                
+            """
+            return self.sorted(layerId).groupby('clusterId').tail(n)
+    def sample(self, layerId, frac = 0.1):
+        """ Samples according to the probability of belonging to a cluster
+         Returns:
+            DataFrame: 
+        """
+        # Pandas cannot sample with probabilities summing to 0, so replace those
+        df = self.clusters[layerId].copy()
+        grp = df.groupby('clusterId')
+        df['probability'] = grp['probability'].transform(lambda x: x if x.mean() > 0 else 0.1 )
 
-        return cluster_sample_indices, cluster_ids, cluster_sizes
+        return grp.sample(frac=frac,weights=df.probability)
 
-    def generate_representative(self, indices):
-        img = np.zeros(self.X[0].shape, float)
-        for c in indices:
-            img = img + np.array(self.X[c]) / len(indices)
-        return img    
-    def get_cluster_representatives(self, layer):
-        
+  
+    def averages(self, layer):
+        """ Returns average of each cluster.
+        """
         layer_clusters = self.clusters[layer]
         cluster_ids = []
         cluster_sizes = []
         cluster_representatives = []
 
         for clusterId, cluster in layer_clusters.groupby('clusterId'):
-            cluster_representatives.append(self.generate_representative(cluster.index))
+            cluster_representatives.append(self.average(cluster.index))
             cluster_ids.append(clusterId)
-            cluster_sizes.append(cluster.size)
-        return cluster_representatives, cluster_ids, cluster_sizes       
+            cluster_sizes.append(len(cluster.index))
+        return cluster_representatives, cluster_ids, cluster_sizes    
+    def average(self, indices):
+        img = np.zeros(self.X[0].shape, float)
+        for c in indices:
+            img = img + np.array(self.X[c]) / len(indices)
+        return img  
+    def get_clusters(self, layer):
+        return self.clusters[layer].groupby('clusterId')
+        layer_clusters = self.clusters[layer]
+        cluster_items = []
+        cluster_ids = []
+        cluster_sizes = []
+        cluster_representatives = []
+
+        for clusterId, cluster in layer_clusters.groupby('clusterId'):
+            cluster_sorted = cluster.sort_values(by='probability', ascending=False).index
+            cluster_items.append(cluster_sorted)
+            cluster_ids.append(clusterId)
+            cluster_sizes.append(len(cluster.index))
+        return cluster_items, cluster_ids, cluster_sizes          
     def activation_aggregation(self, agg_func = np.mean):
         """ Aggregate activations for each layer. 
             Convolutional layers are aggregated per feature. 
@@ -109,28 +135,34 @@ class NeuralActivationPattern:
     def clusters(self):
         import hdbscan
         layer_clusters = []
+        data = {}
+
+        layerIds = []
         for layer, activations in enumerate(self.activations_agg):
             clusterer = hdbscan.HDBSCAN()
             clusterer.fit(activations)
             print(F"Layer {layer}, number of clusters: {clusterer.labels_.max() + 1}")
-            clusters = pd.DataFrame({"clusterId": clusterer.labels_})
-            layer_clusters.append(clusters)
-        return layer_clusters
+            layerIds.append(layer)
+            #data[(layer, "input_index")] = list(range(len(clusterer.labels_)))
+            data[(layer, "clusterId")] = clusterer.labels_
+            data[(layer, "probability")] = clusterer.probabilities_
+ 
+        return pd.DataFrame(data.values(), index=pd.MultiIndex.from_tuples(data.keys(), names=['layerId', 'input_index'])).transpose()
+    
 
     def summary(self, layer):
-        layer_clusters = self.clusters[layer]
-        dd = pd.DataFrame({'cluster': layer_clusters.clusterId, 'label': self.y})
+        layer_clusters = pd.concat([self.clusters[layer], pd.DataFrame({'label': self.y})], axis=1)
         # Count the number of labels falling into each cluster
-        dd_agg = dd.groupby(['cluster', 'label']).agg(counts=pd.NamedAgg(column='label', aggfunc='count')).reset_index()
+        clusters_grp = layer_clusters.groupby(['clusterId', 'label']).agg(counts=pd.NamedAgg(column='label', aggfunc='count')).reset_index()
         # Normalized count over all labels 
-        dd_agg['counts_norm'] = dd_agg['counts'] / dd_agg['counts'].max()
+        clusters_grp['counts_norm'] = clusters_grp['counts'] / clusters_grp['counts'].max()
         # Normalized number of clusters within each label
-        dd_agg['counts_within_label_norm'] = dd_agg['counts'] / dd_agg.groupby('label')['counts'].transform('max')
-        #print(dd_agg)
+        clusters_grp['counts_within_label_norm'] = clusters_grp['counts'] / clusters_grp.groupby('label')['counts'].transform('max')
+        #print(clusters_grp)
 
-        fig = px.scatter(dd_agg, x='label', y = 'cluster', size='counts_within_label_norm', symbol_sequence=['square'], 
+        fig = px.scatter(clusters_grp, x='label', y = 'clusterId', size='counts_within_label_norm', symbol_sequence=['square'], 
             title='Number of labels belonging to each cluster - size normalized per layer',
-            height= 220 + dd['cluster'].unique().shape[0]*20).update_xaxes(type='category').update_yaxes(type='category')
+            height= 220 + layer_clusters['clusterId'].unique().shape[0]*20).update_xaxes(type='category').update_yaxes(type='category')
 
         #fig.show()
         return fig
