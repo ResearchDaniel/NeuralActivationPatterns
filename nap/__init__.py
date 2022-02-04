@@ -1,1 +1,2 @@
 from ._NeuralActivationPattern import NeuralActivationPattern
+from ._NeuralActivationPattern import sort
