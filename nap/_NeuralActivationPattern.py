@@ -43,12 +43,18 @@ class NeuralActivationPattern:
         self.y = y
         self.model = model
         self.agg_func = agg_func
-        layers = model.layers[:]
-        # Extracts the outputs of the layers
-        layer_outputs = [layer.output for layer in layers] 
-        # Creates a model that will return these outputs, given the model input
-        from tensorflow import keras
-        self.activation_model = keras.models.Model(inputs=model.input, outputs=layer_outputs) 
+
+    def layerIdx(self, layer):
+        """ Get layer index given either its layer name or its index
+            Returns:
+                int: Layer index. 
+        """
+        if isinstance(layer, int) or isinstance(layer, float):
+            return int(layer)
+        else:
+            layer_name = layer
+            layer_names = [layer.name for layer in self.model.layers]
+            return layer_names.index(layer_name)
 
     def activity_patterns(self, path):
         """ Get activity patterns for a layer, or a filter within a layer
@@ -70,26 +76,29 @@ class NeuralActivationPattern:
             filterId = int(layer_filter[1])
             return self.filter_patterns(layerId, filterId)
 
-    def layer_max_activations(self, layerId, nSamplesPerLayer = 10, agg_func = np.max):
+    def layer_max_activations(self, layer, nSamplesPerLayer = 10, agg_func = np.max):
         """ Get indices to the inputs with the highest aggregated activation within specified layer.
 
         Returns:
             list: Indices to input data with the highest activations.
         """        
-        activations = self.layer_activations[layerId]
+        layerId = self.layerIdx(layer)
+        activations = self.layer_activations(layerId)
         # for each input
         agg_activations = [agg_func(activation[:]) for activation in activations]
         # Get indices of images that activate the most
         largestActivationsIndices = list(reversed(np.argsort(agg_activations)[-nSamplesPerLayer:]))
 
         return largestActivationsIndices
-    def filter_max_activations(self, layerId, filterId, nSamplesPerLayer = 10, agg_func = np.max):
+        
+    def filter_max_activations(self, layer, filterId, nSamplesPerLayer = 10, agg_func = np.max):
         """ Get indices to the inputs with the highest aggregated activation within specified layer and filter.
             Only works for convolutional layers.
         Returns:
             list: Indices to input data with the highest activations.
         """        
-        activations = self.layer_activations[layerId]
+        layerId = self.layerIdx(layer)
+        activations = self.layer_activations(layerId)
         # for each finput
         agg_activations = [agg_func(activation[:,:,filterId]) for activation in activations]
         # Get indices of images that activate the most
@@ -97,28 +106,31 @@ class NeuralActivationPattern:
 
         return largestActivationsIndices
 
-
-    def sorted(self, layerId):
+    def sorted(self, layer):
         """ Returns patterns sorted according to probability of belonging to a pattern
         """
-        return self.patterns[layerId].sort_values(['patternId', 'probability'], ascending=False)
+        layerId = self.layerIdx(layer)
+        return self.layer_patterns(layerId).sort_values(['patternId', 'probability'], ascending=False)
 
-    def head(self, layerId, n):
+    def head(self, layer, n):
             """ Returns, from each pattern, the n items most likey to belong to the pattern.
             """
+            layerId = self.layerIdx(layer)
             return self.sorted(layerId).groupby('patternId').head(n)
-    def tail(self, layerId, n):
+    def tail(self, layer, n):
             """ Returns, from each pattern, the n items (outliers) least likey to belong to the pattern.
                 
             """
+            layerId = self.layerIdx(layer)
             return self.sorted(layerId).groupby('patternId').tail(n)
-    def sample(self, layerId, frac = 0.1):
+    def sample(self, layer, frac = 0.1):
         """ Samples according to the probability of belonging to a pattern
          Returns:
             DataFrame: 
         """
+        layerId = self.layerIdx(layer)
         # Pandas cannot sample with probabilities summing to 0, so replace those
-        df = self.patterns[layerId].copy()
+        df = self.layer_patterns(layerId).copy()
         grp = df.groupby('patternId')
         df['probability'] = grp['probability'].transform(lambda x: x if x.mean() > 0 else 0.1 )
 
@@ -130,48 +142,48 @@ class NeuralActivationPattern:
             img = img + np.array(self.X[c]) / len(indices)
         return img  
         
+    def activation_model(self, layer):
+        from tensorflow import keras
+        layerId = layerIdx(layer)
+        return keras.models.Model(inputs=model.input, outputs=model.layers[layerId]) 
 
-    @lazyproperty  
-    def layer_activations(self):
-        layer_activations = self.activation_model.predict(self.X)
+    def layer_activations(self, layer):
+        layerIdx = self.layerIdx(layer)
+        layer_output = self.model.layers[layerIdx].output
+        # Creates a model that will return these outputs, given the model input
+        from tensorflow import keras
+        activation_model = keras.models.Model(inputs=self.model.input, outputs=layer_output) 
+        layer_activations = activation_model.predict(self.X)
         # Print info about the activations
-        print(pd.DataFrame({"Layer": [layer.name for layer in self.model.layers], 'Activation shape': [activation.shape for activation in layer_activations]}))
+        #print(pd.DataFrame({"Layer": self.model.layers[layerIdx].name, 'Activation shape': [activation.shape for activation in layer_activations]}))
         return layer_activations
 
-    def layer_patterns(self, layerId):
-        return self.patterns[layerId]
-
-    @lazyproperty  
-    def patterns(self):
+    def layer_patterns(self, layer):
+        layerIdx = self.layerIdx(layer)
+        activations = self.layer_activations(layer)
+        agg_activations = layer_activation_aggregation(activations, self.agg_func)
         import hdbscan
-        layer_patterns = [] 
+        clusterer = hdbscan.HDBSCAN()
+        clusterer.fit(agg_activations)
+        print(F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}") 
         data = {}
-
-        layerIds = []
-        for layerId, activations in enumerate(self.layer_activations):
-            agg_activations = layer_activation_aggregation(activations, self.agg_func)
-            clusterer = hdbscan.HDBSCAN()
-            clusterer.fit(agg_activations)
-            print(F"Layer {layerId}, number of patterns: {clusterer.labels_.max() + 1}")
-            layerIds.append(layerId)
-            #data[(layer, "input_index")] = list(range(len(clusterer.labels_)))
-            data[(layerId, "patternId")] = clusterer.labels_
-            data[(layerId, "probability")] = clusterer.probabilities_
+        data[(layerIdx, "patternId")] = clusterer.labels_
+        data[(layerIdx, "probability")] = clusterer.probabilities_
+        return pd.DataFrame({"patternId": clusterer.labels_, "probability": clusterer.probabilities_})
  
-        return pd.DataFrame(data.values(), index=pd.MultiIndex.from_tuples(data.keys(), names=['layerId', 'input_index'])).transpose()
-
-    def filter_patterns(self, layerId, filterId):
+    def filter_patterns(self, layer, filterId):
         import hdbscan
-        activations = self.layer_activations[layerId]
+        activations = self.layer_activations(layer)
         filter_activations = [activation[:,:,filterId].flatten() for activation in activations]
         clusterer = hdbscan.HDBSCAN()
         clusterer.fit(filter_activations)
-        print(F"Layer {layerId}, filter: {filterId}, number of patterns: {clusterer.labels_.max() + 1}")
+        print(F"Layer {layer}, filter: {filterId}, number of patterns: {clusterer.labels_.max() + 1}")
  
         return pd.DataFrame({"patternId":clusterer.labels_, "probability": clusterer.probabilities_})
     
     def layer_summary(self, layer):
-        layer_patterns = pd.concat([self.patterns[layer], pd.DataFrame({'label': self.y})], axis=1)
+        layerId = self.layerIdx(layer)
+        layer_patterns = pd.concat([self.layer_patterns(layerId), pd.DataFrame({'label': self.y})], axis=1)
         # Count the number of labels falling into each pattern
         patterns = layer_patterns.groupby(['patternId', 'label']).agg(counts=pd.NamedAgg(column='label', aggfunc='count')).reset_index()
         
