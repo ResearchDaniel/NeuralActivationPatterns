@@ -6,7 +6,10 @@ from tensorflow.keras import layers
 
 def show_image_grid(images, labels, img_idx, title, images_per_row, img_scale):
     import plotly.express as px
-    imSize = (images[0].shape[0], images[0].shape[1])
+    if images[0].shape[2] > 1:
+        imSize = (images[0].shape[0], images[0].shape[1], images[0].shape[2])
+    else:
+        imSize = (images[0].shape[0], images[0].shape[1])
     # Get indices of the largest 
     sampleSize = len(img_idx)
     nCols = min(sampleSize, images_per_row)
@@ -29,7 +32,10 @@ def show_image_grid(images, labels, img_idx, title, images_per_row, img_scale):
 def show_pattern(average, representatives, outliers, images, labels, title):
     import plotly.express as px
     import plotly.subplots as sp
-    imSize = (images[0].shape[0], images[0].shape[1])
+    if images[0].shape[2] > 1:
+        imSize = (images[0].shape[0], images[0].shape[1], images[0].shape[2])
+    else:
+        imSize = (images[0].shape[0], images[0].shape[1])
     img = np.array([average.reshape(imSize)] + [images[idx].reshape(imSize) for idx in representatives] + [images[idx].reshape(imSize) for idx in outliers])
     fig = px.imshow(img, facet_col=0, binary_string=True, title = title)
     fig.layout.annotations[0]['text'] = "Average"
@@ -44,37 +50,43 @@ def show_images(images, labels, layer_img_idx, titles, images_per_row = 10, img_
         show_image_grid(images, labels, img_idx, titles[layer], images_per_row, img_scale)
 
 # Model / data parameters
-num_classes = 10
-input_shape = (28, 28, 1)
+def setupMNIST():
+    import tensorflow_datasets as tfds
+    ds, info = tfds.load('mnist', split='test', shuffle_files=False, batch_size=-1, with_info=True)
+    print(info.features['label'].num_classes)
+    num_classes = info.features['label'].num_classes
+    input_shape = info.features['image'].shape
+    x_test = tfds.as_numpy(ds['image']).astype("float32")  / 255
+    y_test_l = tfds.as_numpy(ds['label'])
 
-# the data, split between train and test sets
-(x_train, y_train_l), (x_test, y_test_l) = keras.datasets.mnist.load_data()
+    model_save_name = 'mnist_classifier'
+    path = F"{model_save_name}" 
+    #model.save(path)
+    model = keras.models.load_model(path)
+    #model.save_w(f"{model_save_name}")
+    #model.layer_summary()  
+    return model, x_test, y_test_l
 
-# Scale images to the [0, 1] range
-x_train = x_train.astype("float32") / 255
-x_test = x_test.astype("float32") / 255
-# Make sure images have shape (28, 28, 1)
-x_train = np.expand_dims(x_train, -1)
-x_test = np.expand_dims(x_test, -1)
-print("x_train shape:", x_train.shape)
-print(x_train.shape[0], "train samples")
-print(x_test.shape[0], "test samples")
+def setupInceptionV3():
+    import tensorflow_datasets as tfds
+    import tensorflow as tf
+    ds, info = tfds.load('imagenet_v2', split='test', shuffle_files=False, with_info=True)
+    print(info.features)
+    num_classes = info.features['label'].num_classes
+    input_shape = info.features['image'].shape
+    ds = ds.take(2)
+    x_test = np.asarray([tf.keras.applications.inception_v3.preprocess_input(tf.keras.layers.Resizing(299, 299)(v['image'])) for v in ds])
+    y_test_l = np.asarray([tfds.as_numpy(v['label']) for v in ds])
+    model = tf.keras.applications.InceptionV3(include_top=False, weights='imagenet')
+    print(model.summary())
+    return model, x_test, y_test_l
 
-
-# convert class vectors to binary class matrices
-y_train = keras.utils.to_categorical(y_train_l, num_classes)
-y_test = keras.utils.to_categorical(y_test_l, num_classes)
-
-
-model_save_name = 'mnist_classifier'
-path = F"{model_save_name}" 
-#model.save(path)
-model = keras.models.load_model(path)
-#model.save_w(f"{model_save_name}")
-#model.layer_summary()        
+model, x_test, y_test_l = setupMNIST()
+#model, x_test, y_test_l = setupInceptionV3()
+      
 
 ap = nap.NeuralActivationPattern(x_test[:100], y_test_l[:100], model)
-ap.layer_summary(0)
+ap.layer_summary("conv2d")
 def filter_analysis():
     # For now, simply test that these functions works
     layerId = 5
@@ -109,7 +121,7 @@ def layer_analysis():
     #show_images(x_test, y_test_l, patterns, titles)
 
     # Show pattern representatives for layer  
-    sorted_patterns = nap.sort(ap.filter_patterns(layerId))
+    sorted_patterns = nap.sort(ap.layer_patterns(layerId))
     for pattern_id, pattern in sorted_patterns.groupby('patternId'):
         avg = ap.average(pattern.index)
         centers = pattern.head(1).index

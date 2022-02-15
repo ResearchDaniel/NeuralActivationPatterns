@@ -10,3 +10,4 @@ dependencies:
   - plotly
   - pandas
   - ipykernel
+  - tensorflow-datasets
