@@ -1,5 +1,6 @@
 import nap
 import numpy as np
+import export
 import pandas as pd
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -189,3 +190,6 @@ def layer_analysis():
 
 #layer_analysis()
 filter_analysis()
+
+export.export_all(ap, "MNIST", ["conv2d", "conv2d_1", "dense"])
+
