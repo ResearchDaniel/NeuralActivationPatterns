@@ -129,67 +129,69 @@ def precomputePatterns(aggregated_activations_path, layer):
         patterns = ap.layer_patterns(layer, agg_activations=activations_agg)
         patterns.to_feather(f'{aggregated_activations_path}_patterns_{layer}.feather')        
 
-model, x_test, y_test_l = setupMNIST()
+model, X, y = setupMNIST()
 
-# precomputeActivations(x_test, model, ["conv2d", "max_pooling2d", "conv2d_1", "max_pooling2d_1", "flatten", "dropout", "dense"], 'results/mnist_activations')
+# precomputeActivations(X, model, ["conv2d", "max_pooling2d", "conv2d_1", "max_pooling2d_1", "flatten", "dropout", "dense"], 'results/mnist_activations')
 # path = 'results/mnist_activations'
-# #model, x_test, y_test_l = setupInceptionV3()
+# #model, X, y = setupInceptionV3()
 # #path = 'results/inceptionv3_activations'
-# # precomputeActivations(x_test, model, ["mixed3","mixed4", "mixed5"], path)
+# # precomputeActivations(X, model, ["mixed3","mixed4", "mixed5"], path)
 
-x_test = x_test.take(10)
-y_test_l = y_test_l.take(10)
-x_test = x_test.batch(1)
-y_test_l = list(y_test_l.as_numpy_iterator())
+X = X.take(10)
+y = y.take(10)
+X = X.batch(1)
+y = list(y.as_numpy_iterator())
 ap = nap.NeuralActivationPattern(model)
 
-ap.layer_summary("conv2d", x_test, y_test_l)
+ap.layer_summary("conv2d", X, y)
 def filter_analysis():
     # For now, simply test that these functions works
     layer = "conv2d_1"
     filterId = 0
-    filter_patterns = ap.activity_patterns("conv2d:0", x_test)
-    filter_patterns = ap.activity_patterns("0:0", x_test)
+    filter_patterns = ap.activity_patterns("conv2d:0", X)
+    filter_patterns = ap.activity_patterns("0:0", X)
     # Show pattern representatives for filter  
-    sorted_patterns = nap.sort(ap.filter_patterns(layer, filterId, x_test))
+    sorted_patterns = nap.sort(ap.filter_patterns(layer, filterId, X))
     
-    X = list(x_test.unbatch().as_numpy_iterator())
+    images = list(X.unbatch().as_numpy_iterator())
     for pattern_id, pattern in sorted_patterns.groupby('patternId'):
         avg = nap.average(X, pattern.index)
         centers = pattern.head(1).index
         outliers = pattern.tail(3).index
-        show_pattern(avg, centers, outliers, X, y_test_l, F"Layer {layer}, Filter: {filterId}, Pattern: {pattern_id}, Size: {len(pattern)}")
+        show_pattern(avg, centers, outliers, images, y, F"Layer {layer}, Filter: {filterId}, Pattern: {pattern_id}, Size: {len(pattern)}")
 
 
 def layer_analysis():
-    ap.layer_summary(5, x_test, y_test_l).show()
-    print(ap.layer_max_activations(0, x_test))
+    ap.layer_summary(5, X, y).show()
+    print(ap.layer_max_activations(0, X))
     
     layerId = 5
     nSamplesPerLayer = 10
-    patterns = ap.layer_patterns(layerId, x_test)
+    patterns = ap.layer_patterns(layerId, X)
     # Show a sample subset from each pattern 
     print(nap.sample(patterns))
     pattern_samples = nap.head(patterns, nSamplesPerLayer) 
     titles = []
     patterns = []
+    images = list(X.unbatch().as_numpy_iterator())
+
     for pattern_id, pattern in pattern_samples.groupby('patternId'):
         patterns.append(pattern.index)
         titles.append(F"Pattern: {pattern_id}, size: {len(pattern)}")
-    #show_images(x_test, y_test_l, patterns, titles)
+    #show_images(images, y, patterns, titles)
 
     # Show pattern representatives for layer  
-    sorted_patterns = nap.sort(ap.layer_patterns(layerId, x_test))
-    X = list(x_test.unbatch().as_numpy_iterator())
+    sorted_patterns = nap.sort(ap.layer_patterns(layerId, X))
+    
     for pattern_id, pattern in sorted_patterns.groupby('patternId'):
         avg = nap.average(X, pattern.index)
         centers = pattern.head(1).index
         outliers = pattern.tail(3).index
-        show_pattern(avg, centers, outliers, X, y_test_l, F"Layer {layerId}, Pattern: {pattern_id}, Size: {len(pattern)}")
+        show_pattern(avg, centers, outliers, images, y, F"Layer {layerId}, Pattern: {pattern_id}, Size: {len(pattern)}")
 
 
 #layer_analysis()
-filter_analysis()
+#filter_analysis()
 
-export.export_all(ap, "MNIST", ["conv2d", "conv2d_1", "dense"])
+export.export_all(ap, X, y, "MNIST", ["conv2d", "conv2d_1", "dense"])
 
