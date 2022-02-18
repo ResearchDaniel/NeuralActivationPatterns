@@ -6,5 +6,6 @@ plotly
 pandas
 ipykernel
 tensorflow-datasets
+pyarrow 
 flask
 pylint
