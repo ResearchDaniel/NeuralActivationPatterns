@@ -9,3 +9,4 @@ tensorflow-datasets
 pyarrow 
 flask
 pylint
+tables

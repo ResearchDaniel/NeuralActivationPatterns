@@ -191,9 +191,10 @@ class NeuralActivationPattern:
  
     def filter_patterns(self, layer, filterId, X = None, activations = None):
         import hdbscan
-        if not activations:
+        if activations is None:
             activations = self.layer_activations(layer, X)
-        filter_activations = [activation[:,:,filterId].flatten() for activation in activations]
+            
+        filter_activations = [np.ndarray.reshape(activation[...,filterId], -1) for activation in activations]
         clusterer = hdbscan.HDBSCAN()
         clusterer.fit(filter_activations)
         print(F"Layer {layer}, filter: {filterId}, number of patterns: {clusterer.labels_.max() + 1}")
