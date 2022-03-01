@@ -1,5 +1,5 @@
 tensorflow
-hdbscan
+hdbscan==0.8.27
 numpy
 matplotlib
 plotly

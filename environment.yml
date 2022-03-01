@@ -3,12 +3,16 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - tensorflow=2
-  - hdbscan
-  - numpy
-  - matplotlib
-  - plotly
-  - pandas
-  - ipykernel
-  - tensorflow-datasets
-  - pyarrow 
+  - python=3.8
+  - pip
+  - pip:
+    - tensorflow
+    - hdbscan==0.8.27
+    - numpy
+    - matplotlib
+    - plotly
+    - pandas
+    - ipykernel
+    - tensorflow-datasets
+    - pyarrow 
+    - tables

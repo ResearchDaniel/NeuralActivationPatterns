@@ -41,6 +41,16 @@ def tail(patterns, n):
         """
         return self.sorted(patterns).groupby('patternId').tail(n)
 
+def outliers(patterns, quantile = 0.95, n = None):
+    """ Returns indices of possible outliers, i.e., the ones with highest outlier score (GLOSH algorithm).
+    """
+    if n is not None:
+        return patterns.nlargest(n, 'outlier_score').index
+    else:
+        threshold = patterns.outlier_score.quantile(quantile)
+        outliers = np.where(patterns.outlier_score > threshold)[0]
+        return outliers
+
 def average(X, indices):
     img = np.zeros(X[0].shape, float)
     for c in indices:
@@ -54,8 +64,8 @@ def layer_activation_aggregation_shape(activation_shape, agg_func = np.mean):
 
         Returns a list of arrays with sizes according to the number of features in each layer.    
     """ 
-    if not agg_func:
-        np.prod(activation_shape)
+    if agg_func is None:
+        return np.prod(activation_shape)
     else:
         if (len(activation_shape) == 3): 
             # Convolutional layer
@@ -63,27 +73,34 @@ def layer_activation_aggregation_shape(activation_shape, agg_func = np.mean):
         else:
             return np.prod(activation_shape)
 
-def layer_activation_aggregation(layer_activations, agg_func = np.mean):
+def layer_activation_aggregation(activations, agg_func = np.mean):
+    """ Aggregate activations in a layer. 
+        Convolutional layers are aggregated per feature.  
+    """ 
+    if agg_func is None:
+        return activations.flatten()
+
+    if (len(activations.shape) == 3): 
+        # Convolutional-like layer
+        return [agg_func(activations[:, :,feature].flatten()) for feature in range(activations.shape[-1])]
+    else:
+
+        # aggregated_activation = [agg_func(activations.flatten())]
+        # aggregated_activations.append(aggregated_activation)
+        return activations.flatten()
+
+def layer_activations_aggregation(layer_activations, agg_func = np.mean):
     """ Aggregate activations in a layer. 
         Convolutional layers are aggregated per feature. 
 
         Returns a list of arrays with sizes according to the number of features in each layer.    
     """ 
-    layer_activations_aggregated = []
     if not agg_func:
         return  [activations.flatten() for activations in layer_activations]
-
+    layer_activations_aggregated = []
     for activations in layer_activations: 
+        layer_activations_aggregated.append(layer_activation_aggregation(activations, agg_func))
 
-        if (len(activations.shape) == 3): 
-            # Convolutional-like layer
-            aggregated_activation = [agg_func(activations[:, :,feature].flatten()) for feature in range(activations.shape[-1])]
-            layer_activations_aggregated.append(aggregated_activation)
-        else:
-
-            # aggregated_activation = [agg_func(activations.flatten())]
-            # aggregated_activations.append(aggregated_activation)
-            layer_activations_aggregated.append(activations.flatten())
     return layer_activations_aggregated    
 
 class NeuralActivationPattern:
@@ -131,7 +148,7 @@ class NeuralActivationPattern:
             list: Indices to input data with the highest activations.
         """        
         layerId = self.layerIdx(layer)
-        if not activations:
+        if activations is None:
             activations = self.layer_activations(layer, X)
         # for each input
         agg_activations = [agg_func(activation[:]) for activation in activations]
@@ -146,7 +163,7 @@ class NeuralActivationPattern:
         Returns:
             list: Indices to input data with the highest activations.
         """      
-        if not activations:
+        if activations is None:
             activations = self.layer_activations(layer, X)  
         # for each finput
         agg_activations = [agg_func(activation[:,:,filterId]) for activation in activations]
@@ -179,10 +196,9 @@ class NeuralActivationPattern:
         return layer_activations
 
     def layer_patterns(self, layer, X = None, agg_activations = None):
-        layerIdx = self.layerIdx(layer)
         if not agg_activations:
             activations = self.layer_activations(layer, X)
-            agg_activations = layer_activation_aggregation(activations, self.agg_func)
+            agg_activations = layer_activations_aggregation(activations, self.agg_func)
         import hdbscan
         clusterer = hdbscan.HDBSCAN()
         clusterer.fit(agg_activations)
@@ -201,9 +217,10 @@ class NeuralActivationPattern:
  
         return pd.DataFrame({"patternId":clusterer.labels_, "probability": clusterer.probabilities_, "outlier_score": clusterer.outlier_scores_})
     
-    def layer_summary(self, layer, X, y):
-        layerId = self.layerIdx(layer)
-        layer_patterns = pd.concat([self.layer_patterns(layerId, X), pd.DataFrame({'label': y})], axis=1)
+    def layer_summary(self, layer, X, y, layer_patterns = None):
+        if layer_patterns is None:
+            layer_patterns = self.layer_patterns(layer, X)
+        layer_patterns = pd.concat([layer_patterns, pd.DataFrame({'label': y})], axis=1)    
         # Count the number of labels falling into each pattern
         patterns = layer_patterns.groupby(['patternId', 'label']).agg(counts=pd.NamedAgg(column='label', aggfunc='count')).reset_index()
         
@@ -220,7 +237,7 @@ class NeuralActivationPattern:
         fig = px.scatter(patterns, x='label', y = 'patternId', size='counts', symbol_sequence=['square'], 
             category_orders={"patternId": patterns_sorted,
                                 "label": labels_sorted},
-            title='Number of labels belonging to each pattern',
+            title=f'Layer {layer}. Number of labels belonging to each pattern',
             size_max=12,
             #width= size,
             #height= size,
