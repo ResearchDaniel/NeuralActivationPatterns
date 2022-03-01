@@ -1,6 +1,7 @@
 import nap
 import numpy as np
 import export
+import util
 import pandas as pd
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -69,7 +70,7 @@ def show_images(images, labels, title, images_per_row = 10, img_scale = 7.0):
 
 def show_outliers(model_name, X, y, patterns, quantile = 0.95, n = None):
     outliers = nap.outliers(patterns, quantile, n)
-    images = filter_tf_dataset(X, outliers)
+    images = util.filter_tf_dataset(X, outliers)
     labels = [f"{y[i]} | id:{i}" for i in outliers]
     title = F"{model_name}, layer: {layer}, outliers"
     show_images(images, labels, title)
@@ -161,134 +162,26 @@ def setupInceptionV3():
     print(model.summary())
     return model, model_name, X, y
 
-EXPORT_LOCATION = Path("results")
 
 
-def activations_path(destination, model_name, layer):
-    return Path(destination, model_name, layer, 'layer_activations.h5')
-def activations_agg_path(destination, model_name, layer):
-    return Path(destination, model_name, layer, 'layer_activations_aggregated.h5')    
-def layer_patterns_path(destination, model_name, layer):
-    return Path(destination, model_name, layer, 'layer_patterns.h5')   
-def filter_patterns_path(destination, model_name, layer, filter):
-    return Path(destination, model_name, layer, 'filters', f'{filter}.h5')   
-
-def precomputeActivations(dataset, model, model_name, layers, destination=EXPORT_LOCATION, mode = 'w'):
-    batch_size = 1000
-
-    ap = nap.NeuralActivationPattern(model)
-    for layer in layers:
-        act_path = activations_path(destination, model_name, layer)
-        act_path.parent.mkdir(parents=True, exist_ok=True)
-        agg_path = activations_agg_path(destination, model_name, layer)
-        with h5py.File(act_path, mode) as f, h5py.File(agg_path, mode) as f_agg:
-            # Dummy computation to get the output shape
-            activations = ap.layer_activations(layer, dataset.take(1).batch(1))
-            output_shape = list(activations.shape)
-            # Ignore first entry, which is batch size 
-            agg_shape = nap.layer_activation_aggregation_shape(output_shape[1:])
-            total_num_inputs = dataset.cardinality().numpy()
-            
-            output_shape[0] = total_num_inputs
-            dset = f.create_dataset("activations", output_shape, compression="gzip")
-            if isinstance(agg_shape, list):
-                agg_shape = [total_num_inputs] + agg_shape
-            else:
-                agg_shape = [total_num_inputs] + [agg_shape]
-
-            dset_aggregated = f_agg.create_dataset("activations", agg_shape, compression="gzip")
-            i = 0
-            for ds in dataset.batch(batch_size):
-                ap = nap.NeuralActivationPattern(model)
-                num_inputs = ds.shape[0]
-                activations = ap.layer_activations(layer, ds)
-                dset[i:i+num_inputs] = activations
-                dset_aggregated[i:i+num_inputs] = nap.layer_activations_aggregation(activations)
-                i += num_inputs
-
-def precomputeLayerAggregation(dataset, model, model_name, layers, agg_func = np.mean, destination=EXPORT_LOCATION):
-    ap = nap.NeuralActivationPattern(model)
-    for layer in layers:
-        activations, f = layer_activations(dataset, model, model_name, layer, destination)
-        output_shape = list(activations.shape)
-        agg_shape = nap.layer_activation_aggregation_shape(output_shape[1:], agg_func)
-        total_num_inputs = output_shape[0]
-        if isinstance(agg_shape, list):
-            agg_shape = [total_num_inputs] + agg_shape
-        else:
-            agg_shape = [total_num_inputs] + [agg_shape]
-        agg_path = activations_agg_path(destination, model_name, layer)
-        with h5py.File(agg_path, 'w') as f_agg:
-            dset_aggregated = f_agg.create_dataset("activations", agg_shape, compression="gzip")
-            for i, activation in enumerate(activations):
-                dset_aggregated[i] = nap.layer_activation_aggregation(activation[()], agg_func)
-        f.close()
-
-
-def precomputeLayerPatterns(dataset, model, model_name, layers, destination=EXPORT_LOCATION):
-    ap = nap.NeuralActivationPattern(model)
-    for layer in layers:
-        activations, f = layer_activations_agg(dataset, model, model_name, layer, destination)
-        patterns = ap.activity_patterns(layer, activations=activations)
-        patterns_path = layer_patterns_path(destination, model_name, layer)
-        f.close()
-        patterns.to_hdf(patterns_path, f'{layer}') 
-
-def precomputeFilterPatterns(dataset, model, model_name, layers, filters = None, destination=EXPORT_LOCATION):
-    ap = nap.NeuralActivationPattern(model)
-    for layer in layers:
-        # [()] retireves all data because slicing the filter is super-slow in hdf5  
-        activations, f = layer_activations(dataset, model, model_name, layer, destination)
-        if filters is None:
-            filters = range(activations.shape[-1])
-        for filter in filters:
-            
-            patterns = ap.activity_patterns(f'{layer}:{filter}', activations=activations)  
-            path = filter_patterns_path(destination, model_name, layer, filter)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            patterns.to_hdf(path, f'{layer}/filter_{filter}')     
-        f.close()
- 
-def layer_activations(dataset, model, model_name, layer, destination=EXPORT_LOCATION):
-    path = activations_path(destination, model_name, layer)
-    if not path.exists():
-        precomputeActivations(dataset, model, model_name, [layer], destination)
-    f = h5py.File(path, 'r')
-    return f["activations"], f
-def layer_activations_agg(dataset, model, model_name, layer, destination=EXPORT_LOCATION):
-    path = activations_agg_path(destination, model_name, layer)
-    if not path.exists():
-        precomputeActivations(dataset, model, model_name, [layer], destination)
-    f = h5py.File(path, 'r')
-    return f["activations"], f
-def layer_patterns(X, model, model_name, layer, destination=EXPORT_LOCATION):
-    path = layer_patterns_path(destination, model_name, layer)
-    if not path.exists():
-        precomputeLayerPatterns(X, model, model_name, [layer], destination)
-    return pd.read_hdf(path)
-def filter_patterns(X, model, model_name, layer, filter, destination=EXPORT_LOCATION):
-    path = filter_patterns_path(destination, model_name, layer, filter)
-    if not path.exists():
-        precomputeFilterPatterns(X, model, model_name, [layer], [filter], destination)
-    return pd.read_hdf(path)    
 
 
     
     
-# model, model_name, X, y = setupMNIST()
-# layers = ["conv2d", "max_pooling2d", "conv2d_1", "max_pooling2d_1", "flatten", "dropout", "dense"]
-# layers = ["conv2d_1"]
-# layer = "conv2d_1" 
-# filterId = 0
+model, model_name, X, y = setupMNIST()
+layers = ["conv2d", "max_pooling2d", "conv2d_1", "max_pooling2d_1", "flatten", "dropout", "dense"]
+layers = ["conv2d_1"]
+layer = "conv2d_1" 
+filterId = 0
 
-model, model_name, X, y = setupInceptionV1()
-layers = ['Mixed_4b_Concatenated']
-layer = 'Mixed_4b_Concatenated'
-filterId = 409
-#precomputeActivations(X, model, model_name, layers=layers)
-#precomputeLayerAggregation(X, model, model_name, layers=layers, agg_func=None)
-#precomputeLayerPatterns(X, model, model_name, layers=layers)
-#precomputeFilterPatterns(X, model, model_name, [layer], [filterId])
+# model, model_name, X, y = setupInceptionV1()
+# layers = ['Mixed_4b_Concatenated']
+# layer = 'Mixed_4b_Concatenated'
+# filterId = 409
+#export.export_activations(X, model, model_name, layers=layers)
+#export.export_layer_aggregation(X, model, model_name, layers=layers, agg_func=None)
+#export.export_layer_patterns(X, model, model_name, layers=layers)
+#export.export_filter_patterns(X, model, model_name, [layer], [filterId])
 # X = X.take(10)
 # y = y.take(10)
 # X = X.batch(1)
@@ -297,52 +190,32 @@ y = list(tfds.as_numpy(y))
 # ap.layer_summary("conv2d", X, y)
 
 def filter_analysis(model, model_name, X, y, layer, filter):
-    patterns = filter_patterns(X, model, model_name, layer, filter)
+    patterns = export.get_filter_patterns(X, model, model_name, layer, filter)
     # Show pattern representatives for filter  
     sorted_patterns = nap.sort(patterns)
 
     for pattern_id, pattern in sorted_patterns.groupby('patternId'):
         if pattern_id == -1:
             continue
-        to_average = filter_tf_dataset(X, pattern.index)
+        to_average = util.filter_tf_dataset(X, pattern.index)
         avg = tf.keras.layers.Average()(to_average).numpy()
         centerIndices = pattern.head(1).index
         outliersIndices = pattern.tail(3).index
-        centers = filter_tf_dataset(X, centerIndices)
-        outliers = filter_tf_dataset(X, outliersIndices)
+        centers = util.filter_tf_dataset(X, centerIndices)
+        outliers = util.filter_tf_dataset(X, outliersIndices)
         centerLabels = [f"Representative | {y[i]}" for i in centerIndices]
         outlierLabels = [f"Outlier | {y[i]}" for i in outliersIndices]
 
         show_pattern(avg, centers, centerLabels, outliers, outlierLabels, F"{model_name}, Layer {layer}, Filter: {filter}, Pattern: {pattern_id}, Size: {len(pattern)}")
 
 
-def filter_tf_dataset(dataset, indices):
-    # https://stackoverflow.com/questions/66410340/filter-tensorflow-dataset-by-id?noredirect=1&lq=1
-    m_X_ds = dataset.enumerate()  # Create index,value pairs in the dataset.
-    keys_tensor = tf.constant(indices)
-    vals_tensor = tf.ones_like(keys_tensor)  # Ones will be casted to True.
 
-    table = tf.lookup.StaticHashTable(
-        tf.lookup.KeyValueTensorInitializer(keys_tensor, vals_tensor),
-        default_value=0)  # If index not in table, return 0.
-
-
-    def hash_table_filter(index, value):
-        table_value = table.lookup(index)  # 1 if index in arr, else 0.
-        index_in_arr =  tf.cast(table_value, tf.bool) # 1 -> True, 0 -> False
-        return index_in_arr
-
-    filtered_ds = m_X_ds.filter(hash_table_filter)
-    # Reorder to same order as 'indices'
-    items = list(tfds.as_numpy(filtered_ds))
-    mapping = dict(items)
-    return [mapping[x] for x in indices]
 
 def layer_analysis(model, model_name, X, y, layer):
-    patterns = layer_patterns(X, model, model_name, layer)
+    patterns = export.get_layer_patterns(X, model, model_name, layer)
     ap = nap.NeuralActivationPattern(model)
     #ap.layer_summary(layer, X, y, patterns).show()
-    #activations = layer_activations(X, model, model_name, layer)
+    #activations = export.get_layer_activations(X, model, model_name, layer)
     #print(ap.layer_max_activations(layer, X, activations=activations))
     # 
 
@@ -356,7 +229,7 @@ def layer_analysis(model, model_name, X, y, layer):
     #     if pattern_id == -1:
     #         continue
     #     pattern_indices = pattern.index
-    #     images = filter_tf_dataset(X, pattern_indices)
+    #     images = util.filter_tf_dataset(X, pattern_indices)
     #     labels = [f"{y[i]} | id:{i}" for i in pattern_indices]
     #     title = F"Layer: {layer}, pattern: {pattern_id}, size: {len(pattern)}"
     #     show_images(images, labels, title)
@@ -367,13 +240,13 @@ def layer_analysis(model, model_name, X, y, layer):
         if pattern_id == -1:
             continue
         
-        to_average = filter_tf_dataset(X, pattern.index)
+        to_average = util.filter_tf_dataset(X, pattern.index)
         avg = tf.keras.layers.Average()(to_average).numpy()
         centerIndices = pattern.head(1).index
-        #outliersIndices = pattern.tail(3).index
-        outliersIndices = nap.outliers(pattern, n=3)
-        centers = filter_tf_dataset(X, centerIndices)
-        outliers = filter_tf_dataset(X, outliersIndices)
+        outliersIndices = pattern.tail(3).index
+        #outliersIndices = nap.outliers(pattern, n=3)
+        centers = util.filter_tf_dataset(X, centerIndices)
+        outliers = util.filter_tf_dataset(X, outliersIndices)
         
         centerLabels = [f"Representative | {y[i]}" for i in centerIndices]
         outlierLabels = [f"Outlier | {y[i]}" for i in outliersIndices]
@@ -382,7 +255,7 @@ def layer_analysis(model, model_name, X, y, layer):
 
 
 #layer_analysis(model, model_name, X, y, layer)
-filter_analysis(model, model_name, X, y, layer, filterId)
+#filter_analysis(model, model_name, X, y, layer, filterId)
 
-#export.export_all(ap, X, y, "MNIST", ["conv2d", "conv2d_1", "dense"])
+export.export_all(model, model_name, X, y, layers)
 
