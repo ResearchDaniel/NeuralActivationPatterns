@@ -1,8 +1,9 @@
 <script lang="ts">
   import { tooltip } from "../stores";
+  import type { PatternForSample } from "../types";
 
   export let imagePath: string;
-  export let index: number = undefined;
+  export let sample: PatternForSample = undefined;
   export let layer: number = undefined;
 
   let hover = false;
@@ -18,7 +19,7 @@
     tooltip.set({
       hover: hover,
       mousePos: m,
-      index: index,
+      sample: sample,
       layer: layer,
     });
   }
@@ -28,13 +29,13 @@
   class="h-32"
   src={imagePath}
   on:mouseenter={() => {
-    if (index !== undefined && layer !== undefined) {
+    if (sample !== undefined && layer !== undefined) {
       hover = true;
       updateSampleTooltip();
     }
   }}
   on:mouseleave={() => {
-    if (index !== undefined && layer !== undefined) {
+    if (sample !== undefined && layer !== undefined) {
       hover = false;
       updateSampleTooltip();
     }

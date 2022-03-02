@@ -9,9 +9,9 @@
   export let model: string;
   export let layer: string;
 
-  $: patternIds = [
-    ...new Set(patterns.map((element) => element.patternId)),
-  ].sort();
+  $: patternIds = [...new Set(patterns.map((element) => element.patternId))]
+    .sort()
+    .filter((id) => id >= 0);
 </script>
 
 <div class="flex flex-col min-h-0">
