@@ -108,7 +108,6 @@ def setupMNIST():
 def setupInceptionV1():
     
     import tensorflow as tf
-    import tf_slim as slim
     #from tf_slim.nets import inception_v1
     from inception_v1 import InceptionV1
     #import tensorflow_hub as hub

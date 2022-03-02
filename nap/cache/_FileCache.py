@@ -9,7 +9,10 @@ CACHE_LOCATION = Path("results")
 def activations_path(destination, model_name, layer):
     return Path(destination, model_name, layer, 'layer_activations.h5')
 def activations_agg_path(destination, model_name, layer, agg_func):
-    return Path(destination, model_name, layer, f'layer_activations_{agg_func.__name__}.h5')    
+    if agg_func is None:
+        return activations_path(destination, model_name, layer)
+    else:
+        return Path(destination, model_name, layer, f'layer_activations_{agg_func.__name__}.h5')    
 def layer_patterns_path(destination, model_name, layer):
     return Path(destination, model_name, layer, 'layer_patterns.h5')   
 def filter_patterns_path(destination, model_name, layer, filter):
@@ -31,7 +34,10 @@ def export_activations(X, model, model_name, layers, destination=CACHE_LOCATION,
             total_num_inputs = X.cardinality().numpy()
             
             output_shape[0] = total_num_inputs
-            dset = f.create_dataset("activations", output_shape, compression="gzip")
+            bytes_per_float = 4
+            num_activations_in_one_MB = min(total_num_inputs, max(1, int(1000000 / (np.prod(output_shape[1:])*bytes_per_float))))
+            chunk_size = tuple([num_activations_in_one_MB] + output_shape[1:])
+            dset = f.create_dataset("activations", output_shape, compression="gzip", chunks=chunk_size)
             i = 0
             for ds in X.batch(batch_size):
                 ap = nap.NeuralActivationPattern(model)
@@ -50,16 +56,27 @@ def export_layer_aggregation(X, model, model_name, layers, agg_func = np.mean, d
             activations = f_act["activations"]
             output_shape = list(activations.shape)
             agg_shape = nap.layer_activation_aggregation_shape(output_shape[1:], agg_func)
+            
             total_num_inputs = output_shape[0]
-            if isinstance(agg_shape, list):
-                agg_shape = [total_num_inputs] + agg_shape
-            else:
-                agg_shape = [total_num_inputs] + [agg_shape]
             agg_path = activations_agg_path(destination, model_name, layer, agg_func)
             with h5py.File(agg_path, 'w') as f_agg:
-                dset_aggregated = f_agg.create_dataset("activations", agg_shape, compression="gzip")
-                for i, activation in enumerate(activations):
-                    dset_aggregated[i] = nap.layer_activation_aggregation(activation[()], agg_func)
+                agg_size = np.prod(agg_shape)
+                bytes_per_float = 4
+                num_activations_in_one_MB = min(total_num_inputs, max(1, int(1000000 / (agg_size*bytes_per_float))))
+                if isinstance(agg_shape, list):
+                    all_agg_shape = [total_num_inputs] + agg_shape
+                    chunk_size = (num_activations_in_one_MB) + tuple(agg_shape)
+                else:
+                    all_agg_shape = [total_num_inputs] + [agg_shape]
+                    chunk_size = (num_activations_in_one_MB, agg_shape)
+                    
+                dset_aggregated = f_agg.create_dataset("activations", all_agg_shape, compression="gzip", chunks=chunk_size)
+                i = 0
+                for chunk in activations.iter_chunks():
+                    data = activations[chunk]
+                    dset_aggregated[i:i+data.shape[0]] = nap.layer_activations_aggregation(data, agg_func)
+                    i += data.shape[0]
+
 
 
 def export_layer_patterns(X, model, model_name, layers, agg_func = np.mean, destination=CACHE_LOCATION):
