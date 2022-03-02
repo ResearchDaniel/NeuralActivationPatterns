@@ -119,7 +119,7 @@ def setupInceptionV1():
     #     hub.KerasLayer("https://tfhub.dev/google/imagenet/inception_v1/classification/4")
     # ])
     #tf.keras.backend.set_image_data_format('channels_last')
-    model_name = "InceptionV1"
+    model_name = f"InceptionV1_{ds.cardinality().numpy()}"
     model = InceptionV1()
     # i = tf.keras.layers.Input([None, None, 3], dtype = tf.uint8)
     # x = tf.keras.layers.Resizing(224, 224)(i)
