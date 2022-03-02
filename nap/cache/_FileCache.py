@@ -1,6 +1,7 @@
 import h5py
 import pandas as pd
 import numpy as np
+import nap
 from pathlib import Path
 
 CACHE_LOCATION = Path("results")
