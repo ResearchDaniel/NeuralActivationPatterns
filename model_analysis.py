@@ -77,14 +77,27 @@ def show_outliers(model_name, X, y, patterns, quantile = 0.95, n = None):
     title = F"{model_name}, layer: {layer}, outliers"
     show_images(images, labels, title)
 # Model / data parameters
-def setupMNIST():
+def setupMNIST(data_dir='D:/data/tensorflow_datasets'):
     import tensorflow_datasets as tfds
     
     ds, info = tfds.load('mnist', split='test', as_supervised=True, shuffle_files=False, with_info=True)
+    mnist_dir = Path(data_dir, "MNIST")
+    if not mnist_dir.exists():
+        from PIL import Image
+        mnist_dir.mkdir(parents=True, exist_ok=True)
+        for i, item in ds.enumerate():
+            image = np.squeeze(item[0].numpy())
+            if (len(image.shape)):
+                image = Image.fromarray((image).astype(np.uint8), 'L')
+            else:
+                image = Image.fromarray((image).astype(np.uint8), 'RGB')
+            image.save(Path(mnist_dir, f"{i}.jpeg"))
+
     ds = ds.take(2000)
 
     X = ds.map(lambda image, label: image)
     y = ds.map(lambda image, label: label)
+    file_names = tf.data.Dataset.from_tensor_slices([f"{i}.jpeg" for i in range(0, ds.cardinality().numpy())])
     def normalize_img(image):
         """Normalizes images: `uint8` -> `float32`."""
         return tf.cast(image, tf.float32) / 255.
@@ -103,7 +116,7 @@ def setupMNIST():
     # print("Test accuracy:", score[1])
     #model.save_w(f"{model_save_name}")
     model.summary()  
-    return model, model_name, X, y
+    return model, model_name, X, y, file_names
 
 def setupInceptionV1():
     
@@ -115,7 +128,7 @@ def setupInceptionV1():
     ds, info = tfds.load('imagenet2012', split='train', shuffle_files=False, with_info=True, data_dir='D:/data/tensorflow_datasets')
     ds = ds.take(100000)
     #ds = ds.take(1000)
-    # print(info.features)
+    print(info.features)
     # model = tf.keras.Sequential([
     #     hub.KerasLayer("https://tfhub.dev/google/imagenet/inception_v1/classification/4")
     # ])
@@ -139,9 +152,10 @@ def setupInceptionV1():
             tf.cast(image, tf.float32), mode='torch')
     X = ds.map(lambda elem: elem['image'])
     y = ds.map(lambda elem: elem['label'])
+    file_names = ds.map(lambda elem: elem['file_name'])
     X = X.map(lambda row:transform_images(row, 224), num_parallel_calls=tf.data.AUTOTUNE)
     print(model.summary())
-    return model, model_name, X, y
+    return model, model_name, X, y, file_names
 
 def setupInceptionV3():
     import tensorflow_datasets as tfds
@@ -169,14 +183,14 @@ def setupInceptionV3():
 
     
     
-model, model_name, X, y = setupMNIST()
+model, model_name, X, y, file_names = setupMNIST()
 layers = ["conv2d", "max_pooling2d", "conv2d_1", "max_pooling2d_1", "flatten", "dropout", "dense"]
 layers = ["conv2d_1"]
 layer = "conv2d_1" 
 filterId = 0
 
-# model, model_name, X, y = setupInceptionV1()
-# layers = ['Mixed_4b_Concatenated']
+# model, model_name, X, y, file_names = setupInceptionV1()
+# layers = ['Mixed_4b_Concatenated', 'Mixed_5b_Concatenated']
 # layer = 'Mixed_4b_Concatenated'
 # filterId = 409
 #export.export_activations(X, model, model_name, layers=layers)
@@ -258,5 +272,5 @@ def layer_analysis(model, model_name, X, y, layer):
 #layer_analysis(model, model_name, X, y, layer)
 #filter_analysis(model, model_name, X, y, layer, filterId)
 
-export.export_all(model, model_name, X, y, layers)
+export.export_all(model, model_name, X, y, file_names, layers)
 
