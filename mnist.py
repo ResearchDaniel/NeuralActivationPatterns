@@ -1,6 +1,8 @@
 import nap
+from nap import cache
 import numpy as np
 import export
+
 import util
 import pandas as pd
 from tensorflow import keras
@@ -190,7 +192,7 @@ y = list(tfds.as_numpy(y))
 # ap.layer_summary("conv2d", X, y)
 
 def filter_analysis(model, model_name, X, y, layer, filter):
-    patterns = export.get_filter_patterns(X, model, model_name, layer, filter)
+    patterns = nap.cache.get_filter_patterns(X, model, model_name, layer, filter)
     # Show pattern representatives for filter  
     sorted_patterns = nap.sort(patterns)
 
@@ -212,7 +214,7 @@ def filter_analysis(model, model_name, X, y, layer, filter):
 
 
 def layer_analysis(model, model_name, X, y, layer):
-    patterns = export.get_layer_patterns(X, model, model_name, layer)
+    patterns = nap.cache.get_layer_patterns(X, model, model_name, layer)
     ap = nap.NeuralActivationPattern(model)
     #ap.layer_summary(layer, X, y, patterns).show()
     #activations = export.get_layer_activations(X, model, model_name, layer)
