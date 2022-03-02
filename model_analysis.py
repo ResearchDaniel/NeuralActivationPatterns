@@ -7,7 +7,6 @@ import export
 import util
 import pandas as pd
 from tensorflow import keras
-from tensorflow.keras import layers
 import tensorflow as tf
 from pathlib import Path
 import h5py
@@ -19,8 +18,7 @@ print(tf.__version__)
 def dir_path(string):
     if Path(string).is_dir():
         return string
-    else:
-        raise NotADirectoryError(string)
+    raise NotADirectoryError(string)
 
 
 parser = argparse.ArgumentParser(description="Running a model analysis run.")
@@ -66,7 +64,6 @@ def show_image_grid(images, labels, title, images_per_row, img_scale):
 
 def show_pattern(average, representatives, representativeLabels, outliers, outlierLabels, title):
     import plotly.express as px
-    import plotly.subplots as sp
     if representatives[0].shape[2] > 1:
         imSize = (representatives[0].shape[0],
                   representatives[0].shape[1], representatives[0].shape[2])
@@ -102,21 +99,11 @@ def show_outliers(model_name, X, y, patterns, quantile=0.95, n=None):
 # Model / data parameters
 
 
-def setupMNIST(image_dir):
-    import tensorflow_datasets as tfds
-
+def setup_mnist(image_dir):
     ds, info = tfds.load(
         'mnist', split='test', as_supervised=True, shuffle_files=False, with_info=True)
     if not image_dir.exists():
-        from PIL import Image
-        image_dir.mkdir(parents=True, exist_ok=True)
-        for i, item in ds.enumerate():
-            image = np.squeeze(item[0].numpy())
-            if (len(image.shape)):
-                image = Image.fromarray((image).astype(np.uint8), 'L')
-            else:
-                image = Image.fromarray((image).astype(np.uint8), 'RGB')
-            image.save(Path(image_dir, f"{i}.jpeg"))
+        util.export_images(image_dir, ds)
 
     ds = ds.take(2000)
 
@@ -133,21 +120,42 @@ def setupMNIST(image_dir):
 
     model_save_name = 'mnist_classifier'
     path = F"{model_save_name}"
-    # model.save(path)
+
     model_name = f"MNIST_Classifier_{ds.cardinality().numpy()}"
     model = keras.models.load_model(path)
-    # X = np.stack(list(X.as_numpy_iterator()), axis=0 )
-    # y = np.array(list(y.as_numpy_iterator()))
-    # y = keras.utils.to_categorical(y, 10)
-    # score = model.evaluate(X, y, verbose=0)
-    # print("Test loss:", score[0])
-    # print("Test accuracy:", score[1])
-    # model.save_w(f"{model_save_name}")
     model.summary()
     return model, model_name, X, y, file_names
 
 
-def setupInceptionV1():
+def setup_cifar10(image_dir):
+    ds, info = tfds.load(
+        'cifar10', split='test', as_supervised=True, shuffle_files=False, with_info=True)
+    if not image_dir.exists():
+        util.export_images(image_dir, ds)
+
+    ds = ds.take(2000)
+
+    X = ds.map(lambda image, label: image)
+    y = ds.map(lambda image, label: label)
+    file_names = tf.data.Dataset.from_tensor_slices(
+        [f"{i}.jpeg" for i in range(0, ds.cardinality().numpy())])
+
+    def normalize_img(image):
+        """Normalizes images: `uint8` -> `float32`."""
+        return tf.cast(image, tf.float32) / 255.
+    X = X.map(lambda row: normalize_img(row),
+              num_parallel_calls=tf.data.AUTOTUNE)
+
+    model_save_name = 'cifar10_classifier'
+    path = F"{model_save_name}"
+
+    model_name = f"CIFAR-10_Classifier_{ds.cardinality().numpy()}"
+    model = keras.models.load_model(path)
+    model.summary()
+    return model, model_name, X, y, file_names
+
+
+def setup_inception_v1():
 
     import tensorflow as tf
     # from tf_slim.nets import inception_v1
@@ -190,7 +198,7 @@ def setupInceptionV1():
     return model, model_name, X, y, file_names
 
 
-def setupInceptionV3():
+def setup_inception_v3():
     import tensorflow_datasets as tfds
     import tensorflow as tf
     print(tf.__version__)
@@ -214,15 +222,16 @@ def setupInceptionV3():
     return model, model_name, X, y
 
 
-image_dir = Path(args.data_path, "MNIST")
-model, model_name, X, y, file_names = setupMNIST(image_dir)
-layers = ["conv2d", "max_pooling2d", "conv2d_1",
-          "max_pooling2d_1", "flatten", "dropout", "dense"]
-layers = ["conv2d_1"]
+# image_dir = Path(args.data_path, "MNIST")
+# model, model_name, X, y, file_names = setup_mnist(image_dir)
+image_dir = Path(args.data_path, "CIFAR10")
+model, model_name, X, y, file_names = setup_cifar10(image_dir)
+layers = [layer.name for layer in model.layers]
+#layers = ["conv2d_1"]
 layer = "conv2d_1"
 filterId = 0
 
-# model, model_name, X, y, file_names = setupInceptionV1()
+# model, model_name, X, y, file_names = setup_inception_v1()
 # layers = ['Mixed_4b_Concatenated', 'Mixed_5b_Concatenated']
 # layer = 'Mixed_4b_Concatenated'
 # filterId = 409

@@ -19,6 +19,7 @@ def export_config(image_dir, model_name, destination=EXPORT_LOCATION):
 
 def export_labels(labels, model_name, destination=EXPORT_LOCATION):
     class NpEncoder(json.JSONEncoder):
+        """ Helper for encoding numpy objects """
         def default(self, obj):
             if isinstance(obj, np.integer):
                 return int(obj)
@@ -72,7 +73,7 @@ def export_images(model, model_name, X, layers, agg_func=np.mean, destination=EX
 
 def export_image(path, name, array):
     image = np.squeeze(array)
-    if (len(image.shape)):
+    if image.shape[-1] == 1:
         image = Image.fromarray((image * 255).astype(np.uint8), 'L')
     else:
         image = Image.fromarray((image * 255).astype(np.uint8), 'RGB')
