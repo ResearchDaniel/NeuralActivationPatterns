@@ -44,11 +44,10 @@ def get_patterns(model, layer):
     return jsonify(patterns.to_json(orient="records"))
 
 
-@app.route('/api/get_labels/<model>')
-def get_labels(model):
-    with open(Path(DATA_DIR, model, 'labels.json')) as json_file:
-        data = json.load(json_file)
-    return jsonify(data)
+@app.route('/api/get_dataset/<model>')
+def get_dataset(model):
+    dataset = pd.read_pickle(Path(DATA_DIR, model, 'dataset.pkl'))
+    return jsonify(dataset.to_json(orient="records"))
 
 
 @app.route('/api/get_average/<model>/<layer>/<pattern>')

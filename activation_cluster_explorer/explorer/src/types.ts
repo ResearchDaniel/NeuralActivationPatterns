@@ -1,8 +1,10 @@
 export interface PatternForSample {
   patternId: number;
   probability: number;
-  outlier_score: number;
-  file_name: string;
+  outlierScore: number;
+  fileName: string;
+  label?: string;
+  prediction?: string;
 }
 
 export interface TooltipSpec {

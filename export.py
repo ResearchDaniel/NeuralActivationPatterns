@@ -7,6 +7,7 @@ import util
 import pandas as pd
 import tensorflow as tf
 import tensorflow_datasets as tfds
+import pandas as pd
 
 EXPORT_LOCATION = Path("activation_cluster_explorer/backend/data")
 
@@ -36,7 +37,7 @@ def export_patterns(model, model_name, X, layers, agg_func=np.mean, destination=
         patterns.to_pickle(Path(path, "patterns.pkl"))
 
 
-def export_images(model, model_name, X, layers, agg_func=np.mean, destination=EXPORT_LOCATION):
+def export_averages(model, model_name, X, layers, agg_func=np.mean, destination=EXPORT_LOCATION):
     indices = set()
     for layer in layers:
         patterns = nap.cache.get_layer_patterns(
@@ -53,12 +54,6 @@ def export_images(model, model_name, X, layers, agg_func=np.mean, destination=EX
             avg = tf.keras.layers.Average()(to_average).numpy()
             export_image(path, "average", avg)
 
-    images_path = Path(destination, model_name, "images")
-    images_path.mkdir(parents=True, exist_ok=True)
-    to_export = util.filter_tf_dataset(X, list(indices))
-    for index, image in zip(indices, to_export):
-        export_image(images_path, f"{index}", image)
-
 
 def export_image(path, name, array):
     image = np.squeeze(array)
@@ -73,4 +68,4 @@ def export_all(model, model_name, X, y, predictions, file_names, layers, image_d
     export_config(image_dir, model_name, destination)
     export_dataset(file_names, y, predictions, model_name, destination)
     export_patterns(model, model_name, X, layers, agg_func, destination)
-    export_images(model, model_name, X, layers, agg_func, destination)
+    export_averages(model, model_name, X, layers, agg_func, destination)

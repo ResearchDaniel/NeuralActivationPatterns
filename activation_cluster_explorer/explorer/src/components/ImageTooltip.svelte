@@ -3,12 +3,10 @@
   import { fade } from "svelte/transition";
   import { faChartBar } from "@fortawesome/free-solid-svg-icons/faChartBar";
   import { faTag } from "@fortawesome/free-solid-svg-icons/faTag";
+  import { faSignature } from "@fortawesome/free-solid-svg-icons/faSignature";
+  import { faRobot } from "@fortawesome/free-solid-svg-icons/faRobot";
 
   import { tooltip } from "../stores";
-  import type { PatternForSample } from "../types";
-
-  export let patterns: PatternForSample[];
-  export let labels: string[] | number[];
 
   let windowWidth = 0;
   let windowHeight = 0;
@@ -26,7 +24,7 @@
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} bind:innerHeight={windowHeight} />
-{#if $tooltip.hover && $tooltip.layer !== undefined && $tooltip.index !== undefined}
+{#if $tooltip.hover && $tooltip.layer !== undefined && $tooltip.sample !== undefined}
   <div
     class="text-sm fixed p-1 rounded text-text-dark shadow z-10 flex mt-4 mb-4"
     {style}
@@ -36,12 +34,24 @@
   >
     <div class="flex flex-col p-2 break-all">
       <div class="flex items-center">
-        <Fa icon={faTag} class="pr-2" />
-        <p>{labels[$tooltip.index]}</p>
+        <Fa icon={faSignature} class="pr-2" />
+        <p>{$tooltip.sample.fileName}</p>
       </div>
+      {#if $tooltip.sample.label !== undefined}
+        <div class="flex items-center">
+          <Fa icon={faTag} class="pr-2" />
+          <p>{$tooltip.sample.label}</p>
+        </div>
+      {/if}
+      {#if $tooltip.sample.prediction !== undefined}
+        <div class="flex items-center">
+          <Fa icon={faRobot} class="pr-2" />
+          <p>{$tooltip.sample.prediction}</p>
+        </div>
+      {/if}
       <div class="flex items-center">
         <Fa icon={faChartBar} class="pr-2" />
-        <p>{patterns[$tooltip.index].probability}</p>
+        <p>{$tooltip.sample.probability}</p>
       </div>
     </div>
   </div>
