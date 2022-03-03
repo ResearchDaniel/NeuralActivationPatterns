@@ -1,12 +1,18 @@
 <script lang="ts">
   import Header from "./header/Header.svelte";
   import Main from "./Main.svelte";
-  import Dropdown from "./components/Dropdown.svelte";
-  import LabeledComponent from "./components/LabeledComponent.svelte";
+  import Distribution from "./Distribution.svelte";
+  import type { PatternForSample } from "./types";
+  import Controls from "./Controls.svelte";
 
   let model: string = undefined;
   let layer: string = undefined;
   let layers: string[] = [];
+  let dataset: {
+    file_name: string;
+    label?: string;
+    prediction?: string;
+  }[] = [];
   const fetchModels = (async () => {
     const response = await fetch(`/api/get_models`);
     const jsonResponse = await response.json();
@@ -18,15 +24,29 @@
     fetch(`/api/get_layers/${model}`)
       .then((response) => response.json())
       .then((jsonResponse) => (layers = jsonResponse["layers"] as string[]));
+    fetch(`/api/get_dataset/${model}`)
+      .then((response) => response.json())
+      .then((jsonResponse) => (dataset = JSON.parse(jsonResponse)));
   }
-  $: fetchDataset = (async () => {
-    if (model !== undefined) {
-      const response = await fetch(`/api/get_dataset/${model}`);
-      const jsonResponse = await response.json();
-      return JSON.parse(jsonResponse);
-    } else {
+  $: fetchPatterns = (async () => {
+    if (dataset.length === 0 || model === undefined || layer === undefined)
       return [];
-    }
+    const response = await fetch(`/api/get_patterns/${model}/${layer}`);
+    const jsonResponse = await response.json();
+    const patterns = JSON.parse(jsonResponse);
+    if (patterns.length !== dataset.length) return [];
+    return patterns
+      .map((pattern, index) => {
+        return {
+          patternId: pattern.patternId,
+          probability: pattern.probability,
+          outlierScore: pattern.outlier_score,
+          fileName: dataset[index].file_name,
+          label: dataset[index].label,
+          prediction: dataset[index].prediction,
+        } as PatternForSample;
+      })
+      .filter((pattern) => pattern.patternId >= 0);
   })();
 </script>
 
@@ -35,27 +55,16 @@
     <Header />
     {#await fetchModels then models}
       <div class="flex flex-row p-2">
-        <LabeledComponent name={"Model"}>
-          <Dropdown
-            items={models}
-            bind:value={model}
-            on:change={() => {
-              layers = [];
-              layer = undefined;
-            }}
-          />
-        </LabeledComponent>
-        {#if model !== undefined && layers.length !== 0}
-          <LabeledComponent name={"Layer"}>
-            <Dropdown items={layers} bind:value={layer} />
-          </LabeledComponent>
-        {/if}
+        <Controls bind:layers bind:layer bind:model bind:dataset {models} />
+        {#await fetchPatterns then patterns}
+          <Distribution {patterns} />
+        {/await}
       </div>
-      {#await fetchDataset then dataset}
-        {#if layer !== undefined}
-          <Main {model} {layer} {dataset} />
-        {/if}
-      {/await}
+      {#if layer !== undefined && dataset.length !== 0}
+        {#await fetchPatterns then patterns}
+          <Main {model} {layer} {patterns} />
+        {/await}
+      {/if}
     {/await}
   </div>
 </main>

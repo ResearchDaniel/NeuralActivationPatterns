@@ -8,9 +8,9 @@
   export let layer: number;
 </script>
 
-<div class="flex">
+<div class="flex flex-wrap">
   {#each samples as sample, i}
-    <div class={i + 1 !== samples.length ? "pr-2" : ""}>
+    <div class:pr-2={i + 1 !== samples.length} class="pb-2">
       <PatternImage
         imagePath={`/api/get_image/${model}/${sample.fileName}`}
         {sample}

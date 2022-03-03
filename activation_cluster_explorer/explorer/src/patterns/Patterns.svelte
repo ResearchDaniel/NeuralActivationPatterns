@@ -5,25 +5,40 @@
   import type { PatternForSample } from "../types";
 
   export let patterns: PatternForSample[];
-
   export let model: string;
   export let layer: string;
 
-  $: patternIds = [...new Set(patterns.map((element) => element.patternId))]
-    .sort()
-    .filter((id) => id >= 0);
+  let selectedPattern: number | undefined;
+
+  $: patternIds = [
+    ...new Set(patterns.map((element) => element.patternId)),
+  ].sort();
 </script>
 
 <div class="flex flex-col min-h-0">
-  <SubHeading heading={"Clusters"} />
-  <div class="flex flex-col items-start overflow-y-auto min-h-0">
-    {#each patternIds as patternId}
-      <Pattern
-        samples={patterns.filter((sample) => sample.patternId === patternId)}
-        {patternId}
-        {model}
-        {layer}
-      />
-    {/each}
-  </div>
+  {#if selectedPattern === undefined}
+    <SubHeading heading={`Clusters (${patternIds.length})`} />
+    <div class="flex flex-col items-start overflow-y-auto min-h-0">
+      {#each patternIds as patternId}
+        <Pattern
+          samples={patterns.filter((sample) => sample.patternId === patternId)}
+          {patternId}
+          {model}
+          {layer}
+          on:zoom={() => (selectedPattern = patternId)}
+        />
+      {/each}
+    </div>
+  {:else}
+    <Pattern
+      samples={patterns.filter(
+        (sample) => sample.patternId === selectedPattern
+      )}
+      patternId={selectedPattern}
+      {model}
+      {layer}
+      on:zoom={() => (selectedPattern = undefined)}
+      expanded={true}
+    />
+  {/if}
 </div>
