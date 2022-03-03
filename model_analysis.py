@@ -24,7 +24,19 @@ def dir_path(string):
 parser = argparse.ArgumentParser(description="Running a model analysis run.")
 parser.add_argument("--data_path", type=dir_path,
                     default='D:/data/tensorflow_datasets')
+parser.add_argument("--aggregation",
+                    default='mean', choices=["mean", "max", "none"])
 args = parser.parse_args()
+
+
+def create_aggregation_function(name):
+    if name == "mean":
+        return np.mean
+    elif name == "max":
+        return np.max
+    elif name == "none":
+        return None
+    raise Exception(f"Invalid aggregation function: {name}")
 
 
 def plotly_annotation_index(nRows, nCols, i):
@@ -222,13 +234,8 @@ def setup_inception_v3():
     return model, model_name, X, y
 
 
-agg_func = None
 image_dir = Path(args.data_path, "MNIST")
 model, model_name, X, y, file_names = setup_mnist(image_dir)
-if agg_func is None:
-    model_name = f"{model_name}_no_agg"
-else:
-    model_name = f"{model_name}_{agg_func.__name__}"
 
 # image_dir = Path(args.data_path, "CIFAR10")
 # model, model_name, X, y, file_names = setup_cifar10(image_dir)
@@ -241,6 +248,13 @@ filterId = 0
 # layers = ['Mixed_4b_Concatenated', 'Mixed_5b_Concatenated']
 # layer = 'Mixed_4b_Concatenated'
 # filterId = 409
+
+agg_func = create_aggregation_function(args.aggregation)
+if agg_func is None:
+    model_name = f"{model_name}_no_agg"
+else:
+    model_name = f"{model_name}_{agg_func.__name__}"
+
 # nap.export_activations(X, model, model_name, layers=layers)
 # nap.export_layer_aggregation(X, model, model_name, layers=layers, agg_func=None)
 # nap.export_layer_patterns(X, model, model_name, layers=layers)
