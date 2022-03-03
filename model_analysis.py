@@ -222,12 +222,18 @@ def setup_inception_v3():
     return model, model_name, X, y
 
 
-# image_dir = Path(args.data_path, "MNIST")
-# model, model_name, X, y, file_names = setup_mnist(image_dir)
-image_dir = Path(args.data_path, "CIFAR10")
-model, model_name, X, y, file_names = setup_cifar10(image_dir)
-layers = [layer.name for layer in model.layers]
-#layers = ["conv2d_1"]
+agg_func = None
+image_dir = Path(args.data_path, "MNIST")
+model, model_name, X, y, file_names = setup_mnist(image_dir)
+if agg_func is None:
+    model_name = f"{model_name}_no_agg"
+else:
+    model_name = f"{model_name}_{agg_func.__name__}"
+
+# image_dir = Path(args.data_path, "CIFAR10")
+# model, model_name, X, y, file_names = setup_cifar10(image_dir)
+#layers = [layer.name for layer in model.layers]
+layers = ["conv2d_1"]
 layer = "conv2d_1"
 filterId = 0
 
@@ -235,10 +241,10 @@ filterId = 0
 # layers = ['Mixed_4b_Concatenated', 'Mixed_5b_Concatenated']
 # layer = 'Mixed_4b_Concatenated'
 # filterId = 409
-# export.export_activations(X, model, model_name, layers=layers)
-# export.export_layer_aggregation(X, model, model_name, layers=layers, agg_func=None)
-# export.export_layer_patterns(X, model, model_name, layers=layers)
-# export.export_filter_patterns(X, model, model_name, [layer], [filterId])
+# nap.export_activations(X, model, model_name, layers=layers)
+# nap.export_layer_aggregation(X, model, model_name, layers=layers, agg_func=None)
+# nap.export_layer_patterns(X, model, model_name, layers=layers)
+# nap.export_filter_patterns(X, model, model_name, [layer], [filterId])
 # X = X.take(10)
 # y = y.take(10)
 # X = X.batch(1)
@@ -318,4 +324,4 @@ def layer_analysis(model, model_name, X, y, layer):
 files = list(tfds.as_numpy(file_names))
 predictions = tf.argmax(model.predict(X.batch(128)), axis=1).numpy()
 export.export_all(model, model_name, X, y, predictions,
-                  files, layers, str(image_dir))
+                  files, layers, str(image_dir), agg_func=agg_func)
