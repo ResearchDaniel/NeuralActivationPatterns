@@ -62,7 +62,7 @@ def export_images(model, model_name, X, layers, agg_func=np.mean, destination=EX
 
 def export_image(path, name, array):
     image = np.squeeze(array)
-    if image.shape[-1] == 1:
+    if len(image.shape) == 2 or image.shape[-1] == 1:
         image = Image.fromarray((image * 255).astype(np.uint8), 'L')
     else:
         image = Image.fromarray((image * 255).astype(np.uint8), 'RGB')

@@ -44,7 +44,7 @@ def export_images(image_dir, dataset):
     image_dir.mkdir(parents=True, exist_ok=True)
     for i, item in dataset.enumerate():
         image = np.squeeze(item[0].numpy())
-        if image.shape[-1] == 1:
+        if len(image.shape) == 2 or image.shape[-1] == 1:
             image = Image.fromarray((image).astype(np.uint8), 'L')
         else:
             image = Image.fromarray((image).astype(np.uint8), 'RGB')
