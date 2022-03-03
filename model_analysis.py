@@ -315,4 +315,7 @@ def layer_analysis(model, model_name, X, y, layer):
 
 # layer_analysis(model, model_name, X, y, layer)
 # filter_analysis(model, model_name, X, y, layer, filterId)
-export.export_all(model, model_name, X, y, file_names, layers, str(image_dir))
+files = list(tfds.as_numpy(file_names))
+predictions = tf.argmax(model.predict(X.batch(128)), axis=1).numpy()
+export.export_all(model, model_name, X, y, predictions,
+                  files, layers, str(image_dir))

@@ -4,6 +4,8 @@ from PIL import Image
 import numpy as np
 import nap
 import util
+import tensorflow as tf
+import tensorflow_datasets as tfds
 
 EXPORT_LOCATION = Path("activation_cluster_explorer/backend/data")
 
@@ -17,37 +19,23 @@ def export_config(image_dir, model_name, destination=EXPORT_LOCATION):
         json.dump(config, outfile)
 
 
-def export_labels(labels, model_name, destination=EXPORT_LOCATION):
-    class NpEncoder(json.JSONEncoder):
-        """ Helper for encoding numpy objects """
-        def default(self, obj):
-            if isinstance(obj, np.integer):
-                return int(obj)
-            if isinstance(obj, np.floating):
-                return float(obj)
-            if isinstance(obj, np.ndarray):
-                return obj.tolist()
-            return super(NpEncoder, self).default(obj)
-
-    Path(destination, model_name).mkdir(parents=True, exist_ok=True)
-    with open(Path(destination, model_name, "labels.json"), 'w') as outfile:
-        json.dump(labels, outfile, cls=NpEncoder)
+def export_dataset(file_names, labels, predictions, model_name, destination=EXPORT_LOCATION):
+    path = Path(destination, model_name)
+    path.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"file_name": file_names, "label": labels,
+                 "prediction": predictions}).to_pickle(Path(path, "dataset.pkl"))
 
 
-def export_patterns(model, model_name, X, file_names, layers, agg_func=np.mean, destination=EXPORT_LOCATION):
-    import tensorflow_datasets as tfds
+def export_patterns(model, model_name, X, layers, agg_func=np.mean, destination=EXPORT_LOCATION):
     for layer in layers:
         path = Path(destination, model_name, "layers", str(layer))
         path.mkdir(parents=True, exist_ok=True)
         patterns = nap.cache.get_layer_patterns(
             X, model, model_name, layer, agg_func)
-        files = list(tfds.as_numpy(file_names))
-        patterns['file_name'] = files
         patterns.to_pickle(Path(path, "patterns.pkl"))
 
 
 def export_images(model, model_name, X, layers, agg_func=np.mean, destination=EXPORT_LOCATION):
-    import tensorflow as tf
     indices = set()
     for layer in layers:
         patterns = nap.cache.get_layer_patterns(
@@ -80,9 +68,8 @@ def export_image(path, name, array):
     image.save(Path(path, f"{name}.jpeg"))
 
 
-def export_all(model, model_name, X, y, file_names, layers, image_dir, agg_func=np.mean, destination=EXPORT_LOCATION):
+def export_all(model, model_name, X, y, predictions, file_names, layers, image_dir, agg_func=np.mean, destination=EXPORT_LOCATION):
     export_config(image_dir, model_name, destination)
-    export_labels(y, model_name, destination)
-    export_patterns(model, model_name, X, file_names,
-                    layers, agg_func, destination)
+    export_dataset(file_names, y, predictions, model_name, destination)
+    export_patterns(model, model_name, X, layers, agg_func, destination)
     export_images(model, model_name, X, layers, agg_func, destination)
