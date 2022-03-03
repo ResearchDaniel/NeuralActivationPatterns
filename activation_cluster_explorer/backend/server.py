@@ -56,23 +56,11 @@ def get_average(model, layer, pattern):
     return send_file(Path(DATA_DIR, model, "layers", layer, pattern, 'average.jpeg'), mimetype='image/jpeg')
 
 
-@app.route('/api/get_centers/<model>/<layer>/<pattern>')
-def get_centers(model, layer, pattern):
-    with open(Path(DATA_DIR, model, "layers", layer, pattern, 'centers.json')) as json_file:
-        data = json.load(json_file)
-    return jsonify(data)
-
-
-@app.route('/api/get_outliers/<model>/<layer>/<pattern>')
-def get_outliers(model, layer, pattern):
-    with open(Path(DATA_DIR, model, "layers", layer, pattern, 'outliers.json')) as json_file:
-        data = json.load(json_file)
-    return jsonify(data)
-
-
 @app.route('/api/get_image/<model>/<id>')
 def get_image(model, id):
-    return send_file(Path(DATA_DIR, model, 'images', f'{id}.jpeg'), mimetype='image/jpeg')
+    with open(Path(DATA_DIR, model, 'config.json')) as json_file:
+        data = json.load(json_file)
+    return send_file(Path(data["data_path"], id), mimetype='image/jpeg')
 
 
 if __name__ == '__main__':

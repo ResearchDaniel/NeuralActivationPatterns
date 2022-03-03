@@ -132,3 +132,5 @@ dmypy.json
 .pyre/
 
 activation_cluster_explorer/backend/data
+activation_cluster_explorer/backend/images
+results/
