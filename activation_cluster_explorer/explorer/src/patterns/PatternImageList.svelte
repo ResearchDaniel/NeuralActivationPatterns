@@ -12,7 +12,7 @@
   {#each samples as sample, i}
     <div class={i + 1 !== samples.length ? "pr-2" : ""}>
       <PatternImage
-        imagePath={`/api/get_image/${model}/${sample.file_name}`}
+        imagePath={`/api/get_image/${model}/${sample.fileName}`}
         {sample}
         {layer}
       />

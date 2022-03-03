@@ -7,7 +7,6 @@
   import type { PatternForSample } from "./types";
 
   export let patterns: PatternForSample[];
-  export let labels: string[] | number[];
 
   const spec: VisualizationSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
@@ -27,12 +26,7 @@
   };
 
   $: data = {
-    table: patterns.map((pattern, index) => {
-      return {
-        ...pattern,
-        label: labels[index],
-      };
-    }),
+    table: patterns,
   };
 </script>
 

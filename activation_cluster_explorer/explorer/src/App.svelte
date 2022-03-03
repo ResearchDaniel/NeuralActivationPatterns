@@ -19,11 +19,12 @@
       .then((response) => response.json())
       .then((jsonResponse) => (layers = jsonResponse["layers"] as string[]));
   }
-  $: fetchLabels = (async () => {
+  $: fetchDataset = (async () => {
     if (model !== undefined) {
-      const response = await fetch(`/api/get_labels/${model}`);
+      const response = await fetch(`/api/get_dataset/${model}`);
       const jsonResponse = await response.json();
-      return jsonResponse;
+      console.log(jsonResponse);
+      return JSON.parse(jsonResponse);
     } else {
       return [];
     }
@@ -51,9 +52,9 @@
           </LabeledComponent>
         {/if}
       </div>
-      {#await fetchLabels then labels}
+      {#await fetchDataset then dataset}
         {#if layer !== undefined}
-          <Main {model} {layer} {labels} />
+          <Main {model} {layer} {dataset} />
         {/if}
       {/await}
     {/await}
