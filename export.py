@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 import nap
 import util
+import pandas as pd
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
