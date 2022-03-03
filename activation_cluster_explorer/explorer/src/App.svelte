@@ -23,7 +23,6 @@
     if (model !== undefined) {
       const response = await fetch(`/api/get_dataset/${model}`);
       const jsonResponse = await response.json();
-      console.log(jsonResponse);
       return JSON.parse(jsonResponse);
     } else {
       return [];
