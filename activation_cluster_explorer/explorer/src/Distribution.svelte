@@ -3,6 +3,7 @@
 
   import type { VisualizationSpec } from "vega-embed";
   import { VegaLite } from "svelte-vega";
+  import type { EmbedOptions } from "vega-embed";
 
   import type { PatternForSample } from "./types";
 
@@ -10,27 +11,22 @@
 
   const spec: VisualizationSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    mark: "circle",
-    data: {
-      name: "table",
-    },
+    mark: { type: "circle", tooltip: true },
+    data: { name: "table" },
     encoding: {
-      x: {
-        field: "patternId",
-      },
-      y: {
-        field: "label",
-      },
+      x: { field: "patternId" },
+      y: { field: "label" },
       size: { aggregate: "count" },
     },
   };
+  const options = {
+    actions: false,
+  } as EmbedOptions;
 
-  $: data = {
-    table: patterns,
-  };
+  $: data = { table: patterns };
 </script>
 
 <div class="flex flex-col">
   <SubHeading heading={"Distribution"} />
-  <VegaLite {data} {spec} />
+  <VegaLite {data} {spec} {options} />
 </div>

@@ -1,15 +1,13 @@
 <script lang="ts">
   import SubSubHeading from "../components/SubSubHeading.svelte";
-  import { numCenters, numOutliers } from "../stores";
   import type { PatternForSample } from "../types";
-  import PatternImage from "./PatternImage.svelte";
-  import PatternImageList from "./PatternImageList.svelte";
   import AllPatternImages from "./AllPatternImages.svelte";
   import Fa from "svelte-fa";
   import { faExpand } from "@fortawesome/free-solid-svg-icons/faExpand";
   import { faCompress } from "@fortawesome/free-solid-svg-icons/faCompress";
   import { createEventDispatcher } from "svelte";
   import IconButton from "../components/IconButton.svelte";
+  import PatternOverview from "./PatternOverview.svelte";
 
   export let samples: PatternForSample[];
   export let patternId: number;
@@ -22,8 +20,6 @@
   $: sortedSamples = samples.sort(
     (a: PatternForSample, b: PatternForSample) => b.probability - a.probability
   );
-  $: centers = sortedSamples.slice(0, $numCenters);
-  $: outliers = sortedSamples.slice(-$numOutliers);
 
   function forwardZoomClicked() {
     dispatch("zoom");
@@ -31,7 +27,7 @@
 </script>
 
 <div
-  class="flex flex-col mt-4 p-2 border-midgrey border rounded-md"
+  class="flex flex-col mt-4 p-2 border-midgrey border rounded-md w-full"
   class:min-h-0={expanded}
 >
   <div class="flex">
@@ -44,22 +40,7 @@
     </div>
   </div>
   <div class="flex flex-col" class:min-h-0={expanded}>
-    <div class="flex">
-      <div class="flex flex-col pr-4">
-        <p>Average</p>
-        <PatternImage
-          imagePath={`/api/get_average/${model}/${layer}/${patternId}`}
-        />
-      </div>
-      <div class="flex flex-col pr-4">
-        <p>Centers</p>
-        <PatternImageList {model} samples={centers} {layer} />
-      </div>
-      <div class="flex flex-col">
-        <p>Outliers</p>
-        <PatternImageList {model} samples={outliers} {layer} />
-      </div>
-    </div>
+    <PatternOverview samples={sortedSamples} {model} {layer} {patternId} />
     {#if expanded}
       <AllPatternImages {samples} {model} {layer} />
     {/if}
