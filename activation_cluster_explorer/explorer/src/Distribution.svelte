@@ -6,6 +6,7 @@
   import type { EmbedOptions } from "vega-embed";
 
   import type { PatternForSample } from "./types";
+  import { themeConfig } from "./constants";
 
   export let patterns: PatternForSample[];
 
@@ -21,6 +22,7 @@
   };
   const options = {
     actions: false,
+    config: themeConfig,
   } as EmbedOptions;
 
   $: data = { table: patterns };

@@ -4,6 +4,7 @@
   import type { PatternForSample } from "../types";
 
   import { numCenters, numOutliers } from "../stores";
+  import { themeConfig } from "../constants";
 
   import type { VegaLiteSpec } from "svelte-vega";
   import type { EmbedOptions } from "vega-embed";
@@ -21,23 +22,12 @@
     height: 100,
     mark: { type: "bar", tooltip: true },
     encoding: {
-      x: { bin: true, field: "probability" },
-      y: { aggregate: "count", title: "samples" },
-    },
-  };
-  const labelPredictionSpec: VegaLiteSpec = {
-    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    description: "A simple bar chart with embedded data.",
-    data: { name: "table" },
-    width: 100,
-    height: 100,
-    mark: "bar",
-    encoding: {
-      x: { field: "label", type: "nominal" },
-      y: { field: "samples", type: "quantitative" },
+      y: { bin: true, field: "probability" },
+      x: { aggregate: "count", title: "samples" },
     },
   };
   const options = {
+    config: themeConfig,
     actions: false,
   } as EmbedOptions;
 
@@ -73,10 +63,10 @@
     },
     width: 100,
     height: 100,
-    mark: "bar",
+    mark: { type: "bar", tooltip: true },
     encoding: {
-      x: { field: "label", type: "nominal" },
-      y: { field: "samples", type: "quantitative" },
+      y: { field: "label", type: "nominal" },
+      x: { field: "samples", type: "quantitative" },
     },
   } as VegaLiteSpec;
   $: predictionSpec = {
@@ -92,10 +82,10 @@
     },
     width: 100,
     height: 100,
-    mark: "bar",
+    mark: { type: "bar", tooltip: true },
     encoding: {
-      x: { field: "prediction", type: "nominal" },
-      y: { field: "samples", type: "quantitative" },
+      y: { field: "prediction", type: "nominal" },
+      x: { field: "samples", type: "quantitative" },
     },
   } as VegaLiteSpec;
 </script>
