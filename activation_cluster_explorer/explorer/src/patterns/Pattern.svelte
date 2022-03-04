@@ -30,7 +30,10 @@
   }
 </script>
 
-<div class="flex flex-col mt-4 p-2 border-midgrey border rounded-md">
+<div
+  class="flex flex-col mt-4 p-2 border-midgrey border rounded-md"
+  class:min-h-0={expanded}
+>
   <div class="flex">
     <SubSubHeading heading={`ID: ${patternId}`} />
     <SubSubHeading heading={`Size: ${samples.length}`} />
@@ -40,19 +43,19 @@
       </IconButton>
     </div>
   </div>
-  <div class="flex flex-col">
+  <div class="flex flex-col" class:min-h-0={expanded}>
     <div class="flex">
-      <div class="flex flex-col">
+      <div class="flex flex-col pr-4">
         <p>Average</p>
         <PatternImage
           imagePath={`/api/get_average/${model}/${layer}/${patternId}`}
         />
       </div>
-      <div class="flex flex-col pl-4 ">
+      <div class="flex flex-col pr-4">
         <p>Centers</p>
         <PatternImageList {model} samples={centers} {layer} />
       </div>
-      <div class="flex flex-col pl-4 ">
+      <div class="flex flex-col">
         <p>Outliers</p>
         <PatternImageList {model} samples={outliers} {layer} />
       </div>

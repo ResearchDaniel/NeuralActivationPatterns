@@ -7,7 +7,7 @@
   export let layer: string;
 </script>
 
-<div class="flex flex-col">
+<div class="flex flex-col min-h-0">
   <p>All Samples</p>
   <PatternImageList {model} {samples} {layer} />
 </div>
