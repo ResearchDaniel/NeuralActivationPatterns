@@ -3,10 +3,10 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 import nap
+import nap.cache
 import util
 import pandas as pd
 import tensorflow as tf
-import tensorflow_datasets as tfds
 import pandas as pd
 
 EXPORT_LOCATION = Path("activation_cluster_explorer/backend/data")
