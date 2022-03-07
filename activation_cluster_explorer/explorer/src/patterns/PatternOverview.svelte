@@ -22,8 +22,8 @@
     height: 100,
     mark: { type: "bar", tooltip: true },
     encoding: {
-      y: { bin: true, field: "probability" },
-      x: { aggregate: "count", title: "samples" },
+      x: { bin: true, field: "probability" },
+      y: { aggregate: "count", title: "samples" },
     },
   };
   const options = {
@@ -61,12 +61,11 @@
         };
       }),
     },
-    width: 100,
     height: 100,
     mark: { type: "bar", tooltip: true },
     encoding: {
-      y: { field: "label", type: "nominal" },
-      x: { field: "samples", type: "quantitative" },
+      x: { field: "label", type: "nominal" },
+      y: { field: "samples", type: "quantitative" },
     },
   } as VegaLiteSpec;
   $: predictionSpec = {
@@ -80,12 +79,11 @@
         };
       }),
     },
-    width: 100,
     height: 100,
     mark: { type: "bar", tooltip: true },
     encoding: {
-      y: { field: "prediction", type: "nominal" },
-      x: { field: "samples", type: "quantitative" },
+      x: { field: "prediction", type: "nominal" },
+      y: { field: "samples", type: "quantitative" },
     },
   } as VegaLiteSpec;
 </script>

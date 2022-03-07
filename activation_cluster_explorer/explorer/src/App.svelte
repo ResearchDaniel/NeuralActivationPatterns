@@ -4,6 +4,9 @@
   import Distribution from "./Distribution.svelte";
   import type { PatternForSample } from "./types";
   import Controls from "./Controls.svelte";
+  import ImageTooltip from "./components/ImageTooltip.svelte";
+  import PatternCompare from "./patterns/PatternCompare.svelte";
+  import { selectedPage } from "./stores";
 
   let model: string = undefined;
   let layer: string = undefined;
@@ -38,6 +41,9 @@
     return patterns
       .map((pattern, index) => {
         return {
+          patternUid: `${model}_${layer}_${pattern.patternId}`,
+          model: model,
+          layer: layer,
           patternId: pattern.patternId,
           probability: pattern.probability,
           outlierScore: pattern.outlier_score,
@@ -53,20 +59,25 @@
 <main class="h-full">
   <div class="flex flex-col" style="height: 100%;">
     <Header />
-    {#await fetchModels then models}
-      <div class="flex flex-row p-2">
-        <Controls bind:layers bind:layer bind:model bind:dataset {models} />
-        {#await fetchPatterns then patterns}
-          <Distribution {patterns} />
-        {/await}
-      </div>
-      {#if layer !== undefined && dataset.length !== 0}
-        {#await fetchPatterns then patterns}
-          <Main {model} {layer} {patterns} />
-        {/await}
-      {/if}
-    {/await}
+    {#if $selectedPage === "Overview"}
+      {#await fetchModels then models}
+        <div class="flex flex-row p-2">
+          <Controls bind:layers bind:layer bind:model bind:dataset {models} />
+          {#await fetchPatterns then patterns}
+            <Distribution {patterns} />
+          {/await}
+        </div>
+        {#if layer !== undefined && dataset.length !== 0}
+          {#await fetchPatterns then patterns}
+            <Main {patterns} />
+          {/await}
+        {/if}
+      {/await}
+    {:else}
+      <PatternCompare />
+    {/if}
   </div>
+  <ImageTooltip />
 </main>
 
 <style global lang="postcss">
