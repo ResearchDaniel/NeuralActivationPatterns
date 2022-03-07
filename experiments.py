@@ -4,7 +4,7 @@ import subprocess
 import sys
  
 models = ["mnist"]
-layers = ["conv2D_1"]
+layers = ["conv2d_1"]
 aggregations = ["mean_std"]
 data_set_sizes = range(10000, 60000, 10000)
 # Batch processing for computing NAPs
