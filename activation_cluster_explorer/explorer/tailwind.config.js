@@ -34,26 +34,8 @@ module.exports = {
       button: '#0071e3',
       button_hover: '#0077ed',
     },
-    extend: {
-      maxHeight: {
-        XS: '250px',
-        S: '500px',
-        M: '750px',
-        L: '1000px',
-        XL: '1250px',
-        XXL: '1500px',
-      },
-      height: {
-        XS: '250px',
-        S: '500px',
-        M: '750px',
-        L: '1000px',
-        XL: '1250px',
-        XXL: '1500px',
-      },
-    },
     minWidth: {
-      'network': '600px',
+      'compare': '600px',
     },
   },
   fontFamily: {

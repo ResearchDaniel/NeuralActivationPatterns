@@ -15,8 +15,8 @@
     mark: { type: "circle", tooltip: true },
     data: { name: "table" },
     encoding: {
-      x: { field: "patternId" },
-      y: { field: "label" },
+      x: { field: "label" },
+      y: { field: "patternId" },
       size: { aggregate: "count" },
     },
   };

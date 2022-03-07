@@ -4,53 +4,20 @@
 
   import type { PatternForSample } from "../types";
 
-  import { fade } from "svelte/transition";
-
   export let patterns: PatternForSample[];
-  export let model: string;
-  export let layer: string;
-
-  let selectedPattern: number | undefined;
 
   $: patternIds = [
     ...new Set(patterns.map((element) => element.patternId)),
   ].sort();
 </script>
 
-{#if selectedPattern === undefined}
-  <div
-    class="flex flex-col min-h-0"
-    out:fade={{ duration: 200 }}
-    in:fade={{ duration: 200, delay: 200 }}
-  >
-    <SubHeading heading={`Clusters (${patternIds.length})`} />
-    <div class="flex flex-col items-start overflow-y-auto min-h-0">
-      {#each patternIds as patternId}
-        <Pattern
-          samples={patterns.filter((sample) => sample.patternId === patternId)}
-          {patternId}
-          {model}
-          {layer}
-          on:zoom={() => (selectedPattern = patternId)}
-        />
-      {/each}
-    </div>
+<div class="flex flex-col min-h-0">
+  <SubHeading heading={`Clusters (${patternIds.length})`} />
+  <div class="flex flex-col items-start overflow-y-auto min-h-0">
+    {#each patternIds as patternId}
+      <Pattern
+        samples={patterns.filter((sample) => sample.patternId === patternId)}
+      />
+    {/each}
   </div>
-{:else}
-  <div
-    class="flex flex-col min-h-0"
-    out:fade={{ duration: 200 }}
-    in:fade={{ duration: 200, delay: 200 }}
-  >
-    <Pattern
-      samples={patterns.filter(
-        (sample) => sample.patternId === selectedPattern
-      )}
-      patternId={selectedPattern}
-      {model}
-      {layer}
-      on:zoom={() => (selectedPattern = undefined)}
-      expanded={true}
-    />
-  </div>
-{/if}
+</div>
