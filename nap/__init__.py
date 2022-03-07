@@ -1,3 +1,9 @@
+from ._Aggregation import AggregationInterface
+from ._Aggregation import NoAggregation
+from ._Aggregation import MeanAggregation
+from ._Aggregation import MeanStdAggregation
+from ._Aggregation import MaxAggregation
+
 from ._NeuralActivationPattern import NeuralActivationPattern
 from ._NeuralActivationPattern import sort
 from ._NeuralActivationPattern import sample

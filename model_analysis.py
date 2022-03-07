@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser(description="Running a model analysis run.")
 parser.add_argument("--data_path", type=dir_path,
                     default='D:/data/tensorflow_datasets')
 parser.add_argument("--aggregation",
-                    default='mean', choices=["mean", "max", "none"])
+                    default='mean', choices=["mean", "mean_std", "max", "none"])
 parser.add_argument("--size", type=int,
                     default=2000)
 args = parser.parse_args()
@@ -33,11 +33,13 @@ args = parser.parse_args()
 
 def create_aggregation_function(name):
     if name == "mean":
-        return np.mean
+        return nap.MeanAggregation()
+    elif name == "mean_std":
+        return nap.MeanStdAggregation()
     elif name == "max":
-        return np.max
+        return nap.MeanAggregation()
     elif name == "none":
-        return None
+        return nap.NoAggregation()
     raise Exception(f"Invalid aggregation function: {name}")
 
 
@@ -166,6 +168,7 @@ def setup_inception_v3():
     print(model.summary())
     return model, model_name, X, y
 
+
 data_set_size = args.size
 image_dir = Path(args.data_path, "MNIST")
 model, model_name, X, y, file_names = setup_mnist(image_dir, data_set_size)
@@ -187,7 +190,7 @@ agg_func = create_aggregation_function(args.aggregation)
 if agg_func is None:
     model_name = f"{model_name}_no_agg"
 else:
-    model_name = f"{model_name}_{agg_func.__name__}"
+    model_name = f"{model_name}_{agg_func.__class__.__name__}"
 
 # nap.cache.export_activations(X, model, model_name, layers=layers)
 # nap.cache.export_layer_aggregation(X, model, model_name, layers=layers, agg_func=None)
@@ -204,6 +207,7 @@ y = list(tfds.as_numpy(y))
 #layer_analysis(model, model_name, X, y, layer)
 # filter_analysis(model, model_name, X, y, layer, filterId)
 files = list(tfds.as_numpy(file_names))
-predictions = tf.argmax(model.predict(X.batch(128)), axis=1).numpy()
+predictions = tf.argmax(model.predict(
+    X.batch(128).cache().prefetch(tf.data.AUTOTUNE)), axis=1).numpy()
 export.export_all(model, model_name, X, y, predictions,
                   files, layers, str(image_dir), agg_func=agg_func)

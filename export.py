@@ -28,7 +28,7 @@ def export_dataset(file_names, labels, predictions, model_name, destination=EXPO
                  "prediction": predictions}).to_pickle(Path(path, "dataset.pkl"))
 
 
-def export_patterns(model, model_name, X, layers, agg_func=np.mean, destination=EXPORT_LOCATION):
+def export_patterns(model, model_name, X, layers, agg_func, destination=EXPORT_LOCATION):
     for layer in layers:
         path = Path(destination, model_name, "layers", str(layer))
         path.mkdir(parents=True, exist_ok=True)
@@ -37,7 +37,7 @@ def export_patterns(model, model_name, X, layers, agg_func=np.mean, destination=
         patterns.to_pickle(Path(path, "patterns.pkl"))
 
 
-def export_averages(model, model_name, X, layers, agg_func=np.mean, destination=EXPORT_LOCATION):
+def export_averages(model, model_name, X, layers, agg_func, destination=EXPORT_LOCATION):
     indices = set()
     for layer in layers:
         patterns = nap.cache.get_layer_patterns(
@@ -64,7 +64,7 @@ def export_image(path, name, array):
     image.save(Path(path, f"{name}.jpeg"))
 
 
-def export_all(model, model_name, X, y, predictions, file_names, layers, image_dir, agg_func=np.mean, destination=EXPORT_LOCATION):
+def export_all(model, model_name, X, y, predictions, file_names, layers, image_dir, agg_func, destination=EXPORT_LOCATION):
     export_config(image_dir, model_name, destination)
     export_dataset(file_names, y, predictions, model_name, destination)
     export_patterns(model, model_name, X, layers, agg_func, destination)

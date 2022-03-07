@@ -1,6 +1,7 @@
 import h5py
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 import nap
 from pathlib import Path
 
@@ -15,7 +16,7 @@ def activations_agg_path(destination, model_name, layer, agg_func):
     if agg_func is None:
         return Path(destination, model_name, layer, f'layer_activations_no_agg.h5')
     else:
-        return Path(destination, model_name, layer, f'layer_activations_{agg_func.__name__}.h5')
+        return Path(destination, model_name, layer, f'layer_activations_{agg_func.__class__.__name__}.h5')
 
 
 def layer_patterns_path(destination, model_name, layer):
@@ -37,11 +38,8 @@ def export_activations(X, model, model_name, layers, destination=CACHE_LOCATION,
             # Dummy computation to get the output shape
             activations = ap.layer_activations(layer, X.take(1).batch(1))
             output_shape = list(activations.shape)
-            # Ignore first entry, which is batch size
-            agg_shape = nap.layer_activation_aggregation_shape(
-                output_shape[1:])
             total_num_inputs = X.cardinality().numpy()
-
+            # Ignore first entry, which is batch size
             output_shape[0] = total_num_inputs
             bytes_per_float = 4
             num_activations_in_one_MB = min(total_num_inputs, max(
@@ -50,7 +48,7 @@ def export_activations(X, model, model_name, layers, destination=CACHE_LOCATION,
             dset = f.create_dataset(
                 "activations", output_shape, compression="gzip", chunks=chunk_size)
             i = 0
-            for ds in X.batch(batch_size):
+            for ds in X.batch(batch_size).cache().prefetch(tf.data.AUTOTUNE):
                 ap = nap.NeuralActivationPattern(model)
                 num_inputs = ds.shape[0]
                 activations = ap.layer_activations(layer, ds)
@@ -58,7 +56,7 @@ def export_activations(X, model, model_name, layers, destination=CACHE_LOCATION,
                 i += num_inputs
 
 
-def export_layer_aggregation(X, model, model_name, layers, agg_func=np.mean, destination=CACHE_LOCATION):
+def export_layer_aggregation(X, model, model_name, layers, agg_func, destination=CACHE_LOCATION):
     ap = nap.NeuralActivationPattern(model)
     for layer in layers:
         act_path = activations_path(destination, model_name, layer)
@@ -67,8 +65,7 @@ def export_layer_aggregation(X, model, model_name, layers, agg_func=np.mean, des
         with h5py.File(act_path, 'r') as f_act:
             activations = f_act["activations"]
             output_shape = list(activations.shape)
-            agg_shape = nap.layer_activation_aggregation_shape(
-                output_shape[1:], agg_func)
+            agg_shape = agg_func.shape(output_shape[1:])
 
             total_num_inputs = output_shape[0]
             agg_path = activations_agg_path(
@@ -91,11 +88,11 @@ def export_layer_aggregation(X, model, model_name, layers, agg_func=np.mean, des
                 for chunk in activations.iter_chunks():
                     data = activations[chunk]
                     dset_aggregated[i:i+data.shape[0]
-                                    ] = nap.layer_activations_aggregation(data, agg_func)
+                                    ] = [agg_func.aggregate(ap.layer(layer), activation) for activation in data]
                     i += data.shape[0]
 
 
-def export_layer_patterns(X, model, model_name, layers, agg_func=np.mean, destination=CACHE_LOCATION):
+def export_layer_patterns(X, model, model_name, layers, agg_func, destination=CACHE_LOCATION):
     ap = nap.NeuralActivationPattern(model)
     for layer in layers:
         activations, f = get_layer_activations_agg(
@@ -132,7 +129,7 @@ def get_layer_activations(X, model, model_name, layer, destination=CACHE_LOCATIO
     return f["activations"], f
 
 
-def get_layer_activations_agg(X, model, model_name, layer, agg_func=np.mean, destination=CACHE_LOCATION):
+def get_layer_activations_agg(X, model, model_name, layer, agg_func, destination=CACHE_LOCATION):
     path = activations_agg_path(destination, model_name, layer, agg_func)
     if not path.exists():
         export_layer_aggregation(X, model, model_name, [
@@ -141,7 +138,7 @@ def get_layer_activations_agg(X, model, model_name, layer, agg_func=np.mean, des
     return f["activations"], f
 
 
-def get_layer_patterns(X, model, model_name, layer, agg_func=np.mean, destination=CACHE_LOCATION):
+def get_layer_patterns(X, model, model_name, layer, agg_func, destination=CACHE_LOCATION):
     path = layer_patterns_path(destination, model_name, layer)
     if not path.exists():
         export_layer_patterns(X, model, model_name, [

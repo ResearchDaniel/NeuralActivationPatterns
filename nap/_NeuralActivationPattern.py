@@ -1,6 +1,7 @@
 import numpy as np
 import plotly.express as px
 import pandas as pd
+from . import AggregationInterface
 
 
 def lazyproperty(func):
@@ -135,6 +136,9 @@ class NeuralActivationPattern:
             layer_names = [layer.name for layer in self.model.layers]
             return layer_names.index(layer_name)
 
+    def layer(self, layer):
+        return self.model.layers[self.layerIdx(layer)]
+
     def activity_patterns(self, path, X=None, activations=None):
         """ Get activity patterns for a layer, or a filter within a layer
             Returns:
@@ -216,8 +220,8 @@ class NeuralActivationPattern:
     def layer_patterns(self, layer, X=None, agg_activations=None):
         if not agg_activations:
             activations = self.layer_activations(layer, X)
-            agg_activations = layer_activations_aggregation(
-                activations, self.agg_func)
+            agg_activations = self.agg_func.aggregate(
+                self.layer(layer), activations)
         import hdbscan
         clusterer = hdbscan.HDBSCAN()
         clusterer.fit(agg_activations)
