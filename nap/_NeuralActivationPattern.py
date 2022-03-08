@@ -223,7 +223,7 @@ class NeuralActivationPattern:
             agg_activations = self.agg_func.aggregate(
                 self.layer(layer), activations)
         import hdbscan
-        clusterer = hdbscan.HDBSCAN()
+        clusterer = hdbscan.HDBSCAN(cluster_selection_method='leaf')
         clusterer.fit(agg_activations)
         print(
             F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}")
