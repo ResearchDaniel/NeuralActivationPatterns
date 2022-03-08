@@ -23,8 +23,16 @@ def layer_patterns_path(destination, model_name, layer):
     return Path(destination, model_name, layer, 'layer_patterns.h5')
 
 
+def layer_patterns_info_path(destination, model_name, layer):
+    return Path(destination, model_name, layer, 'layer_patterns_info.h5')
+
+
 def filter_patterns_path(destination, model_name, layer, filter):
     return Path(destination, model_name, layer, 'filters', f'{filter}.h5')
+
+
+def filter_patterns_info_path(destination, model_name, layer, filter):
+    return Path(destination, model_name, layer, 'filters', f'{filter}_info.h5')
 
 
 def export_activations(X, model, model_name, layers, destination=CACHE_LOCATION, mode='w'):
@@ -97,10 +105,14 @@ def export_layer_patterns(X, model, model_name, layers, agg_func, destination=CA
     for layer in layers:
         activations, f = get_layer_activations_agg(
             X, model, model_name, layer, agg_func, destination)
-        patterns = ap.activity_patterns(layer, activations=activations)
+        patterns, pattern_info = ap.activity_patterns(
+            layer, activations=activations)
         patterns_path = layer_patterns_path(destination, model_name, layer)
         f.close()
         patterns.to_hdf(patterns_path, f'{layer}')
+        patterns_info_path = layer_patterns_info_path(
+            destination, model_name, layer)
+        pattern_info.to_hdf(patterns_info_path, f'{layer}')
 
 
 def export_filter_patterns(X, model, model_name, layers, filters=None, destination=CACHE_LOCATION):
@@ -113,11 +125,14 @@ def export_filter_patterns(X, model, model_name, layers, filters=None, destinati
             filters = range(activations.shape[-1])
         for filter in filters:
             # [()] retireves all data because slicing the filter is super-slow in hdf5
-            patterns = ap.activity_patterns(
+            patterns, patterns_info = ap.activity_patterns(
                 f'{layer}:{filter}', activations=activations[()])
             path = filter_patterns_path(destination, model_name, layer, filter)
             path.parent.mkdir(parents=True, exist_ok=True)
             patterns.to_hdf(path, f'{layer}/filter_{filter}')
+            patterns_info_path = filter_patterns_info_path(
+                destination, model_name, layer, filter)
+            pattern_info.to_hdf(patterns_info_path, f'{layer}/filter_{filter}')
         f.close()
 
 
@@ -140,15 +155,18 @@ def get_layer_activations_agg(X, model, model_name, layer, agg_func, destination
 
 def get_layer_patterns(X, model, model_name, layer, agg_func, destination=CACHE_LOCATION):
     path = layer_patterns_path(destination, model_name, layer)
-    if not path.exists():
+    info_path = layer_patterns_info_path(destination, model_name, layer)
+    if not path.exists() or not info_path.exists():
         export_layer_patterns(X, model, model_name, [
                               layer], agg_func, destination)
-    return pd.read_hdf(path)
+    return pd.read_hdf(path), pd.read_hdf(info_path)
 
 
 def get_filter_patterns(X, model, model_name, layer, filter, destination=CACHE_LOCATION):
     path = filter_patterns_path(destination, model_name, layer, filter)
-    if not path.exists():
+    info_path = filter_patterns_info_path(
+        destination, model_name, layer, filter)
+    if not path.exists() or not info_path.exists():
         export_filter_patterns(X, model, model_name, [
                                layer], [filter], destination)
-    return pd.read_hdf(path)
+    return pd.read_hdf(path), pd.read_hdf(info_path)

@@ -32,15 +32,16 @@ def export_patterns(model, model_name, X, layers, agg_func, destination=EXPORT_L
     for layer in layers:
         path = Path(destination, model_name, "layers", str(layer))
         path.mkdir(parents=True, exist_ok=True)
-        patterns = nap.cache.get_layer_patterns(
+        patterns, info = nap.cache.get_layer_patterns(
             X, model, model_name, layer, agg_func)
         patterns.to_pickle(Path(path, "patterns.pkl"))
+        info.to_pickle(Path(path, "patterns_info.pkl"))
 
 
 def export_averages(model, model_name, X, layers, agg_func, destination=EXPORT_LOCATION):
     indices = set()
     for layer in layers:
-        patterns = nap.cache.get_layer_patterns(
+        patterns, _ = nap.cache.get_layer_patterns(
             X, model, model_name, layer, agg_func)
         sorted_patterns = nap.sort(patterns)
         for pattern_id, pattern in sorted_patterns.groupby('patternId'):

@@ -227,7 +227,11 @@ class NeuralActivationPattern:
         clusterer.fit(agg_activations)
         print(
             F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}")
-        return pd.DataFrame({"patternId": clusterer.labels_, "probability": clusterer.probabilities_, "outlier_score": clusterer.outlier_scores_})
+        patterns = pd.DataFrame({"patternId": clusterer.labels_,
+                                "probability": clusterer.probabilities_, "outlier_score": clusterer.outlier_scores_})
+        pattern_info = pd.DataFrame(
+            {"pattern_persistence": clusterer.cluster_persistence_})
+        return patterns, pattern_info
 
     def filter_patterns(self, layer, filterId, X=None, activations=None):
         import hdbscan
@@ -240,8 +244,11 @@ class NeuralActivationPattern:
         clusterer.fit(filter_activations)
         print(
             F"Layer {layer}, filter: {filterId}, number of patterns: {clusterer.labels_.max() + 1}")
-
-        return pd.DataFrame({"patternId": clusterer.labels_, "probability": clusterer.probabilities_, "outlier_score": clusterer.outlier_scores_})
+        patterns = pd.DataFrame({"patternId": clusterer.labels_,
+                                "probability": clusterer.probabilities_, "outlier_score": clusterer.outlier_scores_})
+        pattern_info = pd.DataFrame(
+            {"pattern_persistence": clusterer.cluster_persistence_})
+        return patterns, pattern_info
 
     def layer_summary(self, layer, X, y, layer_patterns=None):
         if layer_patterns is None:

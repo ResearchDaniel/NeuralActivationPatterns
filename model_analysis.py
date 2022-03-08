@@ -40,19 +40,20 @@ def create_aggregation_function(name):
         return nap.NoAggregation()
     raise Exception(f"Invalid aggregation function: {name}")
 
+
 def setup_model(model, data_path, data_set_size):
     if model == "mnist":
         image_dir = Path(data_path, "MNIST")
-        return *models.setup_mnist(image_dir, data_set_size), image_dir 
+        return *models.setup_mnist(image_dir, data_set_size), image_dir
     elif model == "cifar10":
         image_dir = Path(data_path, "CIFAR10")
-        return *models.setup_cifar10(image_dir, data_set_size), image_dir 
+        return *models.setup_cifar10(image_dir, data_set_size), image_dir
     elif model == "inception_v1":
         image_dir = Path(args.data_path)
-        return *models.setup_inception_v1(image_dir, data_set_size), image_dir 
+        return *models.setup_inception_v1(image_dir, data_set_size), image_dir
     elif model == "inception_v3":
         image_dir = Path(args.data_path)
-        return *models.setup_inception_v3(image_dir, data_set_size), image_dir 
+        return *models.setup_inception_v3(image_dir, data_set_size), image_dir
     raise Exception(f"Invalid aggregation function: {model}")
 # Model / data parameters
 

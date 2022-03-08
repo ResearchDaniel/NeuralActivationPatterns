@@ -3,6 +3,7 @@ import numpy as np
 import util
 import tensorflow as tf
 
+
 def plotly_annotation_index(nRows, nCols, i):
     # The first row correspond to the last annotation in Plotly...
     row = nRows - int(i / nCols) - 1
@@ -73,8 +74,9 @@ def show_outliers(model_name, X, y, layer, patterns, quantile=0.95, n=None):
     title = F"{model_name}, layer: {layer}, outliers"
     show_images(images, labels, title)
 
+
 def filter_analysis(model, model_name, X, y, layer, filter):
-    patterns = nap.cache.get_filter_patterns(
+    patterns, _ = nap.cache.get_filter_patterns(
         X, model, model_name, layer, filter)
     # Show pattern representatives for filter
     sorted_patterns = nap.sort(patterns)
@@ -95,8 +97,9 @@ def filter_analysis(model, model_name, X, y, layer, filter):
                      F"{model_name}, Layer {layer}, Filter: {filter}, Pattern: {pattern_id}, Size: {len(pattern)}")
 
 
-def layer_analysis(model, model_name, X, y, layer):
-    patterns = nap.cache.get_layer_patterns(X, model, model_name, layer)
+def layer_analysis(model, model_name, X, y, layer, aggregation=nap.MeanAggregation()):
+    patterns, _ = nap.cache.get_layer_patterns(
+        X, model, model_name, layer, aggregation)
     ap = nap.NeuralActivationPattern(model)
     # ap.layer_summary(layer, X, y, patterns).show()
     # activations = export.get_layer_activations(X, model, model_name, layer)
@@ -137,4 +140,3 @@ def layer_analysis(model, model_name, X, y, layer):
 
         show_pattern(avg, centers, centerLabels, outliers, outlierLabels,
                      F"{model_name}, Layer {layer}, Pattern: {pattern_id}, Size: {len(pattern)}")
-
