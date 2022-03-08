@@ -28,32 +28,46 @@ def export_dataset(file_names, labels, predictions, model_name, destination=EXPO
                  "prediction": predictions}).to_pickle(Path(path, "dataset.pkl"))
 
 
-def export_patterns(model, model_name, X, layers, agg_func, destination=EXPORT_LOCATION):
-    for layer in layers:
-        path = Path(destination, model_name, "layers", str(layer))
+def export_patterns(model, model_name, X, layers, filters, agg_func, destination=EXPORT_LOCATION):
+    def export_pattern(path, patterns, info):
         path.mkdir(parents=True, exist_ok=True)
-        patterns, info = nap.cache.get_layer_patterns(
-            X, model, model_name, layer, agg_func)
         patterns.to_pickle(Path(path, "patterns.pkl"))
         info.to_pickle(Path(path, "patterns_info.pkl"))
-
-
-def export_averages(model, model_name, X, layers, agg_func, destination=EXPORT_LOCATION):
-    indices = set()
     for layer in layers:
-        patterns, _ = nap.cache.get_layer_patterns(
+        path = Path(destination, model_name, "layers", str(layer))
+        patterns, info = nap.cache.get_layer_patterns(
             X, model, model_name, layer, agg_func)
+        export_pattern(path, patterns, info)
+        if layer in filters:
+            for filter in filters[layer]:
+                path = Path(destination, model_name, "layers", str(layer), str(filter))
+                patterns, info = nap.cache.get_filter_patterns(
+                X, model, model_name, layer, filter)
+                export_pattern(path, patterns, info)
+
+def export_averages(model, model_name, X, layers, filters, agg_func, destination=EXPORT_LOCATION):
+    def export_pattern_averages(base_path, patterns):
         sorted_patterns = nap.sort(patterns)
         for pattern_id, pattern in sorted_patterns.groupby('patternId'):
             if pattern_id == -1:
                 continue
-            indices.update(pattern.index)
-            path = Path(destination, model_name, "layers", str(
-                layer), str(int(pattern_id)))
+            path = Path(base_path, str(int(pattern_id)))
             path.mkdir(parents=True, exist_ok=True)
             to_average = util.filter_tf_dataset(X, pattern.index)
             avg = tf.keras.layers.Average()(to_average).numpy()
             export_image(path, "average", avg)
+
+    for layer in layers:
+        patterns, _ = nap.cache.get_layer_patterns(
+            X, model, model_name, layer, agg_func)
+        layer_path = Path(destination, model_name, "layers", str(layer))
+        export_pattern_averages(layer_path, patterns)         
+        if layer in filters:
+            for filter in filters[layer]:
+                patterns, _ = nap.cache.get_filter_patterns(
+                    X, model, model_name, layer, filter)
+                export_pattern_averages(Path(layer_path, 'filters', str(filter)), patterns)  
+                
 
 
 def export_image(path, name, array):
@@ -65,8 +79,8 @@ def export_image(path, name, array):
     image.save(Path(path, f"{name}.jpeg"))
 
 
-def export_all(model, model_name, X, y, predictions, file_names, layers, image_dir, agg_func, destination=EXPORT_LOCATION):
+def export_all(model, model_name, X, y, predictions, file_names, layers, filters, image_dir, agg_func, destination=EXPORT_LOCATION):
     export_config(image_dir, model_name, destination)
     export_dataset(file_names, y, predictions, model_name, destination)
-    export_patterns(model, model_name, X, layers, agg_func, destination)
-    export_averages(model, model_name, X, layers, agg_func, destination)
+    export_patterns(model, model_name, X, layers, filters, agg_func, destination)
+    export_averages(model, model_name, X, layers, filters, agg_func, destination)

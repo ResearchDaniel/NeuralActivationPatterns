@@ -105,14 +105,14 @@ def export_layer_patterns(X, model, model_name, layers, agg_func, destination=CA
     for layer in layers:
         activations, f = get_layer_activations_agg(
             X, model, model_name, layer, agg_func, destination)
-        patterns, pattern_info = ap.activity_patterns(
+        patterns, patterns_info = ap.activity_patterns(
             layer, activations=activations)
         patterns_path = layer_patterns_path(destination, model_name, layer)
         f.close()
         patterns.to_hdf(patterns_path, f'{layer}')
         patterns_info_path = layer_patterns_info_path(
             destination, model_name, layer)
-        pattern_info.to_hdf(patterns_info_path, f'{layer}')
+        patterns_info.to_hdf(patterns_info_path, f'{layer}')
 
 
 def export_filter_patterns(X, model, model_name, layers, filters=None, destination=CACHE_LOCATION):
@@ -132,7 +132,7 @@ def export_filter_patterns(X, model, model_name, layers, filters=None, destinati
             patterns.to_hdf(path, f'{layer}/filter_{filter}')
             patterns_info_path = filter_patterns_info_path(
                 destination, model_name, layer, filter)
-            pattern_info.to_hdf(patterns_info_path, f'{layer}/filter_{filter}')
+            patterns_info.to_hdf(patterns_info_path, f'{layer}/filter_{filter}')
         f.close()
 
 

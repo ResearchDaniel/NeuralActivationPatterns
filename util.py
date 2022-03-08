@@ -43,9 +43,14 @@ def export_images(image_dir, dataset):
 
     image_dir.mkdir(parents=True, exist_ok=True)
     for i, item in dataset.enumerate():
-        image = np.squeeze(item[0].numpy())
+        if type(item) is dict:
+            image = np.squeeze(item["image"].numpy())
+            file_name = item["file_name"].numpy().decode("utf-8") 
+        else:
+            image = np.squeeze(item[0].numpy())
+            file_name = f"{i}.jpeg"
         if len(image.shape) == 2 or image.shape[-1] == 1:
             image = Image.fromarray((image).astype(np.uint8), 'L')
         else:
             image = Image.fromarray((image).astype(np.uint8), 'RGB')
-        image.save(Path(image_dir, f"{i}.jpeg"))
+        image.save(Path(image_dir, file_name))

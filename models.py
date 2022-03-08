@@ -1,6 +1,7 @@
 import tensorflow_datasets as tfds
 import tensorflow as tf
 import util
+from pathlib import Path
 
 
 def setup_mnist(image_dir, data_set_size):
@@ -13,8 +14,7 @@ def setup_mnist(image_dir, data_set_size):
 
     X = ds.map(lambda image, label: image)
     y = ds.map(lambda image, label: label)
-    file_names = tf.data.Dataset.from_tensor_slices(
-        [f"{i}.jpeg" for i in range(0, ds.cardinality().numpy())])
+    file_names = [f"{i}.jpeg" for i in range(0, ds.cardinality().numpy())]
 
     def normalize_img(image):
         """Normalizes images: `uint8` -> `float32`."""
@@ -41,8 +41,7 @@ def setup_cifar10(image_dir, data_set_size):
 
     X = ds.map(lambda image, label: image)
     y = ds.map(lambda image, label: label)
-    file_names = tf.data.Dataset.from_tensor_slices(
-        [f"{i}.jpeg" for i in range(0, ds.cardinality().numpy())])
+    file_names = [f"{i}.jpeg" for i in range(0, ds.cardinality().numpy())]
 
     def normalize_img(image):
         """Normalizes images: `uint8` -> `float32`."""
@@ -95,7 +94,8 @@ def setup_inception_v1(image_dir, data_set_size):
             tf.cast(image, tf.float32), mode='torch')
     X = ds.map(lambda elem: elem['image'])
     y = ds.map(lambda elem: elem['label'])
-    file_names = ds.map(lambda elem: elem['file_name'])
+    file_names = tfds.as_numpy(ds.map(lambda elem: elem['file_name']))
+    file_names = [file_name.decode("utf-8") for file_name in file_names]
     X = X.map(lambda row: transform_images(row, 224),
               num_parallel_calls=tf.data.AUTOTUNE)
     print(model.summary())
@@ -107,6 +107,9 @@ def setup_inception_v3(image_dir, data_set_size):
     ds, info = tfds.load('imagenet2012', split='train', shuffle_files=False,
                          with_info=True, data_dir=image_dir)
     ds = ds.take(data_set_size)
+    export_dir = Path(image_dir, f"imagenet2012_export_{data_set_size}")
+    if not export_dir.exists():
+        util.export_images(export_dir, ds)
     print(info.features)
     num_classes = info.features['label'].num_classes
     input_shape = info.features['image'].shape
@@ -115,12 +118,13 @@ def setup_inception_v3(image_dir, data_set_size):
         return tf.keras.applications.inception_v3.preprocess_input(tf.keras.layers.Resizing(new_size, new_size)(image))
     X = ds.map(lambda elem: elem['image'])
     y = ds.map(lambda elem: elem['label'])
-    file_names = ds.map(lambda elem: elem['file_name'])
+    file_names = tfds.as_numpy(ds.map(lambda elem: elem['file_name']))
+    file_names = [file_name.decode("utf-8") for file_name in file_names]
     X = X.map(lambda row: transform_images(row, 299), num_parallel_calls=tf.data.AUTOTUNE)
 
     model_name = f"InceptionV3_{ds.cardinality().numpy()}"
     model = tf.keras.applications.InceptionV3(
-        include_top=False, weights='imagenet')
+        include_top=True, weights='imagenet')
     print(model.summary())
     return model, model_name, X, y, file_names
 
