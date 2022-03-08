@@ -8,6 +8,7 @@
   import PatternCompare from "./patterns/PatternCompare.svelte";
   import { labelFilter, predictionFilter, selectedPage } from "./stores";
   import Filters from "./Filters.svelte";
+  import LoadingIndicator from "./components/LoadingIndicator.svelte";
 
   let model: string = undefined;
   let layer: string = undefined;
@@ -71,7 +72,9 @@
           {/await}
         </div>
         {#if layer !== undefined && dataset.length !== 0}
-          {#await fetchPatterns then patterns}
+          {#await fetchPatterns}
+            <LoadingIndicator />
+          {:then patterns}
             <Main {patterns} />
           {/await}
         {/if}
