@@ -46,10 +46,12 @@
 
 <div class="flex flex-col">
   <SubHeading heading={"Distribution"} />
-  <VegaLite
-    {data}
-    {spec}
-    {options}
-    signalListeners={{ select: handleSelection }}
-  />
+  <div class="overflow-auto">
+    <VegaLite
+      {data}
+      {spec}
+      {options}
+      signalListeners={{ select: handleSelection }}
+    />
+  </div>
 </div>

@@ -64,7 +64,7 @@
     <Header />
     {#if $selectedPage === "Overview"}
       {#await fetchModels then models}
-        <div class="flex flex-row p-2">
+        <div class="flex flex-row p-2 h-96">
           <Controls bind:layers bind:layer bind:model bind:dataset {models} />
           {#await fetchPatterns then patterns}
             <Distribution {patterns} />
