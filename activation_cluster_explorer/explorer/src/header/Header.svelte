@@ -7,7 +7,7 @@
 
 <nav class="p-2 pl-3 bg-black flex justify-between">
   <div class="flex items-center">
-    <h2 class="text-2xl font-bold text-text-dark">Activation Clusters</h2>
+    <h2 class="text-2xl font-bold text-text-dark">NAP Microscope</h2>
     <div class="flex pl-12 overflow-auto">
       {#each $pages as page}
         <PageSelector selected={page === $selectedPage} value={page} />

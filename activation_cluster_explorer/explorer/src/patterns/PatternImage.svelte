@@ -8,7 +8,7 @@
 
   export let imagePath: string;
   export let sample: PatternForSample = undefined;
-  export let layer: number = undefined;
+  export let layer: string = undefined;
 
   let hover = false;
   let m = { x: 0, y: 0 };

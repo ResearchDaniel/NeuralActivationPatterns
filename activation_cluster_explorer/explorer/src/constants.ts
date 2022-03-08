@@ -3,6 +3,7 @@ import type { Config as VlConfig } from "vega-lite";
 
 type Config = VgConfig | VlConfig;
 
+export const minPatternSize = 1;
 const markColor = "#0071e3";
 export const themeConfig: Config = {
   arc: { fill: markColor },
