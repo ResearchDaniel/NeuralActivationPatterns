@@ -25,6 +25,6 @@
         });
 </script>
 
-<div class="flex flex-col flex-grow p-2 min-h-0">
+<div class="flex flex-col p-2 min-h-0">
   <Patterns patterns={filteredPatterns} />
 </div>
