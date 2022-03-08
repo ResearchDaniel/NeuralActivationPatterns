@@ -29,6 +29,12 @@ module.exports = {
     minWidth: {
       'compare': '800px',
     },
+    extend: {
+      animation: {
+        "ping-slow": "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+
+      }
+    }
   },
   fontFamily: {
     sans: ['-apple-system', 'BlinkMacSystemFont', 'Helvetica', 'sans-serif'],
