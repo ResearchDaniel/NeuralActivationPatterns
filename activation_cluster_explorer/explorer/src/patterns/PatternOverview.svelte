@@ -1,16 +1,22 @@
 <script lang="ts">
-  import PatternImage from "./PatternImage.svelte";
-  import PatternImageList from "./PatternImageList.svelte";
-  import type { PatternForSample } from "../types";
-
-  import { numCenters, numOutliers } from "../stores";
-  import { themeConfig } from "../constants";
-
   import type { VegaLiteSpec } from "svelte-vega";
   import type { EmbedOptions } from "vega-embed";
   import { VegaLite } from "svelte-vega";
 
+  import PatternImage from "./PatternImage.svelte";
+  import PatternImageList from "./PatternImageList.svelte";
+  import type { PatternForSample } from "../types";
+
+  import {
+    labelFilter,
+    numCenters,
+    numOutliers,
+    predictionFilter,
+  } from "../stores";
+  import { themeConfig } from "../constants";
+
   export let samples: PatternForSample[];
+  export let filteredSamples: PatternForSample[];
   export let patternId: number;
   export let model: string;
   export let layer: string;
@@ -34,22 +40,11 @@
   $: centers = samples.slice(0, $numCenters);
   $: outliers = samples.slice(-$numOutliers);
   $: data = { table: samples };
-  $: metadata = samples.reduce(
-    function (aggregate, sample) {
-      if (sample.label in aggregate.labels) {
-        aggregate.labels[sample.label]++;
-      } else {
-        aggregate.labels[sample.label] = 1;
-      }
-      if (sample.prediction in aggregate.predictions) {
-        aggregate.predictions[sample.prediction]++;
-      } else {
-        aggregate.predictions[sample.prediction] = 1;
-      }
-      return aggregate;
-    },
-    { labels: {}, predictions: {} }
-  );
+  $: metadata = samples.reduce(sampleMetadata, { labels: {}, predictions: {} });
+  $: filteredMetadata = filteredSamples.reduce(sampleMetadata, {
+    labels: {},
+    predictions: {},
+  });
   $: labelSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     description: "A simple bar chart with embedded data.",
@@ -61,6 +56,7 @@
         };
       }),
     },
+    params: [{ name: "select", select: { type: "point", encodings: ["x"] } }],
     height: 100,
     mark: { type: "bar", tooltip: true },
     encoding: {
@@ -68,6 +64,23 @@
       y: { field: "samples", type: "quantitative" },
     },
   } as VegaLiteSpec;
+  $: layeredLabelSpec = {
+    layer: [
+      { ...labelSpec, mark: { ...labelSpec.mark, color: "#dcdcdc" } },
+      {
+        ...labelSpec,
+        data: {
+          values: Object.keys(filteredMetadata.labels).map((key) => {
+            return {
+              label: key,
+              samples: filteredMetadata.labels[key],
+            };
+          }),
+        },
+        params: [],
+      },
+    ],
+  };
   $: predictionSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     description: "A simple bar chart with embedded data.",
@@ -79,6 +92,7 @@
         };
       }),
     },
+    params: [{ name: "select", select: { type: "point", encodings: ["x"] } }],
     height: 100,
     mark: { type: "bar", tooltip: true },
     encoding: {
@@ -86,6 +100,53 @@
       y: { field: "samples", type: "quantitative" },
     },
   } as VegaLiteSpec;
+  $: layeredPredictionSpec = {
+    layer: [
+      { ...predictionSpec, mark: { ...predictionSpec.mark, color: "#dcdcdc" } },
+      {
+        ...predictionSpec,
+        data: {
+          values: Object.keys(filteredMetadata.predictions).map((key) => {
+            return {
+              prediction: key,
+              samples: filteredMetadata.predictions[key],
+            };
+          }),
+        },
+        params: [],
+      },
+    ],
+  };
+
+  function handleSelectionLabel(...args: any) {
+    if (args[1].label !== undefined) {
+      labelFilter.update((filters) => [
+        ...new Set([...filters, ...args[1].label]),
+      ]);
+    }
+  }
+
+  function handleSelectionPrediction(...args: any) {
+    if (args[1].prediction !== undefined) {
+      predictionFilter.update((filters) => [
+        ...new Set([...filters, ...args[1].prediction]),
+      ]);
+    }
+  }
+
+  function sampleMetadata(aggregate, sample) {
+    if (sample.label in aggregate.labels) {
+      aggregate.labels[sample.label]++;
+    } else {
+      aggregate.labels[sample.label] = 1;
+    }
+    if (sample.prediction in aggregate.predictions) {
+      aggregate.predictions[sample.prediction]++;
+    } else {
+      aggregate.predictions[sample.prediction] = 1;
+    }
+    return aggregate;
+  }
 </script>
 
 <div class="flex flex-wrap">
@@ -107,8 +168,16 @@
     <p>Distribution</p>
     <div class="flex flex-wrap">
       <VegaLite {data} spec={probabilityHistogramSpec} {options} />
-      <VegaLite spec={labelSpec} {options} />
-      <VegaLite spec={predictionSpec} {options} />
+      <VegaLite
+        spec={layeredLabelSpec}
+        {options}
+        signalListeners={{ select: handleSelectionLabel }}
+      />
+      <VegaLite
+        spec={layeredPredictionSpec}
+        {options}
+        signalListeners={{ select: handleSelectionPrediction }}
+      />
     </div>
   </div>
 </div>

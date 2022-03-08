@@ -14,5 +14,5 @@ export interface TooltipSpec {
   hover: boolean;
   mousePos: { x: number; y: number };
   sample?: PatternForSample;
-  layer?: number;
+  layer?: string;
 }

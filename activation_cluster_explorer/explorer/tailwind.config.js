@@ -8,34 +8,26 @@ module.exports = {
 
       /* Greyscale */
       white: '#fff',
-      lightgrey: '#F7F7F7',
-      midgrey: '#cfcfcf',
-      darkgrey: '#7f7f7f',
-      grey: '#1e1e1e',
+      grey: '#cfcfcf',
       black: '#0f0f0f',
 
+      /* Highlight */
       highlight: '#0071e3',
       highlight_hover: '#0077ed',
 
-      button_outline: '#cfcfcf',
-
-      error: '#ff453a',
-
-      /* ColorAliases */
+      /* Text */
       text: {
         light: '#0f0f0f',
         dimmed: '#cfcfcf',
         dark: '#fff',
       },
-      body: {
-        light: '#fff',
-        dark: '#1e1e1e',
-      },
+
+      /* Buttons */
       button: '#0071e3',
       button_hover: '#0077ed',
     },
     minWidth: {
-      'compare': '600px',
+      'compare': '800px',
     },
   },
   fontFamily: {

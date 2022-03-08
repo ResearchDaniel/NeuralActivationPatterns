@@ -5,7 +5,7 @@
 
   export let samples: PatternForSample[];
   export let model: string;
-  export let layer: number;
+  export let layer: string;
 </script>
 
 <div class="flex flex-wrap min-h-0 overflow-y-auto">

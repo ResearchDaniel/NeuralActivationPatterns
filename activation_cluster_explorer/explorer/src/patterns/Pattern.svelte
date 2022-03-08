@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { pinnedPatterns, pinnedPatternUids } from "../stores";
+  import { pinnedPatterns, selectedPage } from "../stores";
 
   import Fa from "svelte-fa";
   import FaLayers from "svelte-fa/src/fa-layers.svelte";
@@ -14,11 +14,9 @@
   import type { PatternForSample } from "../types";
 
   export let samples: PatternForSample[];
+  export let filteredSamples: PatternForSample[];
   export let expanded: boolean = false;
 
-  $: sortedSamples = samples.sort(
-    (a: PatternForSample, b: PatternForSample) => b.probability - a.probability
-  );
   $: uid = samples[0].patternUid;
   $: patternId = samples[0].patternId;
   $: model = samples[0].model;
@@ -27,18 +25,21 @@
   function unpinPattern() {
     pinnedPatterns.update((patterns) => {
       delete patterns[uid];
+      if (Object.keys(patterns).length === 0) {
+        selectedPage.set("Overview");
+      }
       return patterns;
     });
   }
 
   function pinPattern() {
-    $pinnedPatterns[uid] = sortedSamples;
+    $pinnedPatterns[uid] = samples;
     pinnedPatterns.set({ ...$pinnedPatterns });
   }
 </script>
 
 <div
-  class="flex flex-col p-2 border-midgrey border rounded-md {expanded
+  class="flex flex-col p-2 border-grey border rounded-md {expanded
     ? 'min-h-0 m-2 min-w-compare'
     : 'w-full mt-4'}"
 >
@@ -61,9 +62,9 @@
     </div>
   </div>
   <div class="flex flex-col" class:min-h-0={expanded}>
-    <PatternOverview samples={sortedSamples} {model} {layer} {patternId} />
+    <PatternOverview {samples} {model} {layer} {patternId} {filteredSamples} />
     {#if expanded}
-      <AllPatternImages {samples} {model} {layer} />
+      <AllPatternImages samples={filteredSamples} {model} {layer} />
     {/if}
   </div>
 </div>

@@ -6,7 +6,8 @@
   import Controls from "./Controls.svelte";
   import ImageTooltip from "./components/ImageTooltip.svelte";
   import PatternCompare from "./patterns/PatternCompare.svelte";
-  import { selectedPage } from "./stores";
+  import { labelFilter, predictionFilter, selectedPage } from "./stores";
+  import Filters from "./Filters.svelte";
 
   let model: string = undefined;
   let layer: string = undefined;
@@ -26,7 +27,9 @@
   $: if (model !== undefined) {
     fetch(`/api/get_layers/${model}`)
       .then((response) => response.json())
-      .then((jsonResponse) => (layers = jsonResponse["layers"] as string[]));
+      .then((jsonResponse) => {
+        layers = jsonResponse["layers"] as string[];
+      });
     fetch(`/api/get_dataset/${model}`)
       .then((response) => response.json())
       .then((jsonResponse) => (dataset = JSON.parse(jsonResponse)));
@@ -75,6 +78,9 @@
       {/await}
     {:else}
       <PatternCompare />
+    {/if}
+    {#if $labelFilter.length > 0 || $predictionFilter.length > 0}
+      <Filters />
     {/if}
   </div>
   <ImageTooltip />
