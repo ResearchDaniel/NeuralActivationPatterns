@@ -1,11 +1,11 @@
 <script lang="ts">
-  import Header from "./header/Header.svelte";
   import Main from "./Main.svelte";
   import Distribution from "./Distribution.svelte";
   import Controls from "./Controls.svelte";
+  import Filters from "./Filters.svelte";
+  import Header from "./header/Header.svelte";
   import ImageTooltip from "./components/ImageTooltip.svelte";
   import PatternCompare from "./patterns/PatternCompare.svelte";
-  import Filters from "./Filters.svelte";
   import LoadingIndicator from "./components/LoadingIndicator.svelte";
 
   import type { PatternForSample, Patterns } from "./types";
@@ -13,6 +13,7 @@
 
   let model: string = undefined;
   let layer: string = undefined;
+  let labels: Record<number, string> = undefined;
   let layers: string[] = [];
   let dataset: {
     file_name: string;
@@ -37,14 +38,21 @@
       .then((jsonResponse) => {
         dataset = JSON.parse(jsonResponse);
       });
+    fetch(`/api/get_labels/${model}`)
+      .then((response) => response.json())
+      .then((jsonResponse) => (labels = jsonResponse));
   }
   $: fetchPatterns = (async () => {
-    if (dataset.length === 0 || model === undefined || layer === undefined)
+    if (
+      dataset.length === 0 ||
+      model === undefined ||
+      layer === undefined ||
+      labels === undefined
+    )
       return { samples: [], persistence: [] };
     const infoResponse = await fetch(`/api/get_pattern_info/${model}/${layer}`);
     const infoJsonResponse = await infoResponse.json();
     const info = JSON.parse(infoJsonResponse);
-    console.log(info);
     const response = await fetch(`/api/get_patterns/${model}/${layer}`);
     const jsonResponse = await response.json();
     const patterns = JSON.parse(jsonResponse);
@@ -52,19 +60,30 @@
       return { samples: [], persistence: [] };
     return {
       samples: patterns
-        .map((pattern, index) => {
-          return {
-            patternUid: `${model}_${layer}_${pattern.patternId}`,
-            model: model,
-            layer: layer,
-            patternId: pattern.patternId,
-            probability: pattern.probability,
-            outlierScore: pattern.outlier_score,
-            fileName: dataset[index].file_name,
-            label: dataset[index].label,
-            prediction: dataset[index].prediction,
-          } as PatternForSample;
-        })
+        .map(
+          (
+            pattern: {
+              patternId: number;
+              probability: number;
+              outlier_score: number;
+            },
+            index: number
+          ) => {
+            return {
+              patternUid: `${model}_${layer}_${pattern.patternId}`,
+              model: model,
+              layer: layer,
+              patternId: pattern.patternId,
+              probability: pattern.probability,
+              outlierScore: pattern.outlier_score,
+              fileName: dataset[index].file_name,
+              labelIndex: dataset[index].label,
+              label: labels[dataset[index].label],
+              predictionIndex: dataset[index].prediction,
+              prediction: labels[dataset[index].prediction],
+            } as PatternForSample;
+          }
+        )
         .filter((pattern) => pattern.patternId >= 0),
       persistence: info.map((infoElement) => infoElement.pattern_persistence),
     } as Patterns;
@@ -77,12 +96,19 @@
     {#if $selectedPage === "Overview"}
       {#await fetchModels then models}
         <div class="flex flex-row p-2 h-96">
-          <Controls bind:layers bind:layer bind:model bind:dataset {models} />
+          <Controls
+            bind:layers
+            bind:layer
+            bind:model
+            bind:dataset
+            bind:labels
+            {models}
+          />
           {#await fetchPatterns then patterns}
             <Distribution patterns={patterns.samples} />
           {/await}
         </div>
-        {#if layer !== undefined && dataset.length !== 0}
+        {#if layer !== undefined && labels !== undefined && dataset.length !== 0}
           {#await fetchPatterns}
             <LoadingIndicator />
           {:then patterns}
