@@ -1,5 +1,5 @@
 <script lang="ts">
-  import SubHeading from "./components/SubHeading.svelte";
+  import SubHeading from "./elements/SubHeading.svelte";
 
   import type { VisualizationSpec } from "vega-embed";
   import { VegaLite } from "svelte-vega";

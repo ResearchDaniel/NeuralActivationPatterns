@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Dropdown from "./components/Dropdown.svelte";
-  import LabeledComponent from "./components/LabeledComponent.svelte";
-  import SubHeading from "./components/SubHeading.svelte";
+  import Dropdown from "./elements/Dropdown.svelte";
+  import LabeledComponent from "./elements/LabeledComponent.svelte";
+  import SubHeading from "./elements/SubHeading.svelte";
 
   export let models: string[];
   export let model: string = undefined;

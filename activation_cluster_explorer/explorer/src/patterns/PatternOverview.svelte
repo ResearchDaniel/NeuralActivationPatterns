@@ -12,6 +12,7 @@
     numCenters,
     numOutliers,
     predictionFilter,
+    showAverage,
   } from "../stores";
   import { themeConfig } from "../constants";
 
@@ -149,12 +150,14 @@
 </script>
 
 <div class="flex flex-wrap">
-  <div class="flex flex-col pr-4">
-    <p>Average</p>
-    <PatternImage
-      imagePath={`/api/get_average/${model}/${layer}/${patternId}`}
-    />
-  </div>
+  {#if $showAverage}
+    <div class="flex flex-col pr-4">
+      <p>Average</p>
+      <PatternImage
+        imagePath={`/api/get_average/${model}/${layer}/${patternId}`}
+      />
+    </div>
+  {/if}
   <div class="flex flex-col pr-4">
     <p>Centers</p>
     <PatternImageList {model} samples={centers} {layer} />

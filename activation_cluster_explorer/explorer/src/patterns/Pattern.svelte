@@ -6,9 +6,9 @@
   import { faThumbtack } from "@fortawesome/free-solid-svg-icons/faThumbtack";
   import { faSlash } from "@fortawesome/free-solid-svg-icons/faSlash";
 
-  import SubSubHeading from "../components/SubSubHeading.svelte";
+  import SubSubHeading from "../elements/SubSubHeading.svelte";
   import AllPatternImages from "./AllPatternImages.svelte";
-  import IconButton from "../components/IconButton.svelte";
+  import IconButton from "../elements/IconButton.svelte";
   import PatternOverview from "./PatternOverview.svelte";
 
   import type { PatternForSample } from "../types";
@@ -39,23 +39,23 @@
 </script>
 
 <div
-  class="flex flex-col p-2 border-grey border rounded-md {expanded
+  class="flex flex-col box-shadow-xl p-2 border-grey border rounded-md {expanded
     ? 'min-h-0 m-2 min-w-compare'
-    : 'w-full mt-4'}"
+    : 'w-full mb-2'}"
 >
   <div class="flex">
     <SubSubHeading heading={`ID: ${patternId}`} />
     <SubSubHeading heading={`Size: ${samples.length}`} />
     <div class="ml-auto">
       {#if $pinnedPatterns[uid] !== undefined}
-        <IconButton on:click={unpinPattern} plain={true}>
+        <IconButton on:click={unpinPattern}>
           <FaLayers slot="icon">
             <Fa icon={faThumbtack} />
             <Fa icon={faSlash} />
           </FaLayers>
         </IconButton>
       {:else}
-        <IconButton on:click={pinPattern} plain={true}>
+        <IconButton on:click={pinPattern}>
           <Fa icon={faThumbtack} slot="icon" />
         </IconButton>
       {/if}

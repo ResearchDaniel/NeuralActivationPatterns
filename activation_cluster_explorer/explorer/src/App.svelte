@@ -3,10 +3,11 @@
   import Distribution from "./Distribution.svelte";
   import Controls from "./Controls.svelte";
   import Filters from "./Filters.svelte";
-  import Header from "./header/Header.svelte";
-  import ImageTooltip from "./components/ImageTooltip.svelte";
+  import Header from "./Header.svelte";
+  import Settings from "./Settings.svelte";
+  import ImageTooltip from "./elements/ImageTooltip.svelte";
   import PatternCompare from "./patterns/PatternCompare.svelte";
-  import LoadingIndicator from "./components/LoadingIndicator.svelte";
+  import LoadingIndicator from "./elements/LoadingIndicator.svelte";
 
   import type { PatternForSample, Patterns } from "./types";
   import { labelFilter, predictionFilter, selectedPage } from "./stores";
@@ -126,10 +127,11 @@
     {/if}
   </div>
   <ImageTooltip />
+  <Settings />
 </main>
 
 <style global lang="postcss">
   @tailwind base;
-  @tailwind components;
+  @tailwind elements;
   @tailwind utilities;
 </style>
