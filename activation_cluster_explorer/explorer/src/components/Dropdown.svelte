@@ -1,6 +1,6 @@
 <script lang="ts">
   export let items: string[] | number[];
-  export let value: string | number;
+  export let value: string | number | undefined = undefined;
 </script>
 
 <select bind:value on:change class="rounded border border-grey">

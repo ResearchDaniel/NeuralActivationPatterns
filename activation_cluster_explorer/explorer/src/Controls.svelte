@@ -4,10 +4,10 @@
   import SubHeading from "./components/SubHeading.svelte";
 
   export let models: string[];
-  export let model: string;
+  export let model: string = undefined;
   export let layers: string[];
-  export let layer: string;
-  export let labels: Record<number, string>;
+  export let layer: string = undefined;
+  export let labels: Record<number, string> = undefined;
   export let dataset: {
     file_name: string;
     label?: string;

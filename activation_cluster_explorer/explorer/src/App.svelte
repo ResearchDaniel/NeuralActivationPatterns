@@ -105,7 +105,9 @@
             {models}
           />
           {#await fetchPatterns then patterns}
-            <Distribution patterns={patterns.samples} />
+            {#if patterns.samples.length > 0}
+              <Distribution patterns={patterns.samples} />
+            {/if}
           {/await}
         </div>
         {#if layer !== undefined && labels !== undefined && dataset.length !== 0}

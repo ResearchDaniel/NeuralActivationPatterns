@@ -11,10 +11,15 @@
 
   export let patterns: PatternForSample[];
 
-  const spec: VisualizationSpec = {
+  const options = {
+    actions: false,
+    config: themeConfig,
+  } as EmbedOptions;
+
+  $: spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     mark: { type: "circle", tooltip: true },
-    data: { name: "table" },
+    data: { values: patterns },
     params: [
       { name: "select", select: { type: "point", encodings: ["x", "y"] } },
     ],
@@ -27,13 +32,7 @@
         value: 0.3,
       },
     },
-  };
-  const options = {
-    actions: false,
-    config: themeConfig,
-  } as EmbedOptions;
-
-  $: data = { table: patterns };
+  } as VisualizationSpec;
 
   function handleSelection(...args: any) {
     if (args[1].vlPoint !== undefined) {
@@ -47,11 +46,6 @@
 <div class="flex flex-col">
   <SubHeading heading={"Distribution"} />
   <div class="overflow-auto">
-    <VegaLite
-      {data}
-      {spec}
-      {options}
-      signalListeners={{ select: handleSelection }}
-    />
+    <VegaLite {spec} {options} signalListeners={{ select: handleSelection }} />
   </div>
 </div>

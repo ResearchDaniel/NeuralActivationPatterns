@@ -21,9 +21,14 @@
   export let model: string;
   export let layer: string;
 
-  const probabilityHistogramSpec: VegaLiteSpec = {
+  const options = {
+    config: themeConfig,
+    actions: false,
+  } as EmbedOptions;
+
+  $: probabilityHistogramSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    data: { name: "table" },
+    data: { values: samples },
     width: 100,
     height: 100,
     mark: { type: "bar", tooltip: true },
@@ -31,15 +36,9 @@
       x: { bin: true, field: "probability" },
       y: { aggregate: "count", title: "samples" },
     },
-  };
-  const options = {
-    config: themeConfig,
-    actions: false,
-  } as EmbedOptions;
-
+  } as VegaLiteSpec;
   $: centers = samples.slice(0, $numCenters);
   $: outliers = samples.slice(-$numOutliers);
-  $: data = { table: samples };
   $: metadata = samples.reduce(sampleMetadata, { labels: {}, predictions: {} });
   $: filteredMetadata = filteredSamples.reduce(sampleMetadata, {
     labels: {},
@@ -80,7 +79,7 @@
         params: [],
       },
     ],
-  };
+  } as VegaLiteSpec;
   $: predictionSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     description: "A simple bar chart with embedded data.",
@@ -116,7 +115,7 @@
         params: [],
       },
     ],
-  };
+  } as VegaLiteSpec;
 
   function handleSelectionLabel(...args: any) {
     if (args[1].label !== undefined) {
@@ -167,7 +166,7 @@
   <div class="flex flex-col">
     <p>Distribution</p>
     <div class="flex flex-wrap">
-      <VegaLite {data} spec={probabilityHistogramSpec} {options} />
+      <VegaLite spec={probabilityHistogramSpec} {options} />
       <VegaLite
         spec={layeredLabelSpec}
         {options}
