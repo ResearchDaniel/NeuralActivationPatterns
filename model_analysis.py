@@ -20,6 +20,10 @@ parser.add_argument("--data_path", type=dir_path,
                     default='D:/data/tensorflow_datasets')
 parser.add_argument("--model",
                     default='mnist', choices=["mnist", "cifar10", "inception_v1", "inception_v3"])
+parser.add_argument("--data_set",
+                    default='mnist')
+parser.add_argument("--split",
+                    default='test')
 parser.add_argument("--layer")
 parser.add_argument("--filter", type=int)
 parser.add_argument("--aggregation",
@@ -41,26 +45,27 @@ def create_aggregation_function(name):
     raise Exception(f"Invalid aggregation function: {name}")
 
 
-def setup_model(model, data_path, data_set_size):
-    if model == "mnist":
-        image_dir = Path(data_path, "MNIST")
-        return *models.setup_mnist(image_dir, data_set_size), image_dir
-    elif model == "cifar10":
-        image_dir = Path(data_path, "CIFAR10")
-        return *models.setup_cifar10(image_dir, data_set_size), image_dir
-    elif model == "inception_v1":
-        image_dir = Path(args.data_path)
-        return *models.setup_inception_v1(image_dir, data_set_size), image_dir
-    elif model == "inception_v3":
-        image_dir = Path(args.data_path)
-        export_dir = Path(image_dir, f"imagenet2012_export_{data_set_size}")
-        return *models.setup_inception_v3(image_dir, data_set_size), export_dir
-    raise Exception(f"Invalid aggregation function: {model}")
+def setup_model(model_name, data_path, data_set, data_set_size, split):
+    X, y, file_names, image_dir = models.get_data_set(data_path, data_set, data_set_size, split)
+    if model_name == "mnist":
+        model, X = models.setup_mnist(X)
+    elif model_name == "cifar10":
+        model, X = models.setup_cifar10(X)
+    elif model_name == "inception_v1":
+        model, X = models.setup_inception_v1(X)
+    elif model_name == "inception_v3":
+        model, X = models.setup_inception_v3(X)
+    else: 
+        raise Exception(f"Invalid model: {model}")
+    print(model.summary())
+    model_name = f"{model_name}_{data_set}_{split}_{X.cardinality().numpy()}"
+    return model, model_name, X, y, file_names, image_dir
+    
 # Model / data parameters
 
 
 data_set_size = args.size
-model, model_name, X, y, file_names, image_dir = setup_model(args.model, args.data_path, data_set_size)
+model, model_name, X, y, file_names, image_dir = setup_model(args.model, args.data_path, args.data_set, data_set_size, args.split)
 model_name = f"{model_name}_leaf"
 if args.layer is None:   
     layers = [layer.name for layer in model.layers] 
