@@ -44,6 +44,13 @@ def get_patterns(model, layer):
     return jsonify(patterns.to_json(orient="records"))
 
 
+@app.route('/api/get_pattern_info/<model>/<layer>')
+def get_pattern_info(model, layer):
+    patterns = pd.read_pickle(
+        Path(DATA_DIR, model, "layers", layer, "patterns_info.pkl"))
+    return jsonify(patterns.to_json(orient="records"))
+
+
 @app.route('/api/get_dataset/<model>')
 def get_dataset(model):
     dataset = pd.read_pickle(Path(DATA_DIR, model, 'dataset.pkl'))

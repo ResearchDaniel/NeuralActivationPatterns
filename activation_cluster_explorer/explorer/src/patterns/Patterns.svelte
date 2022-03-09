@@ -6,6 +6,7 @@
   import { labelFilter, predictionFilter } from "../stores";
 
   export let patterns: PatternForSample[];
+  export let persistence: number[];
 
   $: filteredPatterns = patterns.filter((pattern) => {
     if ($labelFilter.length !== 0) {
@@ -22,7 +23,7 @@
   });
   $: patternIds = [
     ...new Set(filteredPatterns.map((element) => element.patternId)),
-  ].sort();
+  ].sort((a, b) => persistence[b] - persistence[a]);
 </script>
 
 <div class="flex flex-col min-h-0">

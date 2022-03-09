@@ -1,18 +1,18 @@
 <script lang="ts">
-  import Patterns from "./patterns/Patterns.svelte";
+  import PatternsList from "./patterns/Patterns.svelte";
   import { patternFilter } from "./stores";
 
-  import type { PatternForSample } from "./types";
+  import type { PatternForSample, Patterns } from "./types";
 
-  export let patterns: PatternForSample[];
+  export let patterns: Patterns;
 
-  $: sortedPatterns = patterns.sort(
+  $: sortedSamples = patterns.samples.sort(
     (a: PatternForSample, b: PatternForSample) => b.probability - a.probability
   );
-  $: filteredPatterns =
+  $: filteredSamples =
     $patternFilter.length === 0
-      ? sortedPatterns
-      : sortedPatterns.filter((pattern) => {
+      ? sortedSamples
+      : sortedSamples.filter((pattern) => {
           for (let filter of $patternFilter) {
             if (
               pattern.label === filter.label &&
@@ -26,5 +26,5 @@
 </script>
 
 <div class="flex flex-col p-2 min-h-0">
-  <Patterns patterns={filteredPatterns} />
+  <PatternsList patterns={filteredSamples} persistence={patterns.persistence} />
 </div>
