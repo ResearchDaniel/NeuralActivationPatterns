@@ -4,6 +4,8 @@ from pathlib import Path
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import numpy as np
+import pickle
+import ast
 
 
 def filter_tf_dataset(dataset, indices):
@@ -45,7 +47,14 @@ def export_images(image_dir, dataset):
     for i, item in dataset.enumerate():
         if type(item) is dict:
             image = np.squeeze(item["image"].numpy())
-            file_name = item["file_name"].numpy().decode("utf-8") 
+            if "file_name" in item:
+                file_name = item["file_name"].numpy().decode("utf-8")
+            elif "id" in item:
+                # Exist in CIFAR10
+                file_name = item["id"].numpy().decode("utf-8") + ".jpeg"
+            else:
+                file_name = f"{i}.jpeg"
+
         else:
             image = np.squeeze(item[0].numpy())
             file_name = f"{i}.jpeg"
@@ -54,3 +63,13 @@ def export_images(image_dir, dataset):
         else:
             image = Image.fromarray((image).astype(np.uint8), 'RGB')
         image.save(Path(image_dir, file_name))
+
+
+def export_imagenet_labels(label_path):
+    if not label_path.exists():
+        with open('imagenet/imagenet1000_clsidx_to_labels.txt') as file:
+            # Convert text to dict
+            label_names = ast.literal_eval(file.read())
+            with open(label_path, 'wb') as handle:
+                pickle.dump(label_names, handle,
+                            protocol=pickle.HIGHEST_PROTOCOL)
