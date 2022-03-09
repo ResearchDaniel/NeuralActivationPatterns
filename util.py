@@ -39,6 +39,42 @@ def filter_tf_dataset(dataset, indices):
     return [mapping[x] for x in indices]
 
 
+def average_images(image_dir, file_names, indices, image_out_size):
+    """ Average images located in image_dir.
+        Images will be resized to image_out_size.
+    Args:
+        image_dir (Path): Location of images.
+        file_names (_type_): List of file names in image_dir.
+        indices (_type_): Indices to file_names of images to average.
+        image_out_size (list): Width, height, and number of channels of resulting image average.  
+
+    Returns:
+        Image: Average image with size according to image_out_size
+    """
+    num_channels = image_out_size[-1]
+    if num_channels == 1:
+        arr = np.zeros(image_out_size[0:2], np.float)
+    else:
+        arr = np.zeros(image_out_size, np.float)
+    N = len(indices)
+    # Build up average pixel intensities, casting each image as an array of floats
+    for idx in indices:
+        im = Image.open(
+            Path(image_dir, file_names[idx])).resize(image_out_size[0:2])
+        imarr = np.array(im, dtype=np.float)
+        arr = arr+imarr/N
+
+    # Round values in array and cast as 8-bit integer
+    arr = np.array(np.round(arr), dtype=np.uint8)
+
+    # Generate, save and preview final image
+    if len(image_out_size) == 2 or num_channels == 1:
+        out = Image.fromarray(arr, mode='L')
+    else:
+        out = Image.fromarray(arr, mode='RGB')
+    return out
+
+
 def export_images(image_dir, dataset):
 
     image_dir.mkdir(parents=True, exist_ok=True)
