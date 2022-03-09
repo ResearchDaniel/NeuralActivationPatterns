@@ -57,7 +57,7 @@ def export_averages(image_dir, file_names, model, model_name, X, layers, filters
             path.mkdir(parents=True, exist_ok=True)
             size = list(X.element_spec.shape)
             avg = util.average_images(
-                image_dir, file_names, size, pattern.index)
+                image_dir, file_names, pattern.index, size)
             avg.save(Path(path, "average.jpeg"))
 
     for layer in layers:
