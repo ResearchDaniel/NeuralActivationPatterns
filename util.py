@@ -99,13 +99,3 @@ def export_images(image_dir, dataset):
         else:
             image = Image.fromarray((image).astype(np.uint8), 'RGB')
         image.save(Path(image_dir, file_name))
-
-
-def export_imagenet_labels(label_path):
-    if not label_path.exists():
-        with open('imagenet/imagenet1000_clsidx_to_labels.txt') as file:
-            # Convert text to dict
-            label_names = ast.literal_eval(file.read())
-            with open(label_path, 'wb') as handle:
-                pickle.dump(label_names, handle,
-                            protocol=pickle.HIGHEST_PROTOCOL)
