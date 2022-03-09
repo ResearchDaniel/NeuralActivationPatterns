@@ -55,15 +55,15 @@ def average_images(image_dir, file_names, indices, image_out_size):
     """
     num_channels = image_out_size[-1]
     if num_channels == 1:
-        arr = np.zeros(image_out_size[0:2], np.float)
+        arr = np.zeros(image_out_size[0:2], np.float64)
     else:
-        arr = np.zeros(image_out_size, np.float)
+        arr = np.zeros(image_out_size, np.float64)
     N = len(indices)
     # Build up average pixel intensities, casting each image as an array of floats
     for idx in indices:
         im = Image.open(
             Path(image_dir, file_names[idx])).resize(image_out_size[0:2])
-        imarr = np.array(im, dtype=np.float)
+        imarr = np.array(im, dtype=np.float64)
         arr = arr+imarr/N
 
     # Round values in array and cast as 8-bit integer
