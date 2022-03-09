@@ -58,7 +58,8 @@ def setup_model(model_name, data_path, data_set, data_set_size, split):
     else: 
         raise Exception(f"Invalid model: {model}")
     print(model.summary())
-    model_name = f"{model_name}_{data_set}_{split}_{X.cardinality().numpy()}"
+    clean_data_set_name = data_set.replace("/", "-")
+    model_name = f"{model_name}_{clean_data_set_name}_{split}_{X.cardinality().numpy()}"
     return model, model_name, X, y, file_names, image_dir
     
 # Model / data parameters
