@@ -16,3 +16,8 @@ export interface TooltipSpec {
   sample?: PatternForSample;
   layer?: string;
 }
+
+export interface Patterns {
+  samples: PatternForSample[];
+  persistence: number[];
+}
