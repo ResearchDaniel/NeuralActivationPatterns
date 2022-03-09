@@ -20,18 +20,6 @@ def get_data_set(data_path, data_set, data_set_size, split='test'):
             label) for label in range(0, info.features["label"].num_classes)}
         with open(label_path, 'wb') as handle:
             pickle.dump(label_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        # if data_set.startswith("mnist"):
-        #     label_names = {0: "0", 1: "1", 2: "2", 3: "3",
-        #                 4: "4", 5: "5", 6: "6", 7: "7", 8: "8", 9: "9"}
-        #     with open(label_path, 'wb') as handle:
-        #         pickle.dump(label_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        # elif data_set.startswith("cifar10"):
-        #     label_names = {0: "airplaine", 1: "automobile", 2: "bird", 3: "cat",
-        #         4: "deer", 5: "dog", 6: "frog", 7: "horse", 8: "ship", 9: "truck"}
-        #     with open(label_path, 'wb') as handle:
-        #         pickle.dump(label_names, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        # elif data_set.startswith("imagenet"):
-        #     util.export_imagenet_labels(label_path)
 
     X = ds.map(lambda elem: elem['image'])
     y = ds.map(lambda elem: elem['label'])
