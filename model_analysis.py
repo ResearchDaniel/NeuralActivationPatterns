@@ -101,7 +101,8 @@ y = list(tfds.as_numpy(y))
 
 #layer_analysis(model, model_name, X, y, layer)
 # filter_analysis(model, model_name, X, y, layer, filterId)
-files = file_names 
+export.export_max_activations(image_dir, file_names, model, model_name,
+                    X, layers, filters, N=10)
 predictions = tf.argmax(model.predict(
     X.batch(128).cache().prefetch(tf.data.AUTOTUNE)), axis=1).numpy()
 # for x in X.batch(128).cache().prefetch(tf.data.AUTOTUNE):
@@ -109,4 +110,4 @@ predictions = tf.argmax(model.predict(
 #         x), top=1)
 #     print(predictions)
 export.export_all(model, model_name, X, y, predictions,
-                  files, layers, filters, str(image_dir), agg_func=agg_func)
+                  file_names, layers, filters, str(image_dir), agg_func=agg_func)

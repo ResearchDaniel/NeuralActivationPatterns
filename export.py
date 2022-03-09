@@ -8,6 +8,7 @@ import util
 import pandas as pd
 import tensorflow as tf
 import pandas as pd
+import shutil
 
 EXPORT_LOCATION = Path("activation_cluster_explorer/backend/data")
 
@@ -81,6 +82,28 @@ def export_image(path, name, array):
         image = Image.fromarray((image * 255).astype(np.uint8), 'RGB')
     image.save(Path(path, f"{name}.jpeg"))
 
+def export_max_activations(image_dir, file_names, model, model_name, X, layers, filters, N, destination=EXPORT_LOCATION):
+    # Copies the N most activating input images into destination/layer/max_activations
+    def export_activations(base_path, max_activations):
+        base_path.mkdir(parents=True, exist_ok=True)
+        for order, max_activation in enumerate(max_activations):
+            path = Path(base_path, f"{order}_{file_names[max_activation]}")
+            old_name = f"{image_dir}/{file_names[max_activation]}"
+            shutil.copy(old_name, path)
+
+    ap = nap.NeuralActivationPattern(model)
+    for layer in layers:
+            activations, f = nap.cache.get_layer_activations(
+                X, model, model_name, layer)
+            max_activations = ap.layer_max_activations(layer, activations=activations, nSamplesPerLayer = N)
+            layer_path = Path(destination, model_name, "layers", str(layer), "max_activations")
+            export_activations(layer_path, max_activations)
+
+            if layer in filters:
+                for filter in filters[layer]:
+                    max_activations = ap.filter_max_activations(layer, filter, activations=activations, nSamplesPerLayer = N)
+                    export_activations(Path(layer_path, 'filters', str(filter)), max_activations)
+            f.close()
 
 def export_all(model, model_name, X, y, predictions, file_names, layers, filters, image_dir, agg_func, destination=EXPORT_LOCATION):
     export_config(image_dir, model_name, destination)
