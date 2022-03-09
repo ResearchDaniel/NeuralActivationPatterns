@@ -25,6 +25,6 @@
         });
 </script>
 
-<div class="flex flex-col p-2 min-h-0">
+<div class="flex flex-col pl-2 pr-2 min-h-0">
   <PatternsList patterns={filteredSamples} persistence={patterns.persistence} />
 </div>

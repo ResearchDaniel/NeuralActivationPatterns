@@ -10,6 +10,7 @@ module.exports = {
       white: '#fff',
       grey: '#cfcfcf',
       black: '#0f0f0f',
+      black_semi: '#0f0f0f77',
 
       /* Highlight */
       highlight: '#0071e3',
@@ -32,7 +33,9 @@ module.exports = {
     extend: {
       animation: {
         "ping-slow": "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
-
+      },
+      boxShadow: {
+        "top": "0 -5px 10px 0px rgba(0, 0, 0, 0.25)"
       }
     }
   },

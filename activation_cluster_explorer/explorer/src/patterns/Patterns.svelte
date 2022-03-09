@@ -1,6 +1,6 @@
 <script lang="ts">
   import Pattern from "./Pattern.svelte";
-  import SubHeading from "../components/SubHeading.svelte";
+  import SubHeading from "../elements/SubHeading.svelte";
 
   import type { PatternForSample } from "../types";
   import { labelFilter, predictionFilter } from "../stores";
@@ -28,7 +28,7 @@
 
 <div class="flex flex-col min-h-0">
   <SubHeading heading={`Patterns (${patternIds.length})`} />
-  <div class="flex flex-col items-start overflow-y-auto min-h-0">
+  <div class="flex flex-col items-start overflow-y-auto min-h-0 pt-2">
     {#each patternIds as patternId}
       <Pattern
         samples={patterns.filter((sample) => sample.patternId === patternId)}

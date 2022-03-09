@@ -1,13 +1,15 @@
 import { derived, writable } from "svelte/store";
-import { minPatternSize } from "./constants";
+import { centers, minPatternSize, outliers, showAvg } from "./constants";
 import type { PatternForSample, TooltipSpec } from "./types";
 
+export const settingsOpen = writable<boolean>(false);
 export const tooltip = writable<TooltipSpec>({
   hover: false,
   mousePos: { x: 0, y: 0 },
 });
-export const numCenters = writable<number>(1);
-export const numOutliers = writable<number>(3);
+export const numCenters = writable<number>(centers);
+export const numOutliers = writable<number>(outliers);
+export const showAverage = writable<boolean>(showAvg);
 export const selectedPage = writable<string>("Overview");
 export const pinnedPatterns = writable<Record<string, PatternForSample[]>>({});
 export const patternFilter = writable<{ label: string; patternId: number }[]>(

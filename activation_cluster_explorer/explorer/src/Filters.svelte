@@ -1,8 +1,8 @@
 <script lang="ts">
   import { labelFilter, predictionFilter } from "./stores";
-  import Pill from "./components/Pill.svelte";
-  import SubSubHeading from "./components/SubSubHeading.svelte";
-  import IconButton from "./components/IconButton.svelte";
+  import Pill from "./elements/Pill.svelte";
+  import SubSubHeading from "./elements/SubSubHeading.svelte";
+  import IconButton from "./elements/IconButton.svelte";
   import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
   import Fa from "svelte-fa";
 
@@ -26,7 +26,7 @@
   }
 </script>
 
-<div class="flex items-center bg-grey p-2">
+<div class="shadow-top flex items-center p-2 z-10">
   <SubSubHeading heading={"Filters"} />
   <div class="flex items-center overflow-x-auto min-w-0">
     {#if $labelFilter.length > 0}
@@ -52,6 +52,7 @@
   <div class="ml-auto">
     <IconButton
       filled={true}
+      textColor="text-text-dark"
       on:click={() => {
         labelFilter.set([]);
         predictionFilter.set([]);
