@@ -69,5 +69,13 @@ def get_image(model, id):
     return send_file(Path(data["data_path"], id), mimetype='image/jpeg')
 
 
+@app.route('/api/get_labels/<model>')
+def get_labels(model):
+    with open(Path(DATA_DIR, model, 'config.json')) as json_file:
+        data = json.load(json_file)
+    labels = pd.read_pickle(Path(data["data_path"], 'label_names.pkl'))
+    return jsonify(labels)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

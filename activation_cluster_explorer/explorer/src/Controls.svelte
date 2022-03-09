@@ -7,6 +7,7 @@
   export let model: string;
   export let layers: string[];
   export let layer: string;
+  export let labels: Record<number, string>;
   export let dataset: {
     file_name: string;
     label?: string;
@@ -25,6 +26,7 @@
           layers = [];
           dataset = [];
           layer = undefined;
+          labels = undefined;
         }}
       />
     </LabeledComponent>
