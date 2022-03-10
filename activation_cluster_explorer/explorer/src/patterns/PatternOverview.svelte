@@ -27,6 +27,22 @@
     actions: false,
   } as EmbedOptions;
 
+  $: centers = samples.slice(0, $numCenters);
+  $: outliers = samples.slice(-$numOutliers);
+  $: metadata = samples.reduce(sampleMetadata, {
+    labels: {},
+    predictions: {},
+  });
+  $: filteredMetadata = filteredSamples.reduce(sampleMetadata, {
+    labels: {},
+    predictions: {},
+  });
+  $: extent = [
+    samples[samples.length - 1].probability === 1
+      ? 0
+      : samples[samples.length - 1].probability,
+    1,
+  ];
   $: probabilityHistogramSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     data: { values: samples },
@@ -34,17 +50,13 @@
     height: 100,
     mark: { type: "bar", tooltip: true },
     encoding: {
-      x: { bin: true, field: "probability" },
+      x: {
+        bin: { extent: extent },
+        field: "probability",
+      },
       y: { aggregate: "count", title: "samples" },
     },
   } as VegaLiteSpec;
-  $: centers = samples.slice(0, $numCenters);
-  $: outliers = samples.slice(-$numOutliers);
-  $: metadata = samples.reduce(sampleMetadata, { labels: {}, predictions: {} });
-  $: filteredMetadata = filteredSamples.reduce(sampleMetadata, {
-    labels: {},
-    predictions: {},
-  });
   $: labelSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     description: "A simple bar chart with embedded data.",
@@ -102,7 +114,10 @@
   } as VegaLiteSpec;
   $: layeredPredictionSpec = {
     layer: [
-      { ...predictionSpec, mark: { ...predictionSpec.mark, color: "#dcdcdc" } },
+      {
+        ...predictionSpec,
+        mark: { ...predictionSpec.mark, color: "#dcdcdc" },
+      },
       {
         ...predictionSpec,
         data: {
