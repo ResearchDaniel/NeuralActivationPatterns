@@ -233,9 +233,8 @@ def get_layer_patterns(X, model, model_name, layer, agg_func, destination=CACHE_
 def get_layer_patterns_activation_statistics(X, model, model_name, layer, agg_func, destination=CACHE_LOCATION):
     path = layer_patterns_activation_statistics_path(destination, model_name, layer)
     if not path.exists():
-        patterns, f = get_layer_patterns(X, model, model_name, layer, agg_func, destination)
+        patterns, _ = get_layer_patterns(X, model, model_name, layer, agg_func, destination)
         export_layer_patterns_activation_statistics(X, model, model_name, layer, patterns, destination)
-        f.close()
     return pickle.load(open(path, "rb" ))
 
 def get_filter_patterns(X, model, model_name, layer, filter, destination=CACHE_LOCATION):
@@ -250,9 +249,8 @@ def get_filter_patterns(X, model, model_name, layer, filter, destination=CACHE_L
 def get_filter_patterns_activation_statistics(X, model, model_name, layer, filter, destination=CACHE_LOCATION):
     path = filter_patterns_activation_statistics_path(destination, model_name, layer, filter)
     if not path.exists():
-        patterns, f = get_filter_patterns(X, model, model_name, layer, filter, destination)
+        patterns, _ = get_filter_patterns(X, model, model_name, layer, filter, destination)
         export_filter_patterns_activation_statistics(X, model, model_name, layer, filter, patterns, destination)
-        f.close()
     return pickle.load(open(path, "rb" ))
 
 def get_filter_activation_statistics(X, model, model_name, layer, destination=CACHE_LOCATION):
