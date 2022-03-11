@@ -4,6 +4,8 @@ import numpy as np
 import tensorflow as tf
 import nap
 from pathlib import Path
+import pickle
+from scipy import stats
 
 CACHE_LOCATION = Path("results")
 
@@ -18,6 +20,17 @@ def activations_agg_path(destination, model_name, layer, agg_func):
     else:
         return Path(destination, model_name, layer, f'layer_activations_{agg_func.__class__.__name__}.h5')
 
+def activation_statistics_path(destination, model_name, layer):
+    return Path(destination, model_name, layer, 'layer_activation_statistics.pkl')
+
+def layer_patterns_activation_statistics_path(destination, model_name, layer):
+    return Path(destination, model_name, layer, 'layer_patterns_activation_statistics.pkl')
+
+def filter_patterns_activation_statistics_path(destination, model_name, layer, filter):
+    return Path(destination, model_name, layer, filter, 'filters', f'{filter}_patterns_activation_statistics.pkl')    
+
+def filter_activation_statistics_path(destination, model_name, layer, filter):
+    return Path(destination, model_name, layer, filter, 'filters', f'{filter}_activation_statistics.pkl')    
 
 def layer_patterns_path(destination, model_name, layer):
     return Path(destination, model_name, layer, 'layer_patterns.h5')
@@ -99,6 +112,57 @@ def export_layer_aggregation(X, model, model_name, layers, agg_func, destination
                                     ] = [agg_func.aggregate(ap.layer(layer), activation) for activation in data]
                     i += data.shape[0]
 
+def export_layer_activation_statistics(X, model, model_name, layers, destination=CACHE_LOCATION):
+    ap = nap.NeuralActivationPattern(model)
+    for layer in layers:
+        act_path = activations_path(destination, model_name, layer)
+        if not act_path.exists():
+            export_activations(X, model, model_name, [layer], destination)
+        with h5py.File(act_path, 'r') as f_act:
+            activations = f_act["activations"]
+            statistics = stats.describe(activations, axis=-1)
+            path = activation_statistics_path(destination, model_name, layer)
+            pickle.dump(statistics, open(path, "wb"))
+
+def export_layer_patterns_activation_statistics(X, model, model_name, layer, patterns, destination=CACHE_LOCATION):
+    act_path = activations_path(destination, model_name, layer)
+    if not act_path.exists():
+        export_activations(X, model, model_name, [layer], destination)
+    with h5py.File(act_path, 'r') as f_act:
+        activations = f_act["activations"]
+        pattern_statistics = {}
+        for id, pattern in patterns.groupby("patternId"):
+            statistics = stats.describe(activations[pattern.index.tolist()], axis=-1)
+            pattern_statistics[id] = statistics
+        path = layer_patterns_activation_statistics_path(destination, model_name, layer)
+        pickle.dump(pattern_statistics, open(path, "wb"))
+
+def export_filter_patterns_activation_statistics(X, model, model_name, layer, filter, patterns, destination=CACHE_LOCATION):
+    act_path = activations_path(destination, model_name, layer)
+    if not act_path.exists():
+        export_activations(X, model, model_name, [layer], destination)
+    with h5py.File(act_path, 'r') as f_act:
+        activations = f_act["activations"]
+        pattern_statistics = {}
+        for id, pattern in patterns.groupby("patternId"):
+            statistics = stats.describe(activations[pattern.index.tolist()][..., filter], axis=None)
+            pattern_statistics[id] = statistics
+        path = filter_patterns_activation_statistics_path(destination, model_name, layer, filter)
+        pickle.dump(pattern_statistics, open(path, "wb"))
+
+def export_filter_activation_statistics(X, model, model_name, layers, filters=None, destination=CACHE_LOCATION):
+    for layer in layers:
+        # [()] retireves all data because slicing the filter is super-slow in hdf5
+        activations, f = get_layer_activations(
+            X, model, model_name, layer, destination)[()]
+        if filters is None:
+            filters = range(activations.shape[-1])
+        for filter in filters:
+            statistics = stats.describe(activations[..., filter], axis=None)
+            path = filter_activation_statistics_path(destination, model_name, layer, filter)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            pickle.dump(statistics, open(path, "wb"))
+        f.close()
 
 def export_layer_patterns(X, model, model_name, layers, agg_func, destination=CACHE_LOCATION):
     ap = nap.NeuralActivationPattern(model)
@@ -143,6 +207,11 @@ def get_layer_activations(X, model, model_name, layer, destination=CACHE_LOCATIO
     f = h5py.File(path, 'r')
     return f["activations"], f
 
+def get_layer_activation_statistics(X, model, model_name, layer, destination=CACHE_LOCATION):
+    path = activation_statistics_path(destination, model_name, layer)
+    if not path.exists():
+        export_layer_activation_statistics(X, model, model_name, [layer], destination)
+    return pickle.load(open(path, "rb" ))
 
 def get_layer_activations_agg(X, model, model_name, layer, agg_func, destination=CACHE_LOCATION):
     path = activations_agg_path(destination, model_name, layer, agg_func)
@@ -161,6 +230,13 @@ def get_layer_patterns(X, model, model_name, layer, agg_func, destination=CACHE_
                               layer], agg_func, destination)
     return pd.read_hdf(path), pd.read_hdf(info_path)
 
+def get_layer_patterns_activation_statistics(X, model, model_name, layer, agg_func, destination=CACHE_LOCATION):
+    path = layer_patterns_activation_statistics_path(destination, model_name, layer)
+    if not path.exists():
+        patterns, f = get_layer_patterns(X, model, model_name, layer, agg_func, destination)
+        export_layer_patterns_activation_statistics(X, model, model_name, layer, patterns, destination)
+        f.close()
+    return pickle.load(open(path, "rb" ))
 
 def get_filter_patterns(X, model, model_name, layer, filter, destination=CACHE_LOCATION):
     path = filter_patterns_path(destination, model_name, layer, filter)
@@ -170,3 +246,17 @@ def get_filter_patterns(X, model, model_name, layer, filter, destination=CACHE_L
         export_filter_patterns(X, model, model_name, [
                                layer], [filter], destination)
     return pd.read_hdf(path), pd.read_hdf(info_path)
+
+def get_filter_patterns_activation_statistics(X, model, model_name, layer, filter, destination=CACHE_LOCATION):
+    path = filter_patterns_activation_statistics_path(destination, model_name, layer, filter)
+    if not path.exists():
+        patterns, f = get_filter_patterns(X, model, model_name, layer, filter, destination)
+        export_filter_patterns_activation_statistics(X, model, model_name, layer, filter, patterns, destination)
+        f.close()
+    return pickle.load(open(path, "rb" ))
+
+def get_filter_activation_statistics(X, model, model_name, layer, destination=CACHE_LOCATION):
+    path = filter_activation_statistics_path(destination, model_name, layer, filter)
+    if not path.exists():
+        export_filter_activation_statistics(X, model, model_name, [layer], [filter], destination)
+    return pickle.load(open(path, "rb" ))

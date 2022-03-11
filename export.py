@@ -9,6 +9,7 @@ import pandas as pd
 import tensorflow as tf
 import pandas as pd
 import shutil
+import pickle
 
 EXPORT_LOCATION = Path("activation_cluster_explorer/backend/data")
 
@@ -30,22 +31,41 @@ def export_dataset(file_names, labels, predictions, model_name, destination=EXPO
 
 
 def export_patterns(model, model_name, X, layers, filters, agg_func, destination=EXPORT_LOCATION):
-    def export_pattern(path, patterns, info):
+    def export_pattern(path, patterns, info, statisitics):
         path.mkdir(parents=True, exist_ok=True)
         patterns.to_pickle(Path(path, "patterns.pkl"))
         info.to_pickle(Path(path, "patterns_info.pkl"))
+        pickle.dump(statistics, open(Path(path, "patterns_statistics.pkl"), "wb"))
     for layer in layers:
         path = Path(destination, model_name, "layers", str(layer))
         patterns, info = nap.cache.get_layer_patterns(
             X, model, model_name, layer, agg_func)
-        export_pattern(path, patterns, info)
+        statistics = nap.cache.get_layer_patterns_activation_statistics(X, model, model_name, layer, agg_func)
+        export_pattern(path, patterns, info, statistics)
         if layer in filters:
             for filter in filters[layer]:
                 path = Path(destination, model_name,
                             "layers", str(layer), str(filter))
                 patterns, info = nap.cache.get_filter_patterns(
                     X, model, model_name, layer, filter)
-                export_pattern(path, patterns, info)
+                statistics = nap.cache.get_filter_patterns_activation_statistics(X, model, model_name, layer, filter)
+                export_pattern(path, patterns, info, statistics)
+
+def export_statistics(model, model_name, X, layers, filters, destination=EXPORT_LOCATION):
+    for layer in layers:
+        path = Path(destination, model_name, "layers", str(layer))
+        path.mkdir(parents=True, exist_ok=True)
+        stats = nap.cache.get_layer_activation_statistics(
+            X, model, model_name, layer)
+        pickle.dump(stats, open(Path(path, "layer_statistics.pkl"), "wb"))
+        if layer in filters:
+            for filter in filters[layer]:
+                path = Path(destination, model_name,
+                            "layers", str(layer), str(filter))
+                path.mkdir(parents=True, exist_ok=True)
+                stats = nap.cache.get_filter_activation_statistics(
+                    X, model, model_name, layer, filter)
+                pickle.dump(stats, open(Path(path, "filter_statistics.pkl"), "wb"))
 
 
 def export_averages(image_dir, file_names, model, model_name, X, layers, filters, agg_func, destination=EXPORT_LOCATION):
@@ -110,5 +130,7 @@ def export_all(model, model_name, X, y, predictions, file_names, layers, filters
     export_dataset(file_names, y, predictions, model_name, destination)
     export_patterns(model, model_name, X, layers,
                     filters, agg_func, destination)
+    export_statistics(model, model_name, X, layers,
+                    filters, destination)
     export_averages(image_dir, file_names, model, model_name,
                     X, layers, filters, agg_func, destination)
