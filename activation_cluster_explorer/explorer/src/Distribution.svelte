@@ -43,7 +43,7 @@
   }
 </script>
 
-<div class="flex flex-col">
+<div class="flex flex-col min-w-0">
   <SubHeading heading={"Distribution"} />
   <div class="overflow-auto">
     <VegaLite {spec} {options} signalListeners={{ select: handleSelection }} />

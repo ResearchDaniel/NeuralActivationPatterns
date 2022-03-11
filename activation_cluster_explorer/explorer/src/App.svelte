@@ -92,7 +92,7 @@
 </script>
 
 <main class="h-full">
-  <div class="flex flex-col" style="height: 100%;">
+  <div class="flex flex-col h-full">
     <Header />
     {#if $selectedPage === "Overview"}
       {#await fetchModels then models}
