@@ -181,20 +181,26 @@
     <p>Outliers</p>
     <PatternImageList {model} samples={outliers} {layer} />
   </div>
-  <div class="flex flex-col">
+  <div class="flex flex-col min-w-0">
     <p>Distribution</p>
     <div class="flex flex-wrap">
-      <VegaLite spec={probabilityHistogramSpec} {options} />
-      <VegaLite
-        spec={layeredLabelSpec}
-        {options}
-        signalListeners={{ select: handleSelectionLabel }}
-      />
-      <VegaLite
-        spec={layeredPredictionSpec}
-        {options}
-        signalListeners={{ select: handleSelectionPrediction }}
-      />
+      <div class="min-w-0 overflow-x-auto">
+        <VegaLite spec={probabilityHistogramSpec} {options} />
+      </div>
+      <div class="min-w-0 overflow-x-auto">
+        <VegaLite
+          spec={layeredLabelSpec}
+          {options}
+          signalListeners={{ select: handleSelectionLabel }}
+        />
+      </div>
+      <div class="min-w-0 overflow-x-auto">
+        <VegaLite
+          spec={layeredPredictionSpec}
+          {options}
+          signalListeners={{ select: handleSelectionPrediction }}
+        />
+      </div>
     </div>
   </div>
 </div>

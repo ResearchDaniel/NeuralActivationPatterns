@@ -27,16 +27,16 @@ module.exports = {
       button: '#0071e3',
       button_hover: '#0077ed',
     },
-    minWidth: {
-      'compare': '800px',
-    },
     extend: {
       animation: {
         "ping-slow": "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
       },
       boxShadow: {
         "top": "0 -5px 10px 0px rgba(0, 0, 0, 0.25)"
-      }
+      },
+      minWidth: {
+        'compare': '800px',
+      },
     }
   },
   fontFamily: {
