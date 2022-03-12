@@ -25,7 +25,8 @@ parser.add_argument("--data_set",
 parser.add_argument("--split",
                     default='test')
 parser.add_argument("--layer")
-parser.add_argument("--filter", type=int)
+parser.add_argument("--all_filters", required=False)
+parser.add_argument("--filter_range", type=int, nargs=2, required=False)
 parser.add_argument("--aggregation",
                     default='mean', choices=["mean", "mean_std", "max", "none"])
 parser.add_argument("--size", type=int,
@@ -68,17 +69,21 @@ def setup_model(model_name, data_path, data_set, data_set_size, split):
 
 
 data_set_size = args.size
-model, model_name, X, y, file_names, image_dir = setup_model(args.model, args.data_path, args.data_set, data_set_size, args.split)
+model, model_name, X, y, file_names, image_dir = setup_model(
+    args.model, args.data_path, args.data_set, data_set_size, args.split)
 model_name = f"{model_name}_leaf"
-if args.layer is None:   
-    layers = [layer.name for layer in model.layers] 
+if args.layer is None:
+    layers = [layer.name for layer in model.layers]
 else:
     layers = [args.layer]
-if args.filter is None:   
-    filters = {}
-else:
-    filters  = {f"{layer}": [args.filter] for layer in layers}
-
+filters = {}
+if args.all_filters is not None:
+    for layer in layers:
+        shape = list(model.get_layer(layer).output.shape)
+        filters[f"{layer}"] = [f for f in range(0, shape[-1])]
+elif args.filter_range is not None:
+    for layer in layers:
+        filters[f"{layer}"] = [f for f in args.filter_range]
 
 # layers = ['Mixed_4b_Concatenated', 'Mixed_5b_Concatenated']
 # layer = 'Mixed_4b_Concatenated'
@@ -105,7 +110,7 @@ y = list(tfds.as_numpy(y))
 # filter_analysis(model, model_name, X, y, layer, filterId)
 if args.n_max_activations > 0:
     export.export_max_activations(image_dir, file_names, model, model_name,
-                        X, layers, filters, N=args.n_max_activations)
+                                  X, layers, filters, N=args.n_max_activations)
 
 predictions = tf.argmax(model.predict(
     X.batch(128).cache().prefetch(tf.data.AUTOTUNE)), axis=1).numpy()

@@ -182,21 +182,22 @@ def export_layer_patterns(X, model, model_name, layers, agg_func, destination=CA
 def export_filter_patterns(X, model, model_name, layers, filters=None, destination=CACHE_LOCATION):
     ap = nap.NeuralActivationPattern(model)
     for layer in layers:
-
         activations, f = get_layer_activations(
             X, model, model_name, layer, destination)
+        # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
+        activations = activations[()]
         if filters is None:
             filters = range(activations.shape[-1])
         for filter in filters:
-            # [()] retireves all data because slicing the filter is super-slow in hdf5
             patterns, patterns_info = ap.activity_patterns(
-                f'{layer}:{filter}', activations=activations[()])
+                f'{layer}:{filter}', activations=activations)
             path = filter_patterns_path(destination, model_name, layer, filter)
             path.parent.mkdir(parents=True, exist_ok=True)
             patterns.to_hdf(path, f'{layer}/filter_{filter}')
             patterns_info_path = filter_patterns_info_path(
                 destination, model_name, layer, filter)
-            patterns_info.to_hdf(patterns_info_path, f'{layer}/filter_{filter}')
+            patterns_info.to_hdf(patterns_info_path,
+                                 f'{layer}/filter_{filter}')
         f.close()
 
 
