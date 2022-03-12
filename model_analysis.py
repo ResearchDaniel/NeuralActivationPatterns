@@ -25,7 +25,7 @@ parser.add_argument("--data_set",
 parser.add_argument("--split",
                     default='test')
 parser.add_argument("--layer")
-parser.add_argument("--all_filters", required=False)
+parser.add_argument("--all_filters", action='store_false')
 parser.add_argument("--filter_range", type=int, nargs=2, required=False)
 parser.add_argument("--aggregation",
                     default='mean', choices=["mean", "mean_std", "max", "none"])

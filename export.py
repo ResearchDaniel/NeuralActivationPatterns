@@ -45,7 +45,7 @@ def export_patterns(model, model_name, X, layers, filters, agg_func, destination
         if layer in filters:
             for filter in filters[layer]:
                 path = Path(destination, model_name,
-                            "layers", str(layer), str(filter))
+                            "layers", str(layer), "filters", str(filter))
                 patterns, info = nap.cache.get_filter_patterns(
                     X, model, model_name, layer, filter)
                 statistics = nap.cache.get_filter_patterns_activation_statistics(X, model, model_name, layer, filter)
@@ -61,7 +61,7 @@ def export_statistics(model, model_name, X, layers, filters, destination=EXPORT_
         if layer in filters:
             for filter in filters[layer]:
                 path = Path(destination, model_name,
-                            "layers", str(layer), str(filter))
+                            "layers", str(layer), "filters", str(filter))
                 path.mkdir(parents=True, exist_ok=True)
                 stats = nap.cache.get_filter_activation_statistics(
                     X, model, model_name, layer, filter)
@@ -115,6 +115,8 @@ def export_max_activations(image_dir, file_names, model, model_name, X, layers, 
     for layer in layers:
             activations, f = nap.cache.get_layer_activations(
                 X, model, model_name, layer)
+            # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
+            activations = activations[()]    
             max_activations = ap.layer_max_activations(layer, activations=activations, nSamplesPerLayer = N)
             layer_path = Path(destination, model_name, "layers", str(layer), "max_activations")
             export_activations(layer_path, max_activations)

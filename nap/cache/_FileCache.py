@@ -27,10 +27,10 @@ def layer_patterns_activation_statistics_path(destination, model_name, layer):
     return Path(destination, model_name, layer, 'layer_patterns_activation_statistics.pkl')
 
 def filter_patterns_activation_statistics_path(destination, model_name, layer, filter):
-    return Path(destination, model_name, layer, filter, 'filters', f'{filter}_patterns_activation_statistics.pkl')    
+    return Path(destination, model_name, layer, 'filters', str(filter), 'filter_patterns_activation_statistics.pkl')    
 
 def filter_activation_statistics_path(destination, model_name, layer, filter):
-    return Path(destination, model_name, layer, filter, 'filters', f'{filter}_activation_statistics.pkl')    
+    return Path(destination, model_name, layer, 'filters', str(filter), 'filter_activation_statistics.pkl')    
 
 def layer_patterns_path(destination, model_name, layer):
     return Path(destination, model_name, layer, 'layer_patterns.h5')
@@ -41,11 +41,11 @@ def layer_patterns_info_path(destination, model_name, layer):
 
 
 def filter_patterns_path(destination, model_name, layer, filter):
-    return Path(destination, model_name, layer, 'filters', f'{filter}.h5')
+    return Path(destination, model_name, layer, 'filters', str(filter), 'filter_patterns.h5')
 
 
 def filter_patterns_info_path(destination, model_name, layer, filter):
-    return Path(destination, model_name, layer, 'filters', f'{filter}_info.h5')
+    return Path(destination, model_name, layer, 'filters', str(filter), 'filter_patterns_info.h5')
 
 
 def export_activations(X, model, model_name, layers, destination=CACHE_LOCATION, mode='w'):
@@ -152,9 +152,10 @@ def export_filter_patterns_activation_statistics(X, model, model_name, layer, fi
 
 def export_filter_activation_statistics(X, model, model_name, layers, filters=None, destination=CACHE_LOCATION):
     for layer in layers:
-        # [()] retireves all data because slicing the filter is super-slow in hdf5
         activations, f = get_layer_activations(
-            X, model, model_name, layer, destination)[()]
+            X, model, model_name, layer, destination)
+         # [()] retireves all data because slicing the filter is super-slow in hdf5
+        activations = activations[()]
         if filters is None:
             filters = range(activations.shape[-1])
         for filter in filters:
@@ -254,7 +255,7 @@ def get_filter_patterns_activation_statistics(X, model, model_name, layer, filte
         export_filter_patterns_activation_statistics(X, model, model_name, layer, filter, patterns, destination)
     return pickle.load(open(path, "rb" ))
 
-def get_filter_activation_statistics(X, model, model_name, layer, destination=CACHE_LOCATION):
+def get_filter_activation_statistics(X, model, model_name, layer, filter, destination=CACHE_LOCATION):
     path = filter_activation_statistics_path(destination, model_name, layer, filter)
     if not path.exists():
         export_filter_activation_statistics(X, model, model_name, [layer], [filter], destination)

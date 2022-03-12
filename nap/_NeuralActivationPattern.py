@@ -92,7 +92,7 @@ def layer_activation_aggregation(activations, agg_func=np.mean):
 
     if (len(activations.shape) == 3):
         # Convolutional-like layer
-        return [agg_func(activations[:, :, feature].flatten()) for feature in range(activations.shape[-1])]
+        return [agg_func(activations[..., feature].flatten()) for feature in range(activations.shape[-1])]
     else:
 
         # aggregated_activation = [agg_func(activations.flatten())]
@@ -186,8 +186,8 @@ class NeuralActivationPattern:
         """
         if activations is None:
             activations = self.layer_activations(layer, X)
-        # for each finput
-        agg_activations = [agg_func(activation[:, :, filterId])
+        # for each input
+        agg_activations = [agg_func(activation[..., filterId])
                            for activation in activations]
         # Get indices of images that activate the most
         largestActivationsIndices = list(
