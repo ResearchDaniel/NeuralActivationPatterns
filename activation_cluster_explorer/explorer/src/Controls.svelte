@@ -3,59 +3,69 @@
   import LabeledComponent from "./elements/LabeledComponent.svelte";
   import SubHeading from "./elements/SubHeading.svelte";
 
-  export let models: string[];
-  export let model: string = undefined;
-  export let layers: string[];
-  export let layer: string = undefined;
-  export let filters: string[];
-  export let filter: string = "---";
-  export let filterMethods: string[];
-  export let filterMethod: string;
-  export let labels: Record<number, string> = undefined;
-  export let dataset: {
-    file_name: string;
-    label?: string;
-    prediction?: string;
-  }[];
+  import {
+    fetchFilterMethods,
+    fetchFilters,
+    fetchLayers,
+    fetchModels,
+    fetchPatterns,
+  } from "./api";
+  import type { Patterns } from "./types";
+
+  export let patternsRequest: Promise<Patterns> = undefined;
+
+  let model: string = undefined;
+  let layer: string = undefined;
+  let filter: string = "---";
+  let filterMethod: string = undefined;
+
+  $: patternsRequest = fetchPatterns(model, layer, filter, filterMethod);
 </script>
 
 <div class="flex flex-col">
   <SubHeading heading={"Configuration"} />
-  <div class="pt-2">
-    <LabeledComponent name={"Model"}>
-      <Dropdown
-        items={models}
-        bind:value={model}
-        on:change={() => {
-          layers = [];
-          dataset = [];
-          filters = [];
-          layer = undefined;
-          labels = undefined;
-          filter = "---";
-        }}
-      />
-    </LabeledComponent>
-  </div>
-  {#if model !== undefined && layers.length !== 0}
+  {#await fetchModels() then models}
     <div class="pt-2">
-      <LabeledComponent name={"Layer"}>
-        <Dropdown items={layers} bind:value={layer} />
+      <LabeledComponent name={"Model"}>
+        <Dropdown
+          items={models}
+          bind:value={model}
+          on:change={() => {
+            layer = undefined;
+            filter = "---";
+            filterMethod = undefined;
+          }}
+        />
       </LabeledComponent>
     </div>
-  {/if}
-  {#if model !== undefined && layer !== undefined && filterMethods.length > 0}
-    <div class="pt-2">
-      <LabeledComponent name={"Filter Method"}>
-        <Dropdown items={filterMethods} bind:value={filterMethod} />
-      </LabeledComponent>
-    </div>
-    {#if filterMethod !== undefined && filters.length > 1}
+  {/await}
+  {#if model !== undefined}
+    {#await fetchLayers(model) then layers}
       <div class="pt-2">
-        <LabeledComponent name={"Filter"}>
-          <Dropdown items={filters} bind:value={filter} />
+        <LabeledComponent name={"Layer"}>
+          <Dropdown items={layers} bind:value={layer} />
         </LabeledComponent>
       </div>
+    {/await}
+  {/if}
+  {#if model !== undefined && layer !== undefined}
+    {#await fetchFilterMethods(model, layer) then filterMethods}
+      {#if filterMethods.length > 0}
+        <div class="pt-2">
+          <LabeledComponent name={"Filter Method"}>
+            <Dropdown items={filterMethods} bind:value={filterMethod} />
+          </LabeledComponent>
+        </div>
+      {/if}
+    {/await}
+    {#if filterMethod !== undefined}
+      {#await fetchFilters(model, layer, filterMethod) then filters}
+        <div class="pt-2">
+          <LabeledComponent name={"Filter"}>
+            <Dropdown items={filters} bind:value={filter} />
+          </LabeledComponent>
+        </div>
+      {/await}
     {/if}
   {/if}
 </div>
