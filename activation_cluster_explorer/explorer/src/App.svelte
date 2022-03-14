@@ -14,8 +14,10 @@
 
   let model: string = undefined;
   let layer: string = undefined;
+  let filter: string = "---";
   let labels: Record<number, string> = undefined;
   let layers: string[] = [];
+  let filters: string[] = [];
   let dataset: {
     file_name: string;
     label?: string;
@@ -43,6 +45,16 @@
       .then((response) => response.json())
       .then((jsonResponse) => (labels = jsonResponse));
   }
+  $: if (model !== undefined && layer !== undefined) {
+    fetch(`/api/get_filters/${model}/${layer}`)
+      .then((response) => response.json())
+      .then((jsonResponse) => {
+        filters = [
+          "---",
+          ...(jsonResponse["filters"] as string[]).sort((a, b) => +a - +b),
+        ];
+      });
+  }
   $: fetchPatterns = (async () => {
     if (
       dataset.length === 0 ||
@@ -51,10 +63,21 @@
       labels === undefined
     )
       return { samples: [], persistence: [] };
-    const infoResponse = await fetch(`/api/get_pattern_info/${model}/${layer}`);
+    const infoResponse =
+      filter === "---"
+        ? await fetch(`/api/get_pattern_info/${model}/${layer}`)
+        : await fetch(
+            `/api/get_filter_pattern_info/${model}/${layer}/${filter}`
+          );
+    console.log(infoResponse);
+    if (!infoResponse.ok) return { samples: [], persistence: [] };
     const infoJsonResponse = await infoResponse.json();
     const info = JSON.parse(infoJsonResponse);
-    const response = await fetch(`/api/get_patterns/${model}/${layer}`);
+    const response =
+      filter === "---"
+        ? await fetch(`/api/get_patterns/${model}/${layer}`)
+        : await fetch(`/api/get_filter_patterns/${model}/${layer}/${filter}`);
+    if (!response.ok) return { samples: [], persistence: [] };
     const jsonResponse = await response.json();
     const patterns = JSON.parse(jsonResponse);
     if (patterns.length !== dataset.length)
@@ -74,6 +97,7 @@
               patternUid: `${model}_${layer}_${pattern.patternId}`,
               model: model,
               layer: layer,
+              filter: filter === "---" ? undefined : filter,
               patternId: pattern.patternId,
               probability: pattern.probability,
               outlierScore: pattern.outlier_score,
@@ -103,6 +127,8 @@
             bind:model
             bind:dataset
             bind:labels
+            bind:filter
+            bind:filters
             {models}
           />
           {#await fetchPatterns then patterns}

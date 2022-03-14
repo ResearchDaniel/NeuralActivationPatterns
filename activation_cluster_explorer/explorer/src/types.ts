@@ -6,6 +6,7 @@ export interface PatternForSample {
   fileName: string;
   model: string;
   layer: string;
+  filter?: string;
   label?: string;
   prediction?: string;
 }
