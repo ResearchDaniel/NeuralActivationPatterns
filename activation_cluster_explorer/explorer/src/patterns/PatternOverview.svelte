@@ -21,6 +21,7 @@
   export let patternId: number;
   export let model: string;
   export let layer: string;
+  export let expanded: boolean;
 
   const options = {
     config: themeConfig,
@@ -164,7 +165,7 @@
   }
 </script>
 
-<div class="flex flex-wrap">
+<div class="flex flex-wrap" class:overflow-y-auto={expanded}>
   {#if $showAverage}
     <div class="flex flex-col pr-4">
       <p>Average</p>
@@ -173,14 +174,16 @@
       />
     </div>
   {/if}
-  <div class="flex flex-col pr-4">
-    <p>Centers</p>
-    <PatternImageList {model} samples={centers} {layer} />
-  </div>
-  <div class="flex flex-col pr-4">
-    <p>Outliers</p>
-    <PatternImageList {model} samples={outliers} {layer} />
-  </div>
+  {#if !expanded}
+    <div class="flex flex-col pr-4">
+      <p>Centers</p>
+      <PatternImageList {model} samples={centers} {layer} />
+    </div>
+    <div class="flex flex-col pr-4">
+      <p>Outliers</p>
+      <PatternImageList {model} samples={outliers} {layer} />
+    </div>
+  {/if}
   <div class="flex flex-col min-w-0">
     <p>Distribution</p>
     <div class="flex flex-wrap">

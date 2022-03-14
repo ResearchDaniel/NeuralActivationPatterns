@@ -37,17 +37,55 @@ def get_layers(model):
     return jsonify(layers)
 
 
+@app.route('/api/get_filters/<model>/<layer>')
+def get_filters(model, layer):
+    filters = []
+    filters_path = Path(DATA_DIR, model, "layers", layer, "filters")
+    if filters_path.exists():
+        for path in filters_path.iterdir():
+            if path.is_dir():
+                filters.append(path.stem)
+    filters = {
+        'filters': filters
+    }
+    return jsonify(filters)
+
+
 @app.route('/api/get_patterns/<model>/<layer>')
 def get_patterns(model, layer):
-    patterns = pd.read_pickle(
-        Path(DATA_DIR, model, "layers", layer, "patterns.pkl"))
+    pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns.pkl")
+    if not pickle_path.exists:
+        return ERROR_STATUS
+    patterns = pd.read_pickle(pickle_path)
+    return jsonify(patterns.to_json(orient="records"))
+
+
+@app.route('/api/get_filter_patterns/<model>/<layer>/<filter>')
+def get_filter_patterns(model, layer, filter):
+    pickle_path = Path(DATA_DIR, model, "layers", layer,
+                       "filters", filter, "patterns.pkl")
+    if not pickle_path.exists:
+        return ERROR_STATUS
+    patterns = pd.read_pickle(pickle_path)
     return jsonify(patterns.to_json(orient="records"))
 
 
 @app.route('/api/get_pattern_info/<model>/<layer>')
 def get_pattern_info(model, layer):
-    patterns = pd.read_pickle(
-        Path(DATA_DIR, model, "layers", layer, "patterns_info.pkl"))
+    pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns_info.pkl")
+    if not pickle_path.exists:
+        return ERROR_STATUS
+    patterns = pd.read_pickle(pickle_path)
+    return jsonify(patterns.to_json(orient="records"))
+
+
+@app.route('/api/get_filter_pattern_info/<model>/<layer>/<filter>')
+def get_filter_pattern_info(model, layer, filter):
+    pickle_path = Path(DATA_DIR, model, "layers", layer,
+                       "filters", filter, "patterns_info.pkl")
+    if not pickle_path.exists:
+        return ERROR_STATUS
+    patterns = pd.read_pickle(pickle_path)
     return jsonify(patterns.to_json(orient="records"))
 
 

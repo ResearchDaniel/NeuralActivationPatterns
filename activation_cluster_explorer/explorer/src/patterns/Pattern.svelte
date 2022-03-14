@@ -44,8 +44,17 @@
     : 'w-full mb-2'}"
 >
   <div class="flex">
-    <SubSubHeading heading={`ID: ${patternId}`} />
-    <SubSubHeading heading={`Size: ${samples.length}`} />
+    <div class="flex flex-wrap">
+      <SubSubHeading heading={`ID: ${patternId}`} />
+      <SubSubHeading heading={`Size: ${samples.length}`} />
+      {#if expanded}
+        <SubSubHeading heading={`Model: ${model}`} />
+        <SubSubHeading heading={`Layer: ${layer}`} />
+        {#if samples[0].filter !== undefined}
+          <SubSubHeading heading={`Filter: ${samples[0].filter}`} />
+        {/if}
+      {/if}
+    </div>
     <div class="ml-auto">
       {#if $pinnedPatterns[uid] !== undefined}
         <IconButton on:click={unpinPattern}>
@@ -62,7 +71,14 @@
     </div>
   </div>
   <div class="flex flex-col" class:min-h-0={expanded}>
-    <PatternOverview {samples} {model} {layer} {patternId} {filteredSamples} />
+    <PatternOverview
+      {samples}
+      {model}
+      {layer}
+      {patternId}
+      {filteredSamples}
+      {expanded}
+    />
     {#if expanded}
       <AllPatternImages samples={filteredSamples} {model} {layer} />
     {/if}
