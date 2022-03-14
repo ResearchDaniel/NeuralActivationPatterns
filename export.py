@@ -30,26 +30,30 @@ def export_dataset(file_names, labels, predictions, model_name, destination=EXPO
                  "prediction": predictions}).to_pickle(Path(path, "dataset.pkl"))
 
 
-def export_patterns(model, model_name, X, layers, filters, agg_func, destination=EXPORT_LOCATION):
-    def export_pattern(path, patterns, info, statisitics):
+def export_patterns(model, model_name, X, layers, filters, layer_aggregation, filter_aggregation, destination=EXPORT_LOCATION):
+    def export_pattern(path, patterns, info, statistics):
         path.mkdir(parents=True, exist_ok=True)
         patterns.to_pickle(Path(path, "patterns.pkl"))
         info.to_pickle(Path(path, "patterns_info.pkl"))
-        pickle.dump(statistics, open(Path(path, "patterns_statistics.pkl"), "wb"))
+        pickle.dump(statistics, open(
+            Path(path, "patterns_statistics.pkl"), "wb"))
     for layer in layers:
         path = Path(destination, model_name, "layers", str(layer))
         patterns, info = nap.cache.get_layer_patterns(
-            X, model, model_name, layer, agg_func)
-        statistics = nap.cache.get_layer_patterns_activation_statistics(X, model, model_name, layer, agg_func)
+            X, model, model_name, layer, layer_aggregation)
+        statistics = nap.cache.get_layer_patterns_activation_statistics(
+            X, model, model_name, layer, layer_aggregation)
         export_pattern(path, patterns, info, statistics)
         if layer in filters:
             for filter in filters[layer]:
                 path = Path(destination, model_name,
-                            "layers", str(layer), "filters", str(filter))
+                            "layers", str(layer), "filters", filter_aggregation.__class__.__name__, str(filter))
                 patterns, info = nap.cache.get_filter_patterns(
-                    X, model, model_name, layer, filter)
-                statistics = nap.cache.get_filter_patterns_activation_statistics(X, model, model_name, layer, filter)
+                    X, model, model_name, layer, filter, filter_aggregation)
+                statistics = nap.cache.get_filter_patterns_activation_statistics(
+                    X, model, model_name, layer, filter, filter_aggregation)
                 export_pattern(path, patterns, info, statistics)
+
 
 def export_statistics(model, model_name, X, layers, filters, destination=EXPORT_LOCATION):
     for layer in layers:
@@ -65,10 +69,11 @@ def export_statistics(model, model_name, X, layers, filters, destination=EXPORT_
                 path.mkdir(parents=True, exist_ok=True)
                 stats = nap.cache.get_filter_activation_statistics(
                     X, model, model_name, layer, filter)
-                pickle.dump(stats, open(Path(path, "filter_statistics.pkl"), "wb"))
+                pickle.dump(stats, open(
+                    Path(path, "filter_statistics.pkl"), "wb"))
 
 
-def export_averages(image_dir, file_names, model, model_name, X, layers, filters, agg_func, destination=EXPORT_LOCATION):
+def export_averages(image_dir, file_names, model, model_name, X, layers, filters, layer_aggregation, filter_aggregation,  destination=EXPORT_LOCATION):
     def export_pattern_averages(base_path, patterns):
         sorted_patterns = nap.sort(patterns)
         for pattern_id, pattern in sorted_patterns.groupby('patternId'):
@@ -83,15 +88,16 @@ def export_averages(image_dir, file_names, model, model_name, X, layers, filters
 
     for layer in layers:
         patterns, _ = nap.cache.get_layer_patterns(
-            X, model, model_name, layer, agg_func)
+            X, model, model_name, layer, layer_aggregation)
         layer_path = Path(destination, model_name, "layers", str(layer))
         export_pattern_averages(layer_path, patterns)
         if layer in filters:
             for filter in filters[layer]:
                 patterns, _ = nap.cache.get_filter_patterns(
-                    X, model, model_name, layer, filter)
-                export_pattern_averages(
-                    Path(layer_path, 'filters', str(filter)), patterns)
+                    X, model, model_name, layer, filter, filter_aggregation)
+                filter_path = Path(
+                    layer_path, 'filters', filter_aggregation.__class__.__name__, str(filter))
+                export_pattern_averages(filter_path, patterns)
 
 
 def export_image(path, name, array):
@@ -101,6 +107,7 @@ def export_image(path, name, array):
     else:
         image = Image.fromarray((image * 255).astype(np.uint8), 'RGB')
     image.save(Path(path, f"{name}.jpeg"))
+
 
 def export_max_activations(image_dir, file_names, model, model_name, X, layers, filters, N, destination=EXPORT_LOCATION):
     # Copies the N most activating input images into destination/layer/max_activations
@@ -113,26 +120,31 @@ def export_max_activations(image_dir, file_names, model, model_name, X, layers, 
 
     ap = nap.NeuralActivationPattern(model)
     for layer in layers:
-            activations, f = nap.cache.get_layer_activations(
-                X, model, model_name, layer)
-            # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
-            activations = activations[()]    
-            max_activations = ap.layer_max_activations(layer, activations=activations, nSamplesPerLayer = N)
-            layer_path = Path(destination, model_name, "layers", str(layer), "max_activations")
-            export_activations(layer_path, max_activations)
+        activations, f = nap.cache.get_layer_activations(
+            X, model, model_name, layer)
+        # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
+        activations = activations[()]
+        max_activations = ap.layer_max_activations(
+            layer, activations=activations, nSamplesPerLayer=N)
+        layer_path = Path(destination, model_name, "layers",
+                          str(layer), "max_activations")
+        export_activations(layer_path, max_activations)
 
-            if layer in filters:
-                for filter in filters[layer]:
-                    max_activations = ap.filter_max_activations(layer, filter, activations=activations, nSamplesPerLayer = N)
-                    export_activations(Path(layer_path, 'filters', str(filter)), max_activations)
-            f.close()
+        if layer in filters:
+            for filter in filters[layer]:
+                max_activations = ap.filter_max_activations(
+                    layer, filter, activations=activations, nSamplesPerLayer=N)
+                export_activations(
+                    Path(layer_path, 'filters', str(filter)), max_activations)
+        f.close()
 
-def export_all(model, model_name, X, y, predictions, file_names, layers, filters, image_dir, agg_func, destination=EXPORT_LOCATION):
+
+def export_all(model, model_name, X, y, predictions, file_names, layers, filters, image_dir, layer_aggregation, filter_aggregation, destination=EXPORT_LOCATION):
     export_config(image_dir, model_name, destination)
     export_dataset(file_names, y, predictions, model_name, destination)
     export_patterns(model, model_name, X, layers,
-                    filters, agg_func, destination)
+                    filters, layer_aggregation, filter_aggregation, destination)
     export_statistics(model, model_name, X, layers,
-                    filters, destination)
+                      filters, destination)
     export_averages(image_dir, file_names, model, model_name,
-                    X, layers, filters, agg_func, destination)
+                    X, layers, filters, layer_aggregation, filter_aggregation, destination)
