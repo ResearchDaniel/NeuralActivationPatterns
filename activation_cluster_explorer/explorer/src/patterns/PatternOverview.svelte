@@ -170,7 +170,9 @@
     <div class="flex flex-col pr-4">
       <p>Average</p>
       <PatternImage
-        imagePath={`/api/get_average/${model}/${layer}/${patternId}`}
+        imagePath={samples[0].filter !== undefined
+          ? `/api/get_filter_average/${model}/${layer}/${samples[0].filterMethod}/${samples[0].filter}/${patternId}`
+          : `/api/get_average/${model}/${layer}/${patternId}`}
       />
     </div>
   {/if}

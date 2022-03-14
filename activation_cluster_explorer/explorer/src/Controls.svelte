@@ -9,6 +9,8 @@
   export let layer: string = undefined;
   export let filters: string[];
   export let filter: string = "---";
+  export let filterMethods: string[];
+  export let filterMethod: string;
   export let labels: Record<number, string> = undefined;
   export let dataset: {
     file_name: string;
@@ -42,11 +44,18 @@
       </LabeledComponent>
     </div>
   {/if}
-  {#if model !== undefined && layer !== undefined && filters.length > 1}
+  {#if model !== undefined && layer !== undefined && filterMethods.length > 0}
     <div class="pt-2">
-      <LabeledComponent name={"Filter"}>
-        <Dropdown items={filters} bind:value={filter} />
+      <LabeledComponent name={"Filter Method"}>
+        <Dropdown items={filterMethods} bind:value={filterMethod} />
       </LabeledComponent>
     </div>
+    {#if filterMethod !== undefined && filters.length > 1}
+      <div class="pt-2">
+        <LabeledComponent name={"Filter"}>
+          <Dropdown items={filters} bind:value={filter} />
+        </LabeledComponent>
+      </div>
+    {/if}
   {/if}
 </div>
