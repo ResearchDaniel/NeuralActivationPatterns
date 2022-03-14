@@ -13,7 +13,7 @@ export async function fetchLayers(model: string): Promise<string[]> {
     .then((jsonResponse) => jsonResponse["layers"] as string[]);
 }
 
-export async function fetchDataset(model: string): Promise<
+async function fetchDataset(model: string): Promise<
   {
     file_name: string;
     label?: string;
@@ -25,7 +25,7 @@ export async function fetchDataset(model: string): Promise<
     .then((jsonResponse) => JSON.parse(jsonResponse));
 }
 
-export async function fetchLabels(model: string) {
+async function fetchLabels(model: string) {
   return fetch(`/api/get_labels/${model}`).then((response) => response.json());
 }
 
