@@ -15,9 +15,11 @@
   let model: string = undefined;
   let layer: string = undefined;
   let filter: string = "---";
+  let filterMethod: string = undefined;
   let labels: Record<number, string> = undefined;
   let layers: string[] = [];
   let filters: string[] = [];
+  let filterMethods: string[] = [];
   let dataset: {
     file_name: string;
     label?: string;
@@ -46,7 +48,18 @@
       .then((jsonResponse) => (labels = jsonResponse));
   }
   $: if (model !== undefined && layer !== undefined) {
-    fetch(`/api/get_filters/${model}/${layer}`)
+    fetch(`/api/get_filter_methods/${model}/${layer}`)
+      .then((response) => response.json())
+      .then((jsonResponse) => {
+        filterMethods = [...(jsonResponse["methods"] as string[]).sort()];
+      });
+  }
+  $: if (
+    model !== undefined &&
+    layer !== undefined &&
+    filterMethod !== undefined
+  ) {
+    fetch(`/api/get_filters/${model}/${layer}/${filterMethod}`)
       .then((response) => response.json())
       .then((jsonResponse) => {
         filters = [
@@ -64,10 +77,10 @@
     )
       return { samples: [], persistence: [] };
     const infoResponse =
-      filter === "---"
+      filter === "---" || filterMethod === undefined
         ? await fetch(`/api/get_pattern_info/${model}/${layer}`)
         : await fetch(
-            `/api/get_filter_pattern_info/${model}/${layer}/${filter}`
+            `/api/get_filter_pattern_info/${model}/${layer}/${filterMethod}/${filter}`
           );
     console.log(infoResponse);
     if (!infoResponse.ok) return { samples: [], persistence: [] };
@@ -76,7 +89,9 @@
     const response =
       filter === "---"
         ? await fetch(`/api/get_patterns/${model}/${layer}`)
-        : await fetch(`/api/get_filter_patterns/${model}/${layer}/${filter}`);
+        : await fetch(
+            `/api/get_filter_patterns/${model}/${layer}/${filterMethod}/${filter}`
+          );
     if (!response.ok) return { samples: [], persistence: [] };
     const jsonResponse = await response.json();
     const patterns = JSON.parse(jsonResponse);
@@ -98,6 +113,7 @@
               model: model,
               layer: layer,
               filter: filter === "---" ? undefined : filter,
+              filterMethod: filter === "---" ? undefined : filterMethod,
               patternId: pattern.patternId,
               probability: pattern.probability,
               outlierScore: pattern.outlier_score,
@@ -129,6 +145,8 @@
             bind:labels
             bind:filter
             bind:filters
+            bind:filterMethods
+            bind:filterMethod
             {models}
           />
           {#await fetchPatterns then patterns}

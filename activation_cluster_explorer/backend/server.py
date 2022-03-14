@@ -37,10 +37,24 @@ def get_layers(model):
     return jsonify(layers)
 
 
-@app.route('/api/get_filters/<model>/<layer>')
-def get_filters(model, layer):
+@app.route('/api/get_filter_methods/<model>/<layer>')
+def get_filter_methods(model, layer):
+    methods = []
+    methods_path = Path(DATA_DIR, model, "layers", layer, "filters")
+    if methods_path.exists():
+        for path in methods_path.iterdir():
+            if path.is_dir():
+                methods.append(path.stem)
+    methods = {
+        'methods': methods
+    }
+    return jsonify(methods)
+
+
+@app.route('/api/get_filters/<model>/<layer>/<method>')
+def get_filters(model, layer, method):
     filters = []
-    filters_path = Path(DATA_DIR, model, "layers", layer, "filters")
+    filters_path = Path(DATA_DIR, model, "layers", layer, "filters", method)
     if filters_path.exists():
         for path in filters_path.iterdir():
             if path.is_dir():
@@ -60,10 +74,10 @@ def get_patterns(model, layer):
     return jsonify(patterns.to_json(orient="records"))
 
 
-@app.route('/api/get_filter_patterns/<model>/<layer>/<filter>')
-def get_filter_patterns(model, layer, filter):
+@app.route('/api/get_filter_patterns/<model>/<layer>/<method>/<filter>')
+def get_filter_patterns(model, layer, filter, method):
     pickle_path = Path(DATA_DIR, model, "layers", layer,
-                       "filters", filter, "patterns.pkl")
+                       "filters", method, filter, "patterns.pkl")
     if not pickle_path.exists:
         return ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
@@ -79,10 +93,10 @@ def get_pattern_info(model, layer):
     return jsonify(patterns.to_json(orient="records"))
 
 
-@app.route('/api/get_filter_pattern_info/<model>/<layer>/<filter>')
-def get_filter_pattern_info(model, layer, filter):
+@app.route('/api/get_filter_pattern_info/<model>/<layer>/<method>/<filter>')
+def get_filter_pattern_info(model, layer, filter, method):
     pickle_path = Path(DATA_DIR, model, "layers", layer,
-                       "filters", filter, "patterns_info.pkl")
+                       "filters", method, filter, "patterns_info.pkl")
     if not pickle_path.exists:
         return ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
@@ -98,6 +112,11 @@ def get_dataset(model):
 @app.route('/api/get_average/<model>/<layer>/<pattern>')
 def get_average(model, layer, pattern):
     return send_file(Path(DATA_DIR, model, "layers", layer, pattern, 'average.jpeg'), mimetype='image/jpeg')
+
+
+@app.route('/api/get_filter_average/<model>/<layer>/<method>/<filter>/<pattern>')
+def get_filter_average(model, layer, method, filter, pattern):
+    return send_file(Path(DATA_DIR, model, "layers", layer, method, filter, pattern, 'average.jpeg'), mimetype='image/jpeg')
 
 
 @app.route('/api/get_image/<model>/<id>')
