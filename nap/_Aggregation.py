@@ -22,7 +22,7 @@ class NoAggregation(AggregationInterface):
         return np.prod(activation_shape)
 
     def aggregate(self, layer, activations) -> np.ndarray:
-        return activations.flatten()
+        return activations.ravel()
 
 
 class MeanAggregation(AggregationInterface):
@@ -39,9 +39,9 @@ class MeanAggregation(AggregationInterface):
     def aggregate(self, layer, activations) -> np.ndarray:
         if (len(activations.shape) == 3):
             # Convolutional-like layer
-            return [np.mean(activations[:, :, feature].flatten()) for feature in range(activations.shape[-1])]
+            return [np.mean(activations[:, :, feature].ravel()) for feature in range(activations.shape[-1])]
         else:
-            return activations.flatten()
+            return activations.ravel()
 
 
 class MeanStdAggregation(AggregationInterface):
@@ -60,12 +60,12 @@ class MeanStdAggregation(AggregationInterface):
             # Convolutional-like layer
             mean_std = []
             for feature in range(activations.shape[-1]):
-                activation = activations[:, :, feature].flatten()
+                activation = activations[..., feature].ravel()
                 mean_std.append(np.mean(activation))
                 mean_std.append(np.std(activation))
             return mean_std
         else:
-            return activations.flatten()
+            return activations.ravel()
 
 
 class MaxAggregation(AggregationInterface):
@@ -83,6 +83,6 @@ class MaxAggregation(AggregationInterface):
         """Aggregate layer activations"""
         if len(activations.shape) == 3:
             # Convolutional-like layer
-            return [np.max(activations[:, :, feature].flatten()) for feature in range(activations.shape[-1])]
+            return [np.max(activations[..., feature].ravel()) for feature in range(activations.shape[-1])]
         else:
-            return activations.flatten()
+            return activations.ravel()

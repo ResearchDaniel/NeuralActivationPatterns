@@ -1,7 +1,9 @@
 import numpy as np
 import plotly.express as px
 import pandas as pd
-from . import AggregationInterface
+import hdbscan
+from . import NoAggregation
+from . import MeanAggregation
 
 
 def lazyproperty(func):
@@ -67,62 +69,14 @@ def average(X, indices):
     return img
 
 
-def layer_activation_aggregation_shape(activation_shape, agg_func=np.mean):
-    """ Aggregate activations in a layer. 
-        Convolutional layers are aggregated per feature. 
-
-        Returns a list of arrays with sizes according to the number of features in each layer.    
-    """
-    if agg_func is None:
-        return np.prod(activation_shape)
-    else:
-        if (len(activation_shape) == 3):
-            # Convolutional layer
-            return activation_shape[-1]
-        else:
-            return np.prod(activation_shape)
-
-
-def layer_activation_aggregation(activations, agg_func=np.mean):
-    """ Aggregate activations in a layer. 
-        Convolutional layers are aggregated per feature.  
-    """
-    if agg_func is None:
-        return activations.flatten()
-
-    if (len(activations.shape) == 3):
-        # Convolutional-like layer
-        return [agg_func(activations[..., feature].flatten()) for feature in range(activations.shape[-1])]
-    else:
-
-        # aggregated_activation = [agg_func(activations.flatten())]
-        # aggregated_activations.append(aggregated_activation)
-        return activations.flatten()
-
-
-def layer_activations_aggregation(layer_activations, agg_func=np.mean):
-    """ Aggregate activations in a layer. 
-        Convolutional layers are aggregated per feature. 
-
-        Returns a list of arrays with sizes according to the number of features in each layer.    
-    """
-    if not agg_func:
-        return [activations.flatten() for activations in layer_activations]
-    layer_activations_aggregated = []
-    for activations in layer_activations:
-        layer_activations_aggregated.append(
-            layer_activation_aggregation(activations, agg_func))
-
-    return layer_activations_aggregated
-
-
 class NeuralActivationPattern:
     """ Computes neural network activation patterns using clustering.
     """
 
-    def __init__(self, model, agg_func=np.mean):
+    def __init__(self, model, layer_aggregation=MeanAggregation, filter_aggregation=NoAggregation):
         self.model = model
-        self.agg_func = agg_func
+        self.layer_aggregation = layer_aggregation
+        self.filter_aggregation = filter_aggregation
 
     def layerIdx(self, layer):
         """ Get layer index given either its layer name or its index
@@ -166,7 +120,6 @@ class NeuralActivationPattern:
         Returns:
             list: Indices to input data with the highest activations.
         """
-        layerId = self.layerIdx(layer)
         if activations is None:
             activations = self.layer_activations(layer, X)
         # for each input
@@ -220,9 +173,9 @@ class NeuralActivationPattern:
     def layer_patterns(self, layer, X=None, agg_activations=None):
         if not agg_activations:
             activations = self.layer_activations(layer, X)
-            agg_activations = self.agg_func.aggregate(
-                self.layer(layer), activations)
-        import hdbscan
+            agg_activations = [self.layer_aggregation.aggregate(
+                self.layer(layer), activation) for activation in activations]
+
         clusterer = hdbscan.HDBSCAN(cluster_selection_method='leaf')
         clusterer.fit(agg_activations)
         print(
@@ -234,14 +187,17 @@ class NeuralActivationPattern:
         return patterns, pattern_info
 
     def filter_patterns(self, layer, filterId, X=None, activations=None):
-        import hdbscan
+
         if activations is None:
             activations = self.layer_activations(layer, X)
+        # Extract filter activations for each input
+        filter_activations = activations[:, ..., filterId]
+        # Aggregate activations per input
+        agg_activations = [self.filter_aggregation.aggregate(
+            self.layer(layer), activation) for activation in filter_activations]
 
-        filter_activations = [np.ndarray.reshape(
-            activation[..., filterId], -1) for activation in activations]
         clusterer = hdbscan.HDBSCAN()
-        clusterer.fit(filter_activations)
+        clusterer.fit(agg_activations)
         print(
             F"Layer {layer}, filter: {filterId}, number of patterns: {clusterer.labels_.max() + 1}")
         patterns = pd.DataFrame({"patternId": clusterer.labels_,
