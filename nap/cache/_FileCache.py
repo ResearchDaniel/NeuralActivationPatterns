@@ -115,6 +115,44 @@ def export_layer_aggregation(X, model, model_name, layers, layer_aggregation, de
                     i += data.shape[0]
 
 
+def activation_statistics(activations, axis):
+    means = []
+    mins = []
+    maxs = []
+    q1s = []
+    q3s = []
+    if axis is None:
+        means.append(np.mean(activations))
+        mins.append(np.min(activations))
+        maxs.append(np.max(activations))
+        q1s.append(np.quantile(activations, 0.25))
+        q3s.append(np.quantile(activations, 0.75))
+    else:
+        for feature in range(activations.shape[axis]):
+            f_act = activations[..., feature]
+            means.append(np.mean(f_act))
+            mins.append(np.min(f_act))
+            maxs.append(np.max(f_act))
+            q1s.append(np.quantile(f_act, 0.25))
+            q3s.append(np.quantile(f_act, 0.75))
+    IQR = [q3 - q1 for q1, q3 in zip(q1s, q3s)]
+
+    lower = [max(q1-1.5*IQR, min_v)
+             for q1, IQR, min_v in zip(q1s, IQR, mins)]
+    upper = [min(q3+1.5*IQR, max_v)
+             for q3, IQR, max_v in zip(q3s, IQR, maxs)]
+    return {
+        "min": mins,
+        "max": maxs,
+        "mean": means,
+        "q1": q1s,
+        "q3": q3s,
+        "IQR": IQR,
+        "lower": lower,
+        "upper": upper
+    }
+
+
 def export_layer_activation_statistics(X, model, model_name, layers, destination=CACHE_LOCATION):
     ap = nap.NeuralActivationPattern(model)
     for layer in layers:
@@ -123,7 +161,8 @@ def export_layer_activation_statistics(X, model, model_name, layers, destination
             export_activations(X, model, model_name, [layer], destination)
         with h5py.File(act_path, 'r') as f_act:
             activations = f_act["activations"]
-            statistics = stats.describe(activations, axis=-1)
+            statistics = activation_statistics(
+                activations, axis=-1)
             path = activation_statistics_path(destination, model_name, layer)
             pickle.dump(statistics, open(path, "wb"))
 
@@ -136,9 +175,9 @@ def export_layer_patterns_activation_statistics(X, model, model_name, layer, pat
         activations = f_act["activations"]
         pattern_statistics = {}
         for id, pattern in patterns.groupby("patternId"):
-            statistics = stats.describe(
+            pattern_statistics[id] = activation_statistics(
                 activations[pattern.index.tolist()], axis=-1)
-            pattern_statistics[id] = statistics
+
         path = layer_patterns_activation_statistics_path(
             destination, model_name, layer)
         pickle.dump(pattern_statistics, open(path, "wb"))
@@ -152,9 +191,9 @@ def export_filter_patterns_activation_statistics(X, model, model_name, layer, fi
         activations = f_act["activations"]
         pattern_statistics = {}
         for id, pattern in patterns.groupby("patternId"):
-            statistics = stats.describe(
+            pattern_statistics[id] = activation_statistics(
                 activations[pattern.index.tolist()][..., filter], axis=None)
-            pattern_statistics[id] = statistics
+
         path = filter_patterns_activation_statistics_path(
             destination, model_name, layer, filter, filter_aggregation)
         pickle.dump(pattern_statistics, open(path, "wb"))
@@ -169,7 +208,8 @@ def export_filter_activation_statistics(X, model, model_name, layers, filters=No
         if filters is None:
             filters = range(activations.shape[-1])
         for filter in filters:
-            statistics = stats.describe(activations[..., filter], axis=None)
+            statistics = activation_statistics(
+                activations[..., filter], axis=None)
             path = filter_activation_statistics_path(
                 destination, model_name, layer, filter)
             path.parent.mkdir(parents=True, exist_ok=True)
