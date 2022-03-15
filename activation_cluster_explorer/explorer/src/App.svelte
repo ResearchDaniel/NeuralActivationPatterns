@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+
   import Main from "./Main.svelte";
   import Distribution from "./Distribution.svelte";
   import Controls from "./Controls.svelte";
@@ -12,12 +14,40 @@
   import {
     imageFilter,
     labelFilter,
+    numCenters,
+    numOutliers,
     predictionFilter,
     selectedPage,
+    showAverage,
   } from "./stores";
   import type { Patterns } from "./types";
 
   let patternsRequest: Promise<Patterns> = undefined;
+  const urlParams = new URLSearchParams(window.location.search);
+
+  onMount(() => {
+    if (urlParams.has("showAverage"))
+      showAverage.set(JSON.parse(urlParams.get("showAverage")) as boolean);
+    if (urlParams.has("numCenters"))
+      numCenters.set(JSON.parse(urlParams.get("numCenters")) as number);
+    if (urlParams.has("numOutliers"))
+      numOutliers.set(JSON.parse(urlParams.get("numOutliers")) as number);
+
+    showAverage.subscribe((setting) =>
+      updateURLParams("showAverage", `${setting}`)
+    );
+    numCenters.subscribe((setting) =>
+      updateURLParams("numCenters", `${setting}`)
+    );
+    numOutliers.subscribe((setting) =>
+      updateURLParams("numOutliers", `${setting}`)
+    );
+  });
+
+  function updateURLParams(settingName: string, setting: string) {
+    urlParams.set(settingName, setting);
+    window.history.replaceState({}, "", `${location.pathname}?${urlParams}`);
+  }
 </script>
 
 <main class="h-full">
