@@ -27,13 +27,22 @@ def get_models():
 
 @app.route('/api/get_layers/<model>')
 def get_layers(model):
-    layers = []
+    layer_dirs = []
     for path in Path(DATA_DIR, model, "layers").iterdir():
         if path.is_dir():
-            layers.append(path.stem)
-    layers = {
-        'layers': layers
-    }
+            layer_dirs.append(path.stem)
+    with open(Path(DATA_DIR, model, 'config.json')) as json_file:
+        data = json.load(json_file)
+    if "layers" in data:
+        layers = list(
+            filter(lambda layer: layer in layer_dirs, data["layers"]))
+        layers = {
+            'layers': layers
+        }
+    else:
+        layers = {
+            'layers': layer_dirs
+        }
     return jsonify(layers)
 
 
@@ -68,8 +77,8 @@ def get_filters(model, layer, method):
 @app.route('/api/get_patterns/<model>/<layer>')
 def get_patterns(model, layer):
     pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns.pkl")
-    if not pickle_path.exists:
-        return ERROR_STATUS
+    if not pickle_path.exists():
+        return "No such file", ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
     return jsonify(patterns.to_json(orient="records"))
 
@@ -78,8 +87,8 @@ def get_patterns(model, layer):
 def get_filter_patterns(model, layer, filter, method):
     pickle_path = Path(DATA_DIR, model, "layers", layer,
                        "filters", method, filter, "patterns.pkl")
-    if not pickle_path.exists:
-        return ERROR_STATUS
+    if not pickle_path.exists():
+        return "No such file", ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
     return jsonify(patterns.to_json(orient="records"))
 
@@ -87,8 +96,8 @@ def get_filter_patterns(model, layer, filter, method):
 @app.route('/api/get_pattern_info/<model>/<layer>')
 def get_pattern_info(model, layer):
     pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns_info.pkl")
-    if not pickle_path.exists:
-        return ERROR_STATUS
+    if not pickle_path.exists():
+        return "No such file", ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
     return jsonify(patterns.to_json(orient="records"))
 
@@ -97,8 +106,8 @@ def get_pattern_info(model, layer):
 def get_filter_pattern_info(model, layer, filter, method):
     pickle_path = Path(DATA_DIR, model, "layers", layer,
                        "filters", method, filter, "patterns_info.pkl")
-    if not pickle_path.exists:
-        return ERROR_STATUS
+    if not pickle_path.exists():
+        return "No such file", ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
     return jsonify(patterns.to_json(orient="records"))
 
