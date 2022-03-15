@@ -14,9 +14,10 @@ import pickle
 EXPORT_LOCATION = Path("activation_cluster_explorer/backend/data")
 
 
-def export_config(image_dir, model_name, destination=EXPORT_LOCATION):
+def export_config(image_dir, model, model_name, destination=EXPORT_LOCATION):
     config = {
-        "data_path": image_dir
+        "data_path": image_dir,
+        "layers": [layer.name for layer in model.layers]
     }
     Path(destination, model_name).mkdir(parents=True, exist_ok=True)
     with open(Path(destination, model_name, "config.json"), 'w') as outfile:
@@ -140,7 +141,7 @@ def export_max_activations(image_dir, file_names, model, model_name, X, layers, 
 
 
 def export_all(model, model_name, X, y, predictions, file_names, layers, filters, image_dir, layer_aggregation, filter_aggregation, destination=EXPORT_LOCATION):
-    export_config(image_dir, model_name, destination)
+    export_config(image_dir, model, model_name, destination)
     export_dataset(file_names, y, predictions, model_name, destination)
     export_patterns(model, model_name, X, layers,
                     filters, layer_aggregation, filter_aggregation, destination)
