@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tooltip } from "../stores";
+  import { imageFilter, tooltip } from "../stores";
   import Fa from "svelte-fa";
   import FaLayers from "svelte-fa/src/fa-layers.svelte";
   import { faPlay } from "@fortawesome/free-solid-svg-icons/faPlay";
@@ -27,9 +27,15 @@
       layer: layer,
     });
   }
+
+  function addImageFilter() {
+    imageFilter.update((filters) => [
+      ...new Set([...filters, sample.fileName]),
+    ]);
+  }
 </script>
 
-<div class="relative">
+<div class="relative" on:click={addImageFilter}>
   <img
     class="h-32"
     src={imagePath}

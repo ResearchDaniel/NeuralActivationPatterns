@@ -3,24 +3,18 @@
   import SubHeading from "../elements/SubHeading.svelte";
 
   import type { PatternForSample } from "../types";
-  import { labelFilter, predictionFilter } from "../stores";
+  import { imageFilter, labelFilter, predictionFilter } from "../stores";
+  import { filterPatterns } from "../helpers";
 
   export let patterns: PatternForSample[];
   export let persistence: number[];
 
-  $: filteredPatterns = patterns.filter((pattern) => {
-    if ($labelFilter.length !== 0) {
-      if (!$labelFilter.includes(`${pattern.label}`)) {
-        return false;
-      }
-    }
-    if ($predictionFilter.length !== 0) {
-      if (!$predictionFilter.includes(`${pattern.prediction}`)) {
-        return false;
-      }
-    }
-    return true;
-  });
+  $: filteredPatterns = filterPatterns(
+    patterns,
+    $labelFilter,
+    $predictionFilter,
+    $imageFilter
+  );
   $: patternIds = [
     ...new Set(filteredPatterns.map((element) => element.patternId)),
   ].sort((a, b) => persistence[b] - persistence[a]);

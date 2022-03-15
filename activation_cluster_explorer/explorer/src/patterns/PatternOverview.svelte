@@ -28,8 +28,13 @@
     actions: false,
   } as EmbedOptions;
 
-  $: centers = samples.slice(0, $numCenters);
-  $: outliers = samples.slice(-$numOutliers);
+  $: centers = filteredSamples.slice(0, $numCenters);
+  $: derivedNumOutliers =
+    filteredSamples.length >= $numCenters + $numOutliers
+      ? $numOutliers
+      : filteredSamples.length - $numCenters;
+  $: outliers =
+    derivedNumOutliers > 0 ? filteredSamples.slice(-derivedNumOutliers) : [];
   $: metadata = samples.reduce(sampleMetadata, {
     labels: {},
     predictions: {},
@@ -136,17 +141,33 @@
 
   function handleSelectionLabel(...args: any) {
     if (args[1].label !== undefined) {
-      labelFilter.update((filters) => [
-        ...new Set([...filters, ...args[1].label]),
-      ]);
+      const index = $labelFilter.indexOf(args[1].label[0], 0);
+      if (index > -1) {
+        labelFilter.update((filters) => {
+          filters.splice(index, 1);
+          return filters;
+        });
+      } else {
+        labelFilter.update((filters) => [
+          ...new Set([...filters, ...args[1].label]),
+        ]);
+      }
     }
   }
 
   function handleSelectionPrediction(...args: any) {
     if (args[1].prediction !== undefined) {
-      predictionFilter.update((filters) => [
-        ...new Set([...filters, ...args[1].prediction]),
-      ]);
+      const index = $predictionFilter.indexOf(args[1].prediction[0], 0);
+      if (index > -1) {
+        predictionFilter.update((filters) => {
+          filters.splice(index, 1);
+          return filters;
+        });
+      } else {
+        predictionFilter.update((filters) => [
+          ...new Set([...filters, ...args[1].prediction]),
+        ]);
+      }
     }
   }
 
@@ -181,10 +202,12 @@
       <p>Centers</p>
       <PatternImageList {model} samples={centers} {layer} />
     </div>
-    <div class="flex flex-col pr-4">
-      <p>Outliers</p>
-      <PatternImageList {model} samples={outliers} {layer} />
-    </div>
+    {#if outliers.length > 0}
+      <div class="flex flex-col pr-4">
+        <p>Outliers</p>
+        <PatternImageList {model} samples={outliers} {layer} />
+      </div>
+    {/if}
   {/if}
   <div class="flex flex-col min-w-0">
     <p>Distribution</p>

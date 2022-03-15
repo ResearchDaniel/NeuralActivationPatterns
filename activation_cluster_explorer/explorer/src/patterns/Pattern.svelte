@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { pinnedPatterns, selectedPage } from "../stores";
+  import { imageFilter, pinnedPatterns, selectedPage } from "../stores";
 
   import Fa from "svelte-fa";
   import FaLayers from "svelte-fa/src/fa-layers.svelte";
   import { faThumbtack } from "@fortawesome/free-solid-svg-icons/faThumbtack";
   import { faSlash } from "@fortawesome/free-solid-svg-icons/faSlash";
+  import { faFilter } from "@fortawesome/free-solid-svg-icons/faFilter";
 
   import SubSubHeading from "../elements/SubSubHeading.svelte";
   import AllPatternImages from "./AllPatternImages.svelte";
@@ -36,6 +37,26 @@
     $pinnedPatterns[uid] = samples;
     pinnedPatterns.set({ ...$pinnedPatterns });
   }
+
+  function filterAll() {
+    const notFiltered = filteredSamples.filter(
+      (sample) => !$imageFilter.includes(sample.fileName)
+    );
+    if (notFiltered.length === 0) {
+      imageFilter.update((filters) => {
+        filteredSamples.forEach((sample) => {
+          const index = filters.indexOf(sample.fileName, 0);
+          if (index > -1) {
+            filters.splice(index, 1);
+          }
+        });
+        return filters;
+      });
+    } else {
+      const fileNames = notFiltered.map((item) => item.fileName);
+      imageFilter.update((filters) => [...new Set([...filters, ...fileNames])]);
+    }
+  }
 </script>
 
 <div
@@ -56,6 +77,9 @@
       {/if}
     </div>
     <div class="ml-auto">
+      <IconButton on:click={filterAll}>
+        <Fa icon={faFilter} slot="icon" />
+      </IconButton>
       {#if $pinnedPatterns[uid] !== undefined}
         <IconButton on:click={unpinPattern}>
           <FaLayers slot="icon">
