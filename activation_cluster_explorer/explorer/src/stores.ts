@@ -1,5 +1,6 @@
 import { derived, writable } from "svelte/store";
 import { centers, minPatternSize, outliers, showAvg } from "./constants";
+import { filterPatterns } from "./helpers";
 import type { PatternForSample, TooltipSpec } from "./types";
 
 export const settingsOpen = writable<boolean>(false);
@@ -17,26 +18,20 @@ export const patternFilter = writable<{ label: string; patternId: number }[]>(
 );
 export const labelFilter = writable<string[]>([]);
 export const predictionFilter = writable<string[]>([]);
+export const imageFilter = writable<string[]>([]);
 
 export const filteredPinnedPatterns = derived(
-  [pinnedPatterns, labelFilter, predictionFilter],
-  ([$pinnedPatterns, $labelFilter, $predictionFilter]) => {
+  [pinnedPatterns, labelFilter, predictionFilter, imageFilter],
+  ([$pinnedPatterns, $labelFilter, $predictionFilter, $imageFilter]) => {
     const filtered = {};
     const pinnedPatternUids = Object.keys($pinnedPatterns);
     pinnedPatternUids.forEach((uid) => {
-      const patterns = $pinnedPatterns[uid].filter((pattern) => {
-        if ($labelFilter.length !== 0) {
-          if (!$labelFilter.includes(`${pattern.label}`)) {
-            return false;
-          }
-        }
-        if ($predictionFilter.length !== 0) {
-          if (!$predictionFilter.includes(`${pattern.prediction}`)) {
-            return false;
-          }
-        }
-        return true;
-      });
+      const patterns = filterPatterns(
+        $pinnedPatterns[uid],
+        $labelFilter,
+        $predictionFilter,
+        $imageFilter
+      );
       if (patterns.length >= minPatternSize) filtered[uid] = patterns;
     });
     return filtered;

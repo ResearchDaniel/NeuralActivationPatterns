@@ -9,7 +9,12 @@
   import PatternCompare from "./patterns/PatternCompare.svelte";
   import LoadingIndicator from "./elements/LoadingIndicator.svelte";
 
-  import { labelFilter, predictionFilter, selectedPage } from "./stores";
+  import {
+    imageFilter,
+    labelFilter,
+    predictionFilter,
+    selectedPage,
+  } from "./stores";
   import type { Patterns } from "./types";
 
   let patternsRequest: Promise<Patterns> = undefined;
@@ -39,7 +44,7 @@
     {:else}
       <PatternCompare />
     {/if}
-    {#if $labelFilter.length > 0 || $predictionFilter.length > 0}
+    {#if $labelFilter.length > 0 || $predictionFilter.length > 0 || $imageFilter.length > 0}
       <Filters />
     {/if}
   </div>

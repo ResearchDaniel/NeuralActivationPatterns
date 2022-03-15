@@ -8,6 +8,8 @@
   import type { PatternForSample } from "./types";
   import { themeConfig } from "./constants";
   import { patternFilter } from "./stores";
+  import { imageFilter, labelFilter, predictionFilter } from "./stores";
+  import { filterPatterns } from "./helpers";
 
   export let patterns: PatternForSample[];
 
@@ -16,10 +18,16 @@
     config: themeConfig,
   } as EmbedOptions;
 
+  $: filteredPatterns = filterPatterns(
+    patterns,
+    $labelFilter,
+    $predictionFilter,
+    $imageFilter
+  );
   $: spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     mark: { type: "circle", tooltip: true },
-    data: { values: patterns },
+    data: { values: filteredPatterns },
     params: [
       { name: "select", select: { type: "point", encodings: ["x", "y"] } },
     ],
