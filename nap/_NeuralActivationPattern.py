@@ -195,9 +195,9 @@ class NeuralActivationPattern:
         # Aggregate activations per input
         agg_activations = [self.filter_aggregation.aggregate(
             self.layer(layer), activation) for activation in filter_activations]
-
-        clusterer = hdbscan.HDBSCAN()
+        clusterer = hdbscan.HDBSCAN(cluster_selection_method='leaf')
         clusterer.fit(agg_activations)
+
         print(
             F"Layer {layer}, filter: {filterId}, number of patterns: {clusterer.labels_.max() + 1}")
         patterns = pd.DataFrame({"patternId": clusterer.labels_,
