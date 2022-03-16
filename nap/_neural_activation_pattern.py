@@ -1,9 +1,12 @@
-import numpy as np
-import plotly.express as px
-import pandas as pd
+"""Main functionality providing neural activation patterns."""
 import hdbscan
-from . import NoAggregation
-from . import MeanAggregation
+import numpy as np
+import pandas as pd
+import plotly.express as px
+from tensorflow import keras
+
+# pylint: disable=R0401
+from . import MeanAggregation, NoAggregation
 
 
 def lazyproperty(func):
@@ -31,41 +34,41 @@ def sample(patterns, frac=0.1):
         Returns: DataFrame
     """
     # Pandas cannot sample with probabilities summing to 0, so replace those
-    df = patterns.copy()
-    grp = df.groupby('patternId')
-    df['probability'] = grp['probability'].transform(
+    data_frame = patterns.copy()
+    grp = data_frame.groupby('patternId')
+    data_frame['probability'] = grp['probability'].transform(
         lambda x: x if x.mean() > 0 else 0.1)
-    return grp.sample(frac=frac, weights=df.probability)
+    return grp.sample(frac=frac, weights=data_frame.probability)
 
 
-def head(patterns, n):
+def head(patterns, num_samples):
     """ Returns, from each pattern, the n items most likey to belong to the pattern.
     """
-    return sort(patterns).groupby('patternId').head(n)
+    return sort(patterns).groupby('patternId').head(num_samples)
 
 
-def tail(patterns, n):
+def tail(patterns, num_samples):
     """ Returns, from each pattern, the n items (outliers) least likey to belong to the pattern.
 
     """
-    return self.sorted(patterns).groupby('patternId').tail(n)
+    return sort(patterns).groupby('patternId').tail(num_samples)
 
 
-def outliers(patterns, quantile=0.95, n=None):
-    """ Returns indices of possible outliers, i.e., the ones with highest outlier score (GLOSH algorithm).
+def outliers(patterns, quantile=0.95, num_samples=None):
+    """Returns indices of possible outliers, i.e.,
+    the ones with highest outlier score (GLOSH algorithm).
     """
-    if n is not None:
-        return patterns.nlargest(n, 'outlier_score').index
-    else:
-        threshold = patterns.outlier_score.quantile(quantile)
-        outliers = np.where(patterns.outlier_score > threshold)[0]
-        return outliers
+    if num_samples is not None:
+        return patterns.nlargest(num_samples, 'outlier_score').index
+    threshold = patterns.outlier_score.quantile(quantile)
+    outlier_samples = np.where(patterns.outlier_score > threshold)[0]
+    return outlier_samples
 
 
-def average(X, indices):
-    img = np.zeros(X[0].shape, float)
-    for c in indices:
-        img = img + np.array(X[c]) / len(indices)
+def average(samples, indices):
+    img = np.zeros(samples[0].shape, float)
+    for index in indices:
+        img = img + np.array(samples[index]) / len(indices)
     return img
 
 
@@ -78,101 +81,102 @@ class NeuralActivationPattern:
         self.layer_aggregation = layer_aggregation
         self.filter_aggregation = filter_aggregation
 
-    def layerIdx(self, layer):
-        """ Get layer index given either its layer name or its index
+    def layer_idx(self, layer):
+        """Get layer index given either its layer name or its index.
+
             Returns:
-                int: Layer index. 
+                int: Layer index.
         """
-        if isinstance(layer, int) or isinstance(layer, float):
+        if isinstance(layer, (float, int)):
             return int(layer)
-        else:
-            layer_name = layer
-            layer_names = [layer.name for layer in self.model.layers]
-            return layer_names.index(layer_name)
+        layer_name = layer
+        layer_names = [layer.name for layer in self.model.layers]
+        return layer_names.index(layer_name)
 
     def layer(self, layer):
-        return self.model.layers[self.layerIdx(layer)]
+        return self.model.layers[self.layer_idx(layer)]
 
-    def activity_patterns(self, path, X=None, activations=None):
-        """ Get activity patterns for a layer, or a filter within a layer
+    def activity_patterns(self, path, input_data=None, activations=None):
+        """Get activity patterns for a layer, or a filter within a layer.
+
             Returns:
-                DataFrame: Columns [patternId, probability] and index according to input id. 
+                DataFrame: Columns [patternId, probability] and index
+                    according to input id.
         """
         layer_filter = path.split(":")
         if len(layer_filter) < 1 or len(layer_filter) > 2:
             raise ValueError(
                 f"Expected path format layer_name:filter_number, got {path}")
         if layer_filter[0].isdigit():
-            layerId = int(layer_filter[0])
+            layer_id = int(layer_filter[0])
         else:
             layer_name = layer_filter[0]
             layer_names = [layer.name for layer in self.model.layers]
-            layerId = layer_names.index(layer_name)
+            layer_id = layer_names.index(layer_name)
         if len(layer_filter) == 1:
-            return self.layer_patterns(layerId, X, activations)
-        elif len(layer_filter) == 2:
-            filterId = int(layer_filter[1])
-            return self.filter_patterns(layerId, filterId, X, activations)
+            return self.layer_patterns(layer_id, input_data, activations)
+        filter_id = int(layer_filter[1])
+        return self.filter_patterns(layer_id, filter_id, input_data, activations)
 
-    def layer_max_activations(self, layer, X=None, activations=None, nSamplesPerLayer=10, agg_func=np.max):
-        """ Get indices to the inputs with the highest aggregated activation within specified layer.
+    def layer_max_activations(self, layer, input_data=None, activations=None, samples_per_layer=10,
+                              agg_func=np.max):
+        """Get indices to the inputs with the highest aggregated activation within specified layer.
 
         Returns:
             list: Indices to input data with the highest activations.
         """
         if activations is None:
-            activations = self.layer_activations(layer, X)
+            activations = self.layer_activations(layer, input_data)
         # for each input
         agg_activations = [agg_func(activation[:])
                            for activation in activations]
         # Get indices of images that activate the most
-        largestActivationsIndices = list(
-            reversed(np.argsort(agg_activations)[-nSamplesPerLayer:]))
+        largest_activations_indices = list(
+            reversed(np.argsort(agg_activations)[-samples_per_layer:]))
 
-        return largestActivationsIndices
+        return largest_activations_indices
 
-    def filter_max_activations(self, layer, filterId, X=None, activations=None, nSamplesPerLayer=10, agg_func=np.max):
-        """ Get indices to the inputs with the highest aggregated activation within specified layer and filter.
-            Only works for convolutional layers.
+    def filter_max_activations(self, layer, filter_id, input_data=None, activations=None,
+                               samples_per_layer=10, agg_func=np.max):
+        """ Get indices to the inputs with the highest aggregated activation within specified
+            layer and filter. Only works for convolutional layers.
+
         Returns:
             list: Indices to input data with the highest activations.
         """
         if activations is None:
-            activations = self.layer_activations(layer, X)
+            activations = self.layer_activations(layer, input_data)
         # for each input
-        agg_activations = [agg_func(activation[..., filterId])
+        agg_activations = [agg_func(activation[..., filter_id])
                            for activation in activations]
         # Get indices of images that activate the most
-        largestActivationsIndices = list(
-            reversed(np.argsort(agg_activations)[-nSamplesPerLayer:]))
+        largest_activations_indices = list(
+            reversed(np.argsort(agg_activations)[-samples_per_layer:]))
 
-        return largestActivationsIndices
+        return largest_activations_indices
 
     def activation_model(self, layer):
-        from tensorflow import keras
-        layerId = layerIdx(layer)
-        return keras.models.Model(inputs=model.input, outputs=model.layers[layerId])
+        layer_id = self.layer_idx(layer)
+        return keras.models.Model(inputs=self.model.input, outputs=self.model.layers[layer_id])
 
     def layer_output_shape(self, layer):
-        layerIdx = self.layerIdx(layer)
-        return self.model.layers[layerIdx].output.shape
+        layer_idx = self.layer_idx(layer)
+        return self.model.layers[layer_idx].output.shape
 
-    def layer_activations(self, layer, X):
-        layerIdx = self.layerIdx(layer)
-        layer_output = self.model.layers[layerIdx].output
+    def layer_activations(self, layer, input_data):
+        layer_idx = self.layer_idx(layer)
+        layer_output = self.model.layers[layer_idx].output
         # Creates a model that will return these outputs, given the model input
-        from tensorflow import keras
         activation_model = keras.models.Model(
             inputs=self.model.input, outputs=layer_output)
 
-        layer_activations = activation_model.predict(X)
+        layer_activations = activation_model.predict(input_data)
         # Print info about the activations
-        #print(pd.DataFrame({"Layer": self.model.layers[layerIdx].name, 'Activation shape': [activation.shape for activation in layer_activations]}))
         return layer_activations
 
-    def layer_patterns(self, layer, X=None, agg_activations=None):
+    def layer_patterns(self, layer, input_data=None, agg_activations=None):
         if not agg_activations:
-            activations = self.layer_activations(layer, X)
+            activations = self.layer_activations(layer, input_data)
             agg_activations = [self.layer_aggregation.aggregate(
                 self.layer(layer), activation) for activation in activations]
 
@@ -181,17 +185,17 @@ class NeuralActivationPattern:
         print(
             F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}")
         patterns = pd.DataFrame({"patternId": clusterer.labels_,
-                                "probability": clusterer.probabilities_, "outlier_score": clusterer.outlier_scores_})
+                                 "probability": clusterer.probabilities_,
+                                 "outlier_score": clusterer.outlier_scores_})
         pattern_info = pd.DataFrame(
             {"pattern_persistence": clusterer.cluster_persistence_})
         return patterns, pattern_info
 
-    def filter_patterns(self, layer, filterId, X=None, activations=None):
-
+    def filter_patterns(self, layer, filter_id, input_data=None, activations=None):
         if activations is None:
-            activations = self.layer_activations(layer, X)
+            activations = self.layer_activations(layer, input_data)
         # Extract filter activations for each input
-        filter_activations = activations[:, ..., filterId]
+        filter_activations = activations[:, ..., filter_id]
         # Aggregate activations per input
         agg_activations = [self.filter_aggregation.aggregate(
             self.layer(layer), activation) for activation in filter_activations]
@@ -199,18 +203,19 @@ class NeuralActivationPattern:
         clusterer.fit(agg_activations)
 
         print(
-            F"Layer {layer}, filter: {filterId}, number of patterns: {clusterer.labels_.max() + 1}")
+            F"Layer {layer}, filter: {filter_id}, number of patterns: {clusterer.labels_.max()+1}")
         patterns = pd.DataFrame({"patternId": clusterer.labels_,
-                                "probability": clusterer.probabilities_, "outlier_score": clusterer.outlier_scores_})
+                                 "probability": clusterer.probabilities_,
+                                 "outlier_score": clusterer.outlier_scores_})
         pattern_info = pd.DataFrame(
             {"pattern_persistence": clusterer.cluster_persistence_})
         return patterns, pattern_info
 
-    def layer_summary(self, layer, X, y, layer_patterns=None):
+    def layer_summary(self, layer, input_data, label, layer_patterns=None):
         if layer_patterns is None:
-            layer_patterns = self.layer_patterns(layer, X)
+            layer_patterns = self.layer_patterns(layer, input_data)
         layer_patterns = pd.concat(
-            [layer_patterns, pd.DataFrame({'label': y})], axis=1)
+            [layer_patterns, pd.DataFrame({'label': label})], axis=1)
         # Count the number of labels falling into each pattern
         patterns = layer_patterns.groupby(['patternId', 'label']).agg(
             counts=pd.NamedAgg(column='label', aggfunc='count')).reset_index()
@@ -223,15 +228,12 @@ class NeuralActivationPattern:
 
         patterns_sorted = np.sort(layer_patterns['patternId'].unique())[::-1]
         labels_sorted = np.sort(layer_patterns['label'].unique())
-        # size = max(220 + labels.shape[0]*20,
-        #            220 + patterns.shape[0]*20)
-        fig = px.scatter(patterns, x='label', y='patternId', size='counts', symbol_sequence=['square'],
-                         category_orders={"patternId": patterns_sorted,
-                                          "label": labels_sorted},
+        fig = px.scatter(patterns, x='label', y='patternId', size='counts',
+                         symbol_sequence=['square'], category_orders={"patternId":
+                                                                      patterns_sorted,
+                                                                      "label": labels_sorted},
                          title=f'Layer {layer}. Number of labels belonging to each pattern',
                          size_max=12,
-                         #width= size,
-                         #height= size,
                          template="plotly_white"
                          )
         fig.update_xaxes(tickson="boundaries", type='category', showline=True, mirror=True,
@@ -242,9 +244,4 @@ class NeuralActivationPattern:
                          )
         fig.update_yaxes(tickson="boundaries", type='category',
                          showline=True, mirror=True, scaleanchor="x", scaleratio=1)
-        # fig.show()
         return fig
-        # HDBSCAN is noise aware – it has a notion of data samples that are not assigned to any pattern. This is handled by assigning these samples the label -1.
-        # px.histogram(dd, x='label', facet_row='pattern', title= 'Layer {}: {}'.format(patternOnLayer, model.layers[patternOnLayer].name),
-        #height = 2000,
-        # facet_row_spacing=0.005000).update_yaxes(matches=None)

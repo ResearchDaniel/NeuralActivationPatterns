@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [14]
+
+    name: Pylint
+
+    steps:
+      - name: Python Packages
+        run: pip install -r requirements.txt
+
+      - name: Pylint Files
+        run: pylint *.py
+
+      - name: Pylint NAP
+        run: pylint nap
