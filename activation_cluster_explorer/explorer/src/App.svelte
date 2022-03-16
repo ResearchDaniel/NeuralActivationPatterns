@@ -19,6 +19,7 @@
     predictionFilter,
     selectedPage,
     showAverage,
+    showDistribution,
   } from "./stores";
   import type { Patterns } from "./types";
 
@@ -28,6 +29,10 @@
   onMount(() => {
     if (urlParams.has("showAverage"))
       showAverage.set(JSON.parse(urlParams.get("showAverage")) as boolean);
+    if (urlParams.has("showDistribution"))
+      showDistribution.set(
+        JSON.parse(urlParams.get("showDistribution")) as boolean
+      );
     if (urlParams.has("numCenters"))
       numCenters.set(JSON.parse(urlParams.get("numCenters")) as number);
     if (urlParams.has("numOutliers"))
@@ -42,6 +47,9 @@
     numOutliers.subscribe((setting) =>
       updateURLParams("numOutliers", `${setting}`)
     );
+    showDistribution.subscribe((setting) => {
+      updateURLParams("showDistribution", `${setting}`);
+    });
   });
 
   function updateURLParams(settingName: string, setting: string) {
@@ -56,7 +64,7 @@
     {#if $selectedPage === "Overview"}
       <div class="flex flex-row p-2 h-96">
         <Controls bind:patternsRequest />
-        {#if patternsRequest !== undefined}
+        {#if patternsRequest !== undefined && $showDistribution}
           {#await patternsRequest then patterns}
             {#if patterns.samples.length > 0}
               <Distribution patterns={patterns.samples} />

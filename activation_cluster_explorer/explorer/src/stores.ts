@@ -1,5 +1,4 @@
 import { derived, writable } from "svelte/store";
-import { centers, minPatternSize, outliers, showAvg } from "./constants";
 import { filterPatterns } from "./helpers";
 import type { PatternForSample, TooltipSpec } from "./types";
 
@@ -8,9 +7,11 @@ export const tooltip = writable<TooltipSpec>({
   hover: false,
   mousePos: { x: 0, y: 0 },
 });
-export const numCenters = writable<number>(centers);
-export const numOutliers = writable<number>(outliers);
-export const showAverage = writable<boolean>(showAvg);
+export const numCenters = writable<number>(1);
+export const numOutliers = writable<number>(3);
+export const minPatternSize = writable<number>(3);
+export const showAverage = writable<boolean>(false);
+export const showDistribution = writable<boolean>(false);
 export const selectedPage = writable<string>("Overview");
 export const pinnedPatterns = writable<Record<string, PatternForSample[]>>({});
 export const patternFilter = writable<{ label: string; patternId: number }[]>(
@@ -21,8 +22,14 @@ export const predictionFilter = writable<string[]>([]);
 export const imageFilter = writable<string[]>([]);
 
 export const filteredPinnedPatterns = derived(
-  [pinnedPatterns, labelFilter, predictionFilter, imageFilter],
-  ([$pinnedPatterns, $labelFilter, $predictionFilter, $imageFilter]) => {
+  [pinnedPatterns, labelFilter, predictionFilter, imageFilter, minPatternSize],
+  ([
+    $pinnedPatterns,
+    $labelFilter,
+    $predictionFilter,
+    $imageFilter,
+    $minPatternSize,
+  ]) => {
     const filtered = {};
     const pinnedPatternUids = Object.keys($pinnedPatterns);
     pinnedPatternUids.forEach((uid) => {
@@ -32,7 +39,7 @@ export const filteredPinnedPatterns = derived(
         $predictionFilter,
         $imageFilter
       );
-      if (patterns.length >= minPatternSize) filtered[uid] = patterns;
+      if (patterns.length >= $minPatternSize) filtered[uid] = patterns;
     });
     return filtered;
   }
