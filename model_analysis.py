@@ -1,3 +1,4 @@
+from isort import file
 import nap
 import export
 import models
@@ -6,6 +7,9 @@ import tensorflow as tf
 from pathlib import Path
 import tensorflow_datasets as tfds
 import argparse
+import pickle
+import util
+
 print(tf.__version__)
 
 
@@ -45,7 +49,7 @@ def create_aggregation_function(name):
     elif name == "mean_std":
         return nap.MeanStdAggregation()
     elif name == "max":
-        return nap.MeanAggregation()
+        return nap.MaxAggregation()
     elif name == "none":
         return nap.NoAggregation()
     raise Exception(f"Invalid aggregation function: {name}")
@@ -87,7 +91,8 @@ if args.all_filters:
         filters[f"{layer}"] = [f for f in range(0, shape[-1])]
 elif args.filter_range is not None:
     for layer in layers:
-        filters[f"{layer}"] = [f for f in args.filter_range]
+        filters[f"{layer}"] = [f for f in range(
+            args.filter_range[0], args.filter_range[1])]
 
 # layers = ['Mixed_4b_Concatenated', 'Mixed_5b_Concatenated']
 # layer = 'Mixed_4b_Concatenated'
@@ -110,15 +115,28 @@ y = list(tfds.as_numpy(y))
 
 #layer_analysis(model, model_name, X, y, layer)
 # filter_analysis(model, model_name, X, y, layer, filterId)
+
+
 if args.n_max_activations > 0:
     export.export_max_activations(image_dir, file_names, model, model_name,
                                   X, layers, filters, N=args.n_max_activations)
 
-predictions = tf.argmax(model.predict(
-    X.batch(128).cache().prefetch(tf.data.AUTOTUNE)), axis=1).numpy()
-# for x in X.batch(128).cache().prefetch(tf.data.AUTOTUNE):
-#     predictions = tf.keras.applications.inception_v3.decode_predictions(model.predict(
-#         x), top=1)
-#     print(predictions)
+ONLY_MAX_ACTIVATIONS = False
+if ONLY_MAX_ACTIVATIONS:
+    # Only consider highest activating images
+    N = 100
+    X, y, file_names, predictions = util.keep_max_activations(
+        model, model_name, X, y, file_names, layers[0], filters[layers[0]][0], N)
+    model_name += f"_{N}_max_activations"
+else:
+    # Predictions can take some time for larger models so we cache them on disk
+    predictions_path = Path("results", model_name, "predictions.pkl")
+    if predictions_path.exists():
+        predictions = pickle.load(open(predictions_path, "rb"))
+    else:
+        predictions = tf.argmax(model.predict(
+            X.batch(128).cache().prefetch(tf.data.AUTOTUNE)), axis=1).numpy()
+        pickle.dump(predictions, open(predictions_path, "wb"))
+
 export.export_all(model, model_name, X, y, predictions,
                   file_names, layers, filters, str(image_dir), layer_aggregation=layer_aggregation, filter_aggregation=filter_aggregation)

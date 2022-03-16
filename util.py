@@ -5,7 +5,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import numpy as np
 import pickle
-import ast
+import nap
 
 
 def filter_tf_dataset(dataset, indices):
@@ -39,6 +39,27 @@ def filter_tf_dataset(dataset, indices):
     items = list(tfds.as_numpy(filtered_ds))
     mapping = dict(items)
     return [mapping[x] for x in indices]
+
+
+def keep_max_activations(model, model_name, X, y, file_names, layer, filter, N):
+    ''' Keeps the top N activating inputs '''
+    activations, f = nap.cache.get_layer_activations(
+        X, model, model_name, layer)
+    # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
+    activations = activations[()]
+    ap = nap.NeuralActivationPattern(model)
+    # max_activations = ap.layer_max_activations(
+    #     layer, activations=activations, nSamplesPerLayer=N)
+    max_activations = ap.filter_max_activations(
+        layer, filter, activations=activations, nSamplesPerLayer=N)
+    # Filter out max activations
+    X = tf.data.Dataset.from_tensor_slices(
+        filter_tf_dataset(X, max_activations))
+    y = [y[idx] for idx in max_activations]
+    file_names = [file_names[idx] for idx in max_activations]
+    predictions = tf.argmax(model.predict(
+        X.batch(128).cache().prefetch(tf.data.AUTOTUNE)), axis=1).numpy()
+    return X, y, file_names, predictions
 
 
 def average_images(image_dir, file_names, indices, image_out_size):

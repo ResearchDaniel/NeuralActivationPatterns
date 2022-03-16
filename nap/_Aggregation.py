@@ -33,13 +33,17 @@ class MeanAggregation(AggregationInterface):
         if len(activation_shape) == 3:
             # Convolutional layer
             return activation_shape[-1]
+        elif len(activation_shape) == 2 and activation_shape[1] > 1:
+            return 1
         else:
             return np.prod(activation_shape)
 
     def aggregate(self, layer, activations) -> np.ndarray:
-        if (len(activations.shape) == 3):
+        if len(activations.shape) == 3:
             # Convolutional-like layer
             return [np.mean(activations[:, :, feature].ravel()) for feature in range(activations.shape[-1])]
+        elif len(activations.shape) == 2 and activations.shape[1] > 1:
+            return [np.mean(activations)]
         else:
             return activations.ravel()
 
@@ -52,6 +56,8 @@ class MeanStdAggregation(AggregationInterface):
         if len(activation_shape) == 3:
             # Convolutional layer
             return 2*activation_shape[-1]
+        elif len(activation_shape) == 2 and activation_shape[1] > 1:
+            return 2
         else:
             return np.prod(activation_shape)
 
@@ -64,6 +70,8 @@ class MeanStdAggregation(AggregationInterface):
                 mean_std.append(np.mean(activation))
                 mean_std.append(np.std(activation))
             return mean_std
+        elif len(activations.shape) == 2 and activations.shape[1] > 1:
+            return [np.mean(activations), np.std(activation)]
         else:
             return activations.ravel()
 
@@ -76,6 +84,8 @@ class MaxAggregation(AggregationInterface):
         if len(activation_shape) == 3:
             # Convolutional layer
             return activation_shape[-1]
+        elif len(activation_shape) == 2 and activation_shape[1] > 1:
+            return 1
         else:
             return np.prod(activation_shape)
 
@@ -84,5 +94,7 @@ class MaxAggregation(AggregationInterface):
         if len(activations.shape) == 3:
             # Convolutional-like layer
             return [np.max(activations[..., feature].ravel()) for feature in range(activations.shape[-1])]
+        elif len(activations.shape) == 2 and activations.shape[1] > 1:
+            return [np.max(activations)]
         else:
             return activations.ravel()

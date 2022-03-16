@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 models = ["inception_v3"]
-layers = {"inception_v3": ["mixed5", "mixed6", "mixed10"]}
+layers = {"inception_v3": ["mixed5", "mixed6", "mixed10", "predictions"]}
 data_sets = {"mnist": "mnist", "cifar10": "cifar10",
              "inception_v3": "imagenet2012_subset"}
 splits = {"inception_v3": "validation"}
@@ -12,7 +12,7 @@ layer_aggregations = ["mean"]  # , "mean_std", 'none']
 data_set_sizes = range(12811, 14000, 14000)
 
 # filters = " --all_filters "
-filters = " --filter_range 0 10 "
+filters = " --filter_range 0 2 "
 # Batch processing for computing NAPs
 
 
