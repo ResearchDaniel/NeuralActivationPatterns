@@ -6,7 +6,13 @@
   import Fa from "svelte-fa";
   import { faTimes } from "@fortawesome/free-solid-svg-icons/faTimes";
 
-  import { numCenters, numOutliers, settingsOpen, showAverage } from "./stores";
+  import {
+    numCenters,
+    numOutliers,
+    settingsOpen,
+    showAverage,
+    showDistribution,
+  } from "./stores";
   import NumericFieldStore from "./elements/NumericFieldStore.svelte";
 </script>
 
@@ -28,6 +34,12 @@
           <p>Show Average</p>
           <div class="ml-auto">
             <Switch checked={showAverage} />
+          </div>
+        </div>
+        <div class="flex items-center mb-2">
+          <p>Show Distribution</p>
+          <div class="ml-auto">
+            <Switch checked={showDistribution} />
           </div>
         </div>
         <div class="flex items-center mb-2">
