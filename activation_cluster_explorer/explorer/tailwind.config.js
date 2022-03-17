@@ -44,18 +44,20 @@ module.exports = {
   },
   darkMode: 'media',
   plugins: [require('@tailwindcss/forms')],
-  purge: {
-    content: ['./src/**/*.svelte'],
-    // this is for extracting Svelte `class:` syntax but is not perfect yet
-    defaultExtractor: (content) => {
-      const broadMatches = content.match(/[^<>"'`\s]*[^<>"'`\s:]/g) || [];
-      const broadMatchesWithoutTrailingSlash = broadMatches.map((match) =>
-        _.trimEnd(match, '\\')
-      );
-      const matches = broadMatches.concat(broadMatchesWithoutTrailingSlash);
-      return matches;
+  content: {
+    files: ['./src/**/*.svelte'],
+    extract: {
+      // this is for extracting Svelte `class:` syntax but is not perfect yet
+      defaultExtractor: (content) => {
+        const broadMatches = content.match(/[^<>"'`\s]*[^<>"'`\s:]/g) || [];
+        const broadMatchesWithoutTrailingSlash = broadMatches.map((match) =>
+          _.trimEnd(match, '\\')
+        );
+        const matches = broadMatches.concat(broadMatchesWithoutTrailingSlash);
+        return matches;
+      },
+      enabled: isProduction,
     },
-    enabled: isProduction,
   },
   future: {
     purgeLayersByDefault: true,
