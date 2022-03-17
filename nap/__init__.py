@@ -1,13 +1,14 @@
-from ._Aggregation import AggregationInterface
-from ._Aggregation import NoAggregation
-from ._Aggregation import MeanAggregation
-from ._Aggregation import MeanStdAggregation
-from ._Aggregation import MaxAggregation
+"""Providing functionality for computing nerual activation patterns."""
+from ._aggregation import AggregationInterface
+from ._aggregation import NoAggregation
+from ._aggregation import MeanAggregation
+from ._aggregation import MeanStdAggregation
+from ._aggregation import MaxAggregation
 
-from ._NeuralActivationPattern import NeuralActivationPattern
-from ._NeuralActivationPattern import sort
-from ._NeuralActivationPattern import sample
-from ._NeuralActivationPattern import head
-from ._NeuralActivationPattern import outliers
-from ._NeuralActivationPattern import tail
-from ._NeuralActivationPattern import average
+from ._neural_activation_pattern import NeuralActivationPattern
+from ._neural_activation_pattern import sort
+from ._neural_activation_pattern import sample
+from ._neural_activation_pattern import head
+from ._neural_activation_pattern import outliers
+from ._neural_activation_pattern import tail
+from ._neural_activation_pattern import average
