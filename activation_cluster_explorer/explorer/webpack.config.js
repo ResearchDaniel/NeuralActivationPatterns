@@ -29,11 +29,6 @@ module.exports = {
 				exclude: /node_modules/
 			},
 			{
-				test: /\.(sa|sc|c)ss$/,
-				exclude: /node_modules/,
-				use: ['isomorphic-style-loader', MiniCssExtractPlugin.loader, 'css-loader'],
-			},
-			{
 				test: /\.svelte$/,
 				use: {
 					loader: 'svelte-loader',
@@ -58,7 +53,8 @@ module.exports = {
 				test: /\.css$/,
 				use: [
 					MiniCssExtractPlugin.loader,
-					'css-loader'
+					'css-loader',
+					'postcss-loader'
 				],
 			},
 			{

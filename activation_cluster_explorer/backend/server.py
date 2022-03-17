@@ -31,7 +31,7 @@ def get_layers(model):
     for path in Path(DATA_DIR, model, "layers").iterdir():
         if path.is_dir():
             layer_dirs.append(path.stem)
-    with open(Path(DATA_DIR, model, 'config.json')) as json_file:
+    with open(Path(DATA_DIR, model, 'config.json'), encoding='utf8') as json_file:
         data = json.load(json_file)
     if "layers" in data:
         layers = list(
@@ -83,10 +83,10 @@ def get_patterns(model, layer):
     return jsonify(patterns.to_json(orient="records"))
 
 
-@app.route('/api/get_filter_patterns/<model>/<layer>/<method>/<filter>')
-def get_filter_patterns(model, layer, filter, method):
+@app.route('/api/get_filter_patterns/<model>/<layer>/<method>/<filter_index>')
+def get_filter_patterns(model, layer, filter_index, method):
     pickle_path = Path(DATA_DIR, model, "layers", layer,
-                       "filters", method, filter, "patterns.pkl")
+                       "filters", method, filter_index, "patterns.pkl")
     if not pickle_path.exists():
         return "No such file", ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
@@ -102,10 +102,10 @@ def get_pattern_info(model, layer):
     return jsonify(patterns.to_json(orient="records"))
 
 
-@app.route('/api/get_filter_pattern_info/<model>/<layer>/<method>/<filter>')
-def get_filter_pattern_info(model, layer, filter, method):
+@app.route('/api/get_filter_pattern_info/<model>/<layer>/<method>/<filter_index>')
+def get_filter_pattern_info(model, layer, filter_index, method):
     pickle_path = Path(DATA_DIR, model, "layers", layer,
-                       "filters", method, filter, "patterns_info.pkl")
+                       "filters", method, filter_index, "patterns_info.pkl")
     if not pickle_path.exists():
         return "No such file", ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
@@ -120,24 +120,26 @@ def get_dataset(model):
 
 @app.route('/api/get_average/<model>/<layer>/<pattern>')
 def get_average(model, layer, pattern):
-    return send_file(Path(DATA_DIR, model, "layers", layer, pattern, 'average.jpeg'), mimetype='image/jpeg')
+    return send_file(Path(DATA_DIR, model, "layers", layer, pattern, 'average.jpeg'),
+                     mimetype='image/jpeg')
 
 
-@app.route('/api/get_filter_average/<model>/<layer>/<method>/<filter>/<pattern>')
-def get_filter_average(model, layer, method, filter, pattern):
-    return send_file(Path(DATA_DIR, model, "layers", layer, method, filter, pattern, 'average.jpeg'), mimetype='image/jpeg')
+@app.route('/api/get_filter_average/<model>/<layer>/<method>/<filter_index>/<pattern>')
+def get_filter_average(model, layer, method, filter_index, pattern):
+    return send_file(Path(DATA_DIR, model, "layers", layer, method, filter_index, pattern,
+                          'average.jpeg'), mimetype='image/jpeg')
 
 
-@app.route('/api/get_image/<model>/<id>')
-def get_image(model, id):
-    with open(Path(DATA_DIR, model, 'config.json')) as json_file:
+@app.route('/api/get_image/<model>/<identifier>')
+def get_image(model, identifier):
+    with open(Path(DATA_DIR, model, 'config.json'), encoding='utf8') as json_file:
         data = json.load(json_file)
-    return send_file(Path(data["data_path"], id), mimetype='image/jpeg')
+    return send_file(Path(data["data_path"], identifier), mimetype='image/jpeg')
 
 
 @app.route('/api/get_labels/<model>')
 def get_labels(model):
-    with open(Path(DATA_DIR, model, 'config.json')) as json_file:
+    with open(Path(DATA_DIR, model, 'config.json'), encoding='utf8') as json_file:
         data = json.load(json_file)
     labels = pd.read_pickle(Path(data["data_path"], 'label_names.pkl'))
     return jsonify(labels)
