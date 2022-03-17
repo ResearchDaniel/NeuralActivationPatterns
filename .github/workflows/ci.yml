@@ -25,10 +25,10 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Install Node dependencies
-        run: yarn --cwd activation_cluster_explorer/explorer --frozen-lockfile
+        run: yarn --cwd nap_microscope/microscope --frozen-lockfile
 
       - name: Build
-        run: yarn --cwd activation_cluster_explorer/explorer build
+        run: yarn --cwd nap_microscope/microscope build
 
       - name: Python Packages
         run: pip install -r requirements.txt
@@ -39,5 +39,5 @@ jobs:
       - name: Pylint NAP
         run: pylint nap
 
-      - name: Pylint Explorer Server
-        run: pylint activation_cluster_explorer/backend/server.py
+      - name: Pylint Microscope Server
+        run: pylint nap_microscope/backend/server.py
