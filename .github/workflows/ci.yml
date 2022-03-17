@@ -14,10 +14,21 @@ jobs:
       matrix:
         node: [14]
 
-    name: Pylint
+    name: Pylint and Node ${{ matrix.node }}
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install Node dependencies
+        run: yarn --cwd activation_cluster_explorer/explorer --frozen-lockfile
+
+      - name: Build
+        run: yarn --cwd activation_cluster_explorer/explorer build
 
       - name: Python Packages
         run: pip install -r requirements.txt
@@ -27,3 +38,6 @@ jobs:
 
       - name: Pylint NAP
         run: pylint nap
+
+      - name: Pylint Explorer Server
+        run: pylint activation_cluster_explorer/backend/server.py
