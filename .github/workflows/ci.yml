@@ -17,6 +17,8 @@ jobs:
     name: Pylint
 
     steps:
+      - uses: actions/checkout@v2
+
       - name: Python Packages
         run: pip install -r requirements.txt
 
