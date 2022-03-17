@@ -131,6 +131,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-activation_cluster_explorer/backend/data
-activation_cluster_explorer/backend/images
+nap_microscope/backend/data
+nap_microscope/backend/images
 results/

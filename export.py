@@ -12,7 +12,7 @@ import nap
 import nap.cache
 import util
 
-EXPORT_LOCATION = Path("activation_cluster_explorer/backend/data")
+EXPORT_LOCATION = Path("nap_microscope/backend/data")
 
 
 def export_config(image_dir, model, model_name, destination=EXPORT_LOCATION):
