@@ -108,7 +108,7 @@ def export_activations(input_data, neural_activation, model_name, layers,
 
 
 # pylint: disable=R0914
-def export_layer_aggregation(input_data, model_name, layers, neural_activation,
+def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                              destination=CACHE_LOCATION):
     for layer in layers:
         act_path = activations_path(destination, model_name, layer)
@@ -309,12 +309,12 @@ def get_layer_activations(input_data, neural_activation, model_name, layer,
     return file_handle["activations"], file_handle
 
 
-def get_layer_activation_statistics(input_data, model, model_name, layer,
+def get_layer_activation_statistics(input_data, neural_activation, model_name, layer,
                                     destination=CACHE_LOCATION):
     path = activation_statistics_path(destination, model_name, layer)
     if not path.exists():
         export_layer_activation_statistics(
-            input_data, model, model_name, [layer], destination)
+            input_data, neural_activation, model_name, [layer], destination)
     return pickle.load(open(path, "rb"))
 
 

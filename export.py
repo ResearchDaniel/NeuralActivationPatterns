@@ -32,8 +32,8 @@ def export_dataset(file_names, labels, predictions, export_name, destination=EXP
                  "prediction": predictions}).to_pickle(Path(path, "dataset.pkl"))
 
 
-def export_patterns(model_name, export_name, input_data, layers, filters,
-                    neural_activation, destination=EXPORT_LOCATION):
+def export_patterns(neural_activation, model_name, export_name, input_data, layers, filters,
+                    destination=EXPORT_LOCATION):
     def export_pattern(path, patterns, info, statistics):
         path.mkdir(parents=True, exist_ok=True)
         patterns.to_pickle(Path(path, "patterns.pkl"))
@@ -60,13 +60,13 @@ def export_patterns(model_name, export_name, input_data, layers, filters,
                 export_pattern(path, patterns, info, statistics)
 
 
-def export_statistics(model, model_name, export_name, input_data, layers, filters,
+def export_statistics(neural_activation, model_name, export_name, input_data, layers, filters,
                       destination=EXPORT_LOCATION):
     for layer in layers:
         path = Path(destination, export_name, "layers", str(layer))
         path.mkdir(parents=True, exist_ok=True)
         stats = nap.cache.get_layer_activation_statistics(
-            input_data, model, model_name, layer)
+            input_data, neural_activation, model_name, layer)
         with open(Path(path, "layer_statistics.pkl"), "wb") as outfile:
             pickle.dump(stats, outfile)
         if layer in filters:
@@ -75,7 +75,7 @@ def export_statistics(model, model_name, export_name, input_data, layers, filter
                             "layers", str(layer), "filters", str(model_filter))
                 path.mkdir(parents=True, exist_ok=True)
                 stats = nap.cache.get_filter_activation_statistics(
-                    input_data, model, model_name, layer, model_filter)
+                    input_data, neural_activation, model_name, layer, model_filter)
                 with open(Path(path, "filter_statistics.pkl"), "wb") as outfile:
                     pickle.dump(stats, outfile)
 
@@ -171,9 +171,9 @@ def export_all(model_name, input_data, labels, predictions, file_names, layers, 
 
     export_config(image_dir, neural_activation.model, export_name, destination)
     export_dataset(file_names, labels, predictions, export_name, destination)
-    export_patterns(model_name, export_name, input_data, layers,
-                    filters, neural_activation, destination)
-    export_statistics(neural_activation.model, model_name, export_name, input_data, layers,
+    export_patterns(neural_activation, model_name, export_name, input_data, layers,
+                    filters, destination)
+    export_statistics(neural_activation, model_name, export_name, input_data, layers,
                       filters, destination)
     export_averages(image_dir, file_names, neural_activation, model_name,
                     export_name, input_data, layers, filters, destination)
