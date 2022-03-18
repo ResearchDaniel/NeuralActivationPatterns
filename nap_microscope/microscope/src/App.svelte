@@ -14,48 +14,19 @@
   import {
     imageFilter,
     labelFilter,
-    numCenters,
-    numOutliers,
     predictionFilter,
     selectedPage,
-    showAverage,
     showDistribution,
   } from "./stores";
   import type { Patterns } from "./types";
+  import { setupURLParams } from "./helpers";
 
   let patternsRequest: Promise<Patterns> = undefined;
   const urlParams = new URLSearchParams(window.location.search);
 
   onMount(() => {
-    if (urlParams.has("showAverage"))
-      showAverage.set(JSON.parse(urlParams.get("showAverage")) as boolean);
-    if (urlParams.has("showDistribution"))
-      showDistribution.set(
-        JSON.parse(urlParams.get("showDistribution")) as boolean
-      );
-    if (urlParams.has("numCenters"))
-      numCenters.set(JSON.parse(urlParams.get("numCenters")) as number);
-    if (urlParams.has("numOutliers"))
-      numOutliers.set(JSON.parse(urlParams.get("numOutliers")) as number);
-
-    showAverage.subscribe((setting) =>
-      updateURLParams("showAverage", `${setting}`)
-    );
-    numCenters.subscribe((setting) =>
-      updateURLParams("numCenters", `${setting}`)
-    );
-    numOutliers.subscribe((setting) =>
-      updateURLParams("numOutliers", `${setting}`)
-    );
-    showDistribution.subscribe((setting) => {
-      updateURLParams("showDistribution", `${setting}`);
-    });
+    setupURLParams(urlParams);
   });
-
-  function updateURLParams(settingName: string, setting: string) {
-    urlParams.set(settingName, setting);
-    window.history.replaceState({}, "", `${location.pathname}?${urlParams}`);
-  }
 </script>
 
 <main class="h-full">
