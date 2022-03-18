@@ -30,7 +30,7 @@
     <IconButton
       on:click={() =>
         window.open(
-          "https://github.com/ResearchDaniel/NetworkActivationClustering",
+          "https://github.com/ResearchDaniel/NetworkActivationPatterns",
           "_blank"
         )}
       textColor="text-text-dark"
