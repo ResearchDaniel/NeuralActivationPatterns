@@ -142,7 +142,7 @@ else:
         with open(predictions_path, "wb") as output:
             pickle.dump(predictions, output)
 
-export.export_all(
-    ml_model, model_name, X, y, predictions, files, layers, filters, str(data_dir),
-    layer_aggregation=layer_aggregation, filter_aggregation=filter_aggregation,
-    minimum_pattern_size=args.minimum_pattern_size, n_max_activations=args.n_max_activations)
+neural_activation_pattern = nap.NeuralActivationPattern(
+    ml_model, layer_aggregation, filter_aggregation, args.minimum_pattern_size)
+export.export_all(model_name, X, y, predictions, files, layers, filters, str(data_dir),
+                  neural_activation_pattern, n_max_activations=args.n_max_activations)

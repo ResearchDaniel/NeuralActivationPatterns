@@ -32,8 +32,8 @@ def export_dataset(file_names, labels, predictions, export_name, destination=EXP
                  "prediction": predictions}).to_pickle(Path(path, "dataset.pkl"))
 
 
-def export_patterns(model, model_name, export_name, input_data, layers, filters, layer_aggregation,
-                    filter_aggregation, min_pattern_size, destination=EXPORT_LOCATION):
+def export_patterns(model, model_name, export_name, input_data, layers, filters,
+                    neural_activation, destination=EXPORT_LOCATION):
     def export_pattern(path, patterns, info, statistics):
         path.mkdir(parents=True, exist_ok=True)
         patterns.to_pickle(Path(path, "patterns.pkl"))
@@ -43,20 +43,26 @@ def export_patterns(model, model_name, export_name, input_data, layers, filters,
     for layer in layers:
         path = Path(destination, export_name, "layers", str(layer))
         patterns, info = nap.cache.get_layer_patterns(
-            input_data, model, model_name, layer, layer_aggregation, min_pattern_size)
+            input_data, model, model_name, layer, neural_activation.layer_aggregation,
+            neural_activation.min_pattern_size)
         statistics = nap.cache.get_layer_patterns_activation_statistics(
-            input_data, model, model_name, layer, layer_aggregation, min_pattern_size)
+            input_data, model, model_name, layer, neural_activation.layer_aggregation,
+            neural_activation.min_pattern_size)
         export_pattern(path, patterns, info, statistics)
         if layer in filters:
             for model_filter in filters[layer]:
-                path = Path(destination, export_name, "layers", str(layer),
-                            "filters", filter_aggregation.__class__.__name__, str(model_filter))
+                path = Path(
+                    destination, export_name, "layers", str(layer),
+                    "filters", neural_activation.filter_aggregation.__class__.__name__,
+                    str(model_filter))
                 patterns, info = nap.cache.get_filter_patterns(
-                    input_data, model, model_name, layer, model_filter, filter_aggregation,
-                    min_pattern_size)
+                    input_data, model, model_name, layer, model_filter,
+                    neural_activation.filter_aggregation,
+                    neural_activation.min_pattern_size)
                 statistics = nap.cache.get_filter_patterns_activation_statistics(
-                    input_data, model, model_name, layer, model_filter, filter_aggregation,
-                    min_pattern_size)
+                    input_data, model, model_name, layer, model_filter,
+                    neural_activation.filter_aggregation,
+                    neural_activation.min_pattern_size)
                 export_pattern(path, patterns, info, statistics)
 
 
@@ -95,22 +101,33 @@ def export_pattern_averages(base_path, patterns, file_names, image_dir, input_da
 
 def export_averages(
         image_dir, file_names, model, model_name, export_name, input_data, layers, filters,
-        layer_aggregation, filter_aggregation, min_pattern_size, destination=EXPORT_LOCATION):
+        neural_activation, destination=EXPORT_LOCATION):
     for layer in layers:
         patterns, _ = nap.cache.get_layer_patterns(
-            input_data, model, model_name, layer, layer_aggregation, min_pattern_size)
+            input_data, model, model_name, layer, neural_activation.layer_aggregation,
+            neural_activation.min_pattern_size)
         layer_path = Path(destination, export_name, "layers", str(layer))
         export_pattern_averages(layer_path, patterns,
                                 file_names, image_dir, input_data)
-        if layer in filters:
-            for model_filter in filters[layer]:
-                patterns, _ = nap.cache.get_filter_patterns(
-                    input_data, model, model_name, layer, model_filter, filter_aggregation,
-                    min_pattern_size)
-                export_pattern_averages(Path(layer_path, 'filters',
-                                             filter_aggregation.__class__.__name__,
-                                             str(model_filter)),
-                                        patterns, file_names, image_dir, input_data)
+        export_filter_averages(
+            image_dir, file_names, model, model_name, input_data, filters,
+            neural_activation, layer, layer_path)
+
+
+def export_filter_averages(
+        image_dir, file_names, model, model_name, input_data, filters, neural_activation,
+        layer, layer_path):
+    if layer in filters:
+        for model_filter in filters[layer]:
+            patterns, _ = nap.cache.get_filter_patterns(
+                input_data, model, model_name, layer, model_filter,
+                neural_activation.filter_aggregation,
+                neural_activation.min_pattern_size)
+            filter_path = Path(layer_path, 'filters',
+                               neural_activation.filter_aggregation.__class__.__name__,
+                               str(model_filter))
+            export_pattern_averages(filter_path,
+                                    patterns, file_names, image_dir, input_data)
 
 
 def export_image(path, name, array):
@@ -132,12 +149,11 @@ def export_activations(base_path, max_activations, file_names, image_dir):
 
 
 def export_max_activations(
-        image_dir, file_names, model, model_name, export_name, input_data, layers, filters, number,
-        destination=EXPORT_LOCATION):
-    activation_pattern = nap.NeuralActivationPattern(model)
+        image_dir, file_names, activation_pattern, model_name, export_name, input_data, layers,
+        filters, number, destination=EXPORT_LOCATION):
     for layer in layers:
         activations, outfile = nap.cache.get_layer_activations(
-            input_data, model, model_name, layer)
+            input_data, activation_pattern.model, model_name, layer)
         # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
         layer_path = Path(destination, export_name, "layers",
                           str(layer), "max_activations")
@@ -154,25 +170,25 @@ def export_max_activations(
         outfile.close()
 
 
-def export_all(
-        model, model_name, input_data, labels, predictions, file_names, layers, filters, image_dir,
-        layer_aggregation, filter_aggregation, minimum_pattern_size, n_max_activations,
-        destination=EXPORT_LOCATION):
+def export_all(model_name, input_data, labels, predictions, file_names, layers, filters, image_dir,
+               neural_activation, n_max_activations,
+               destination=EXPORT_LOCATION):
     # Differentiate between model and export name to be able to cache activation data
     # between configs.
-    export_name = (f"{model_name}_{layer_aggregation.__class__.__name__}"
-                   f"_min_pattern_{minimum_pattern_size}")
+    export_name = (f"{model_name}_{neural_activation.layer_aggregation.__class__.__name__}"
+                   f"_min_pattern_{neural_activation.min_pattern_size}")
 
-    export_config(image_dir, model, export_name, destination)
+    export_config(image_dir, neural_activation.model, export_name, destination)
     export_dataset(file_names, labels, predictions, export_name, destination)
-    export_patterns(model, model_name, export_name, input_data, layers, filters,
-                    layer_aggregation, filter_aggregation, minimum_pattern_size, destination)
-    export_statistics(model, model_name, export_name, input_data, layers,
+    export_patterns(model_name, export_name, input_data, layers,
+                    filters, neural_activation, destination)
+    export_statistics(neural_activation.model, model_name, export_name, input_data, layers,
                       filters, destination)
     export_averages(
-        image_dir, file_names, model, model_name, export_name, input_data, layers, filters,
-        layer_aggregation, filter_aggregation, minimum_pattern_size, destination)
+        image_dir, file_names, model_name, export_name, input_data, layers, filters,
+        neural_activation, destination)
 
     if n_max_activations > 0:
-        export_max_activations(image_dir, file_names, model, model_name, export_name,
-                               input_data, layers, filters, number=n_max_activations)
+        export_max_activations(
+            image_dir, file_names, neural_activation, model_name, export_name,
+            input_data, layers, filters, number=n_max_activations)
