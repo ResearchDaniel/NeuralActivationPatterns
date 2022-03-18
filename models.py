@@ -36,7 +36,8 @@ def get_data_set(data_path, data_set, data_set_size, split='test'):
             file_name = f"{i}.jpeg"
         file_names.append(file_name)
 
-    return (data.map(lambda elem: elem['image']), data.map(lambda elem: elem['label']),
+    return (data.map(lambda elem: elem['image']),
+            data.map(lambda elem: elem['label']),
             file_names, image_dir)
 
 

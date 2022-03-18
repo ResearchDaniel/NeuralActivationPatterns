@@ -41,6 +41,8 @@ parser.add_argument("--size", type=int,
                     default=2000)
 parser.add_argument("--n_max_activations", type=int,
                     default=0)
+parser.add_argument("--minimum_pattern_size", type=int,
+                    default=5)
 args = parser.parse_args()
 
 
@@ -81,7 +83,7 @@ def setup_model(model_type, data_path, data_set, data_set_size, split):
 data_size = args.size
 ml_model, model_name, X, y, files, data_dir = setup_model(
     args.model, args.data_path, args.data_set, data_size, args.split)
-model_name = f"{model_name}_leaf"
+
 if args.layer is None:
     layers = [layer.name for layer in ml_model.layers]
 else:
@@ -101,7 +103,7 @@ elif args.filter_range is not None:
 
 layer_aggregation = create_aggregation_function(args.layer_aggregation)
 filter_aggregation = create_aggregation_function(args.filter_aggregation)
-model_name = f"{model_name}_{layer_aggregation.__class__.__name__}"
+
 
 # nap.cache.export_activations(X, ml_model, model_name, layers=layers)
 # nap.cache.export_layer_aggregation(X, ml_model, model_name, layers=layers, layer_aggregation=None)
@@ -119,10 +121,6 @@ y = list(tfds.as_numpy(y))
 # filter_analysis(ml_model, model_name, X, y, layer, filterId)
 
 
-if args.n_max_activations > 0:
-    export.export_max_activations(data_dir, files, ml_model, model_name,
-                                  X, layers, filters, number=args.n_max_activations)
-
 ONLY_MAX_ACTIVATIONS = False
 if ONLY_MAX_ACTIVATIONS:
     # Only consider highest activating images
@@ -132,6 +130,7 @@ if ONLY_MAX_ACTIVATIONS:
     model_name += f"_{N}_max_activations"
 else:
     # Predictions can take some time for larger models so we cache them on disk
+    predictions_dir = Path("results", model_name)
     predictions_path = Path("results", model_name, "predictions.pkl")
     if predictions_path.exists():
         with open(predictions_path, "rb") as predictions_file:
@@ -139,9 +138,11 @@ else:
     else:
         predictions = tf.argmax(ml_model.predict(
             X.batch(128).cache().prefetch(tf.data.AUTOTUNE)), axis=1).numpy()
+        predictions_dir.mkdir(parents=True, exist_ok=True)
         with open(predictions_path, "wb") as output:
             pickle.dump(predictions, output)
 
-export.export_all(ml_model, model_name, X, y, predictions,
-                  files, layers, filters, str(data_dir),
-                  layer_aggregation=layer_aggregation, filter_aggregation=filter_aggregation)
+neural_activation_pattern = nap.NeuralActivationPattern(
+    ml_model, layer_aggregation, filter_aggregation, args.minimum_pattern_size)
+export.export_all(model_name, X, y, predictions, files, layers, filters, str(data_dir),
+                  neural_activation_pattern, n_max_activations=args.n_max_activations)

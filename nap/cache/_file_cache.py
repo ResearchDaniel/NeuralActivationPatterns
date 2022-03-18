@@ -15,23 +15,30 @@ def activations_path(destination, model_name, layer):
     return Path(destination, model_name, layer, 'layer_activations.h5')
 
 
-def activations_agg_path(destination, model_name, layer, layer_aggregation):
-    return Path(destination, model_name, layer,
-                f'layer_activations_{layer_aggregation.__class__.__name__}.h5')
+def activations_agg_path(destination, model_name, layer, neural_activation):
+    return Path(
+        destination, model_name, layer,
+        f'layer_activations_{neural_activation.layer_aggregation.__class__.__name__}.h5')
 
 
 def activation_statistics_path(destination, model_name, layer):
     return Path(destination, model_name, layer, 'layer_activation_statistics.pkl')
 
 
-def layer_patterns_activation_statistics_path(destination, model_name, layer):
-    return Path(destination, model_name, layer, 'layer_patterns_activation_statistics.pkl')
+def layer_patterns_activation_statistics_path(
+        destination, model_name, layer, neural_activation):
+    return Path(
+        destination, model_name, layer,
+        f'layer_patterns_min_size_{neural_activation.min_pattern_size}_activation_statistics.pkl')
 
 
 def filter_patterns_activation_statistics_path(destination, model_name, layer, filter_index,
-                                               filter_aggregation):
-    return Path(destination, model_name, layer, 'filters', filter_aggregation.__class__.__name__,
-                str(filter_index), 'filter_patterns_activation_statistics.pkl')
+                                               neural_activation):
+    return Path(
+        destination, model_name, layer, 'filters',
+        neural_activation.filter_aggregation.__class__.__name__,
+        str(filter_index),
+        f'filter_patterns_min_size_{neural_activation.min_pattern_size}_activation_statistics.pkl')
 
 
 def filter_activation_statistics_path(destination, model_name, layer, filter_index):
@@ -39,22 +46,29 @@ def filter_activation_statistics_path(destination, model_name, layer, filter_ind
                 'filter_activation_statistics.pkl')
 
 
-def layer_patterns_path(destination, model_name, layer):
-    return Path(destination, model_name, layer, 'layer_patterns.h5')
+def layer_patterns_path(destination, model_name, layer, neural_activation):
+    return Path(
+        destination, model_name, layer,
+        f'layer_patterns_min_size_{neural_activation.min_pattern_size}.h5')
 
 
-def layer_patterns_info_path(destination, model_name, layer):
-    return Path(destination, model_name, layer, 'layer_patterns_info.h5')
+def layer_patterns_info_path(destination, model_name, layer, neural_activation):
+    return Path(destination, model_name, layer,
+                f'layer_patterns_min_size_{neural_activation.min_pattern_size}_info.h5')
 
 
-def filter_patterns_path(destination, model_name, layer, filter_index, filter_aggregation):
-    return Path(destination, model_name, layer, 'filters', filter_aggregation.__class__.__name__,
-                str(filter_index), 'filter_patterns.h5')
+def filter_patterns_path(
+        destination, model_name, layer, filter_index, neural_activation):
+    return Path(destination, model_name, layer, 'filters', neural_activation.
+                filter_aggregation.__class__.__name__, str(filter_index),
+                f'filter_patterns_min_size_{neural_activation.min_pattern_size}.h5')
 
 
-def filter_patterns_info_path(destination, model_name, layer, filter_index, filter_aggregation):
-    return Path(destination, model_name, layer, 'filters', filter_aggregation.__class__.__name__,
-                str(filter_index), 'filter_patterns_info.h5')
+def filter_patterns_info_path(
+        destination, model_name, layer, filter_index, neural_activation):
+    return Path(destination, model_name, layer, 'filters', neural_activation.
+                filter_aggregation.__class__.__name__, str(filter_index),
+                f'filter_patterns_min_size_{neural_activation.min_pattern_size}_info.h5')
 
 
 # pylint: disable=R0914
@@ -77,7 +91,6 @@ def export_activations(input_data, model, model_name, layers, destination=CACHE_
                 "activations", output_shape, compression="gzip", chunks=chunk_size)
             iterator = 0
             for data_set in input_data.batch(1000).cache().prefetch(tf.data.AUTOTUNE):
-                activation_patterns = nap.NeuralActivationPattern(model)
                 num_inputs = data_set.shape[0]
                 activations = activation_patterns.layer_activations(
                     layer, data_set)
@@ -86,9 +99,8 @@ def export_activations(input_data, model, model_name, layers, destination=CACHE_
 
 
 # pylint: disable=R0914
-def export_layer_aggregation(input_data, model, model_name, layers, layer_aggregation,
+def export_layer_aggregation(input_data, model, model_name, layers, neural_activation,
                              destination=CACHE_LOCATION):
-    activation_patterns = nap.NeuralActivationPattern(model)
     for layer in layers:
         act_path = activations_path(destination, model_name, layer)
         if not act_path.exists():
@@ -98,10 +110,10 @@ def export_layer_aggregation(input_data, model, model_name, layers, layer_aggreg
             activations = f_act["activations"]
             # pylint: disable=E1101
             output_shape = list(activations.shape)
-            agg_shape = layer_aggregation.shape(output_shape[1:])
+            agg_shape = neural_activation.layer_aggregation.shape(output_shape[1:])
             total_num_inputs = output_shape[0]
             agg_path = activations_agg_path(
-                destination, model_name, layer, layer_aggregation)
+                destination, model_name, layer, neural_activation)
             with h5py.File(agg_path, 'w') as f_agg:
                 agg_size = np.prod(agg_shape)
                 bytes_per_float = 4
@@ -120,8 +132,8 @@ def export_layer_aggregation(input_data, model, model_name, layers, layer_aggreg
                 for chunk in activations.iter_chunks():
                     data = activations[chunk]
                     dset_aggregated[i:i+data.shape[0]] = [
-                        layer_aggregation.aggregate(
-                            activation_patterns.layer(layer), activation)
+                        neural_activation.layer_aggregation.aggregate(
+                            neural_activation.layer(layer), activation)
                         for activation in data]
                     i += data.shape[0]
 
@@ -180,8 +192,9 @@ def export_layer_activation_statistics(input_data, model, model_name, layers,
                 pickle.dump(statistics, output_file)
 
 
-def export_layer_patterns_activation_statistics(input_data, model, model_name, layer, patterns,
-                                                destination=CACHE_LOCATION):
+def export_layer_patterns_activation_statistics(
+        input_data, model, model_name, layer, patterns, neural_activation,
+        destination=CACHE_LOCATION):
     act_path = activations_path(destination, model_name, layer)
     if not act_path.exists():
         export_activations(input_data, model, model_name, [layer], destination)
@@ -193,13 +206,13 @@ def export_layer_patterns_activation_statistics(input_data, model, model_name, l
                 activations[pattern.index.tolist()], axis=-1)
 
         path = layer_patterns_activation_statistics_path(
-            destination, model_name, layer)
+            destination, model_name, layer, neural_activation)
         with open(path, "wb") as output_file:
             pickle.dump(pattern_statistics, output_file)
 
 
 def export_filter_patterns_activation_statistics(input_data, model, model_name, layer, filter_index,
-                                                 filter_aggregation, patterns,
+                                                 neural_activation, patterns,
                                                  destination=CACHE_LOCATION):
     act_path = activations_path(destination, model_name, layer)
     if not act_path.exists():
@@ -211,7 +224,7 @@ def export_filter_patterns_activation_statistics(input_data, model, model_name, 
                 f_act["activations"][pattern.index.tolist()][..., filter_index], axis=None)
 
         path = filter_patterns_activation_statistics_path(
-            destination, model_name, layer, filter_index, filter_aggregation)
+            destination, model_name, layer, filter_index, neural_activation)
         with open(path, "wb") as output_file:
             pickle.dump(pattern_statistics, output_file)
 
@@ -237,26 +250,26 @@ def export_filter_activation_statistics(input_data, model, model_name, layers, f
         file_handle.close()
 
 
-def export_layer_patterns(input_data, model, model_name, layers, layer_aggregation,
-                          destination=CACHE_LOCATION):
-    activation_patterns = nap.NeuralActivationPattern(model)
+def export_layer_patterns(
+        input_data, model, model_name, layers, neural_activation,
+        destination=CACHE_LOCATION):
     for layer in layers:
         activations, file_handle = get_layer_activations_agg(
-            input_data, model, model_name, layer, layer_aggregation, destination)
-        patterns, patterns_info = activation_patterns.activity_patterns(
+            input_data, model, model_name, layer, neural_activation.layer_aggregation, destination)
+        patterns, patterns_info = neural_activation.activity_patterns(
             layer, activations=activations)
-        patterns_path = layer_patterns_path(destination, model_name, layer)
+        patterns_path = layer_patterns_path(
+            destination, model_name, layer, neural_activation)
         file_handle.close()
         patterns.to_hdf(patterns_path, f'{layer}')
         patterns_info_path = layer_patterns_info_path(
-            destination, model_name, layer)
+            destination, model_name, layer, neural_activation)
         patterns_info.to_hdf(patterns_info_path, f'{layer}')
 
 
-def export_filter_patterns(input_data, model, model_name, layers, filters, filter_aggregation,
-                           destination=CACHE_LOCATION):
-    activation_patterns = nap.NeuralActivationPattern(
-        model, filter_aggregation=filter_aggregation)
+def export_filter_patterns(
+        input_data, model, model_name, layers, filters, neural_activation,
+        destination=CACHE_LOCATION):
     for layer in layers:
         activations, file_handle = get_layer_activations(
             input_data, model, model_name, layer, destination)
@@ -266,14 +279,14 @@ def export_filter_patterns(input_data, model, model_name, layers, filters, filte
             # pylint: disable=E1101
             filters = range(activations.shape[-1])
         for filter_index in filters:
-            patterns, patterns_info = activation_patterns.activity_patterns(
+            patterns, patterns_info = neural_activation.activity_patterns(
                 f'{layer}:{filter_index}', activations=activations)
             path = filter_patterns_path(
-                destination, model_name, layer, filter_index, filter_aggregation)
+                destination, model_name, layer, filter_index, neural_activation)
             path.parent.mkdir(parents=True, exist_ok=True)
             patterns.to_hdf(path, f'{layer}/filter_{filter_index}')
             patterns_info.to_hdf(filter_patterns_info_path(
-                destination, model_name, layer, filter_index, filter_aggregation),
+                destination, model_name, layer, filter_index, neural_activation),
                 f'{layer}/filter_{filter_index}')
         file_handle.close()
 
@@ -306,50 +319,58 @@ def get_layer_activations_agg(input_data, model, model_name, layer, layer_aggreg
     return file_handle["activations"], file_handle
 
 
-def get_layer_patterns(input_data, model, model_name, layer, layer_aggregation,
+def get_layer_patterns(input_data, model, model_name, layer, neural_activation,
                        destination=CACHE_LOCATION):
-    path = layer_patterns_path(destination, model_name, layer)
-    info_path = layer_patterns_info_path(destination, model_name, layer)
+    path = layer_patterns_path(
+        destination, model_name, layer, neural_activation)
+    info_path = layer_patterns_info_path(
+        destination, model_name, layer, neural_activation)
     if not path.exists() or not info_path.exists():
         export_layer_patterns(input_data, model, model_name, [
-                              layer], layer_aggregation, destination)
+                              layer], neural_activation, destination)
     return pd.read_hdf(path), pd.read_hdf(info_path)
 
 
-def get_layer_patterns_activation_statistics(input_data, model, model_name, layer,
-                                             layer_aggregation, destination=CACHE_LOCATION):
+def get_layer_patterns_activation_statistics(
+        input_data, model, model_name, layer, neural_activation,
+        destination=CACHE_LOCATION):
     path = layer_patterns_activation_statistics_path(
-        destination, model_name, layer)
+        destination, model_name, layer, neural_activation)
     if not path.exists():
         patterns, _ = get_layer_patterns(
-            input_data, model, model_name, layer, layer_aggregation, destination)
+            input_data, model, model_name, layer, neural_activation, destination)
         export_layer_patterns_activation_statistics(
-            input_data, model, model_name, layer, patterns, destination)
+            input_data, model, model_name, layer, patterns, neural_activation, destination)
     with open(path, "rb") as output_file:
         return pickle.load(output_file)
 
 
-def get_filter_patterns(input_data, model, model_name, layer, filter_index, filter_aggregation,
-                        destination=CACHE_LOCATION):
+def get_filter_patterns(
+        input_data, model, model_name, layer, filter_index, neural_activation,
+        destination=CACHE_LOCATION):
     path = filter_patterns_path(
-        destination, model_name, layer, filter_index, filter_aggregation)
+        destination, model_name, layer, filter_index, neural_activation)
     info_path = filter_patterns_info_path(
-        destination, model_name, layer, filter_index, filter_aggregation)
+        destination, model_name, layer, filter_index, neural_activation)
     if not path.exists() or not info_path.exists():
-        export_filter_patterns(input_data, model, model_name, [
-                               layer], [filter_index], filter_aggregation, destination)
+        export_filter_patterns(
+            input_data, model, model_name, [layer],
+            [filter_index],
+            neural_activation, destination)
     return pd.read_hdf(path), pd.read_hdf(info_path)
 
 
-def get_filter_patterns_activation_statistics(input_data, model, model_name, layer, filter_index,
-                                              filter_aggregation, destination=CACHE_LOCATION):
+def get_filter_patterns_activation_statistics(
+        input_data, model, model_name, layer, filter_index, neural_activation,
+        destination=CACHE_LOCATION):
     path = filter_patterns_activation_statistics_path(
-        destination, model_name, layer, filter_index, filter_aggregation)
+        destination, model_name, layer, filter_index, neural_activation)
     if not path.exists():
         patterns, _ = get_filter_patterns(
-            input_data, model, model_name, layer, filter_index, filter_aggregation, destination)
+            input_data, model, model_name, layer, filter_index, neural_activation,
+            destination)
         export_filter_patterns_activation_statistics(
-            input_data, model, model_name, layer, filter_index, filter_aggregation, patterns,
+            input_data, model, model_name, layer, filter_index, neural_activation, patterns,
             destination)
     return pickle.load(open(path, "rb"))
 

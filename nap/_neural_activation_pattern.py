@@ -76,10 +76,13 @@ class NeuralActivationPattern:
     """ Computes neural network activation patterns using clustering.
     """
 
-    def __init__(self, model, layer_aggregation=MeanAggregation, filter_aggregation=NoAggregation):
+    def __init__(
+            self, model, layer_aggregation=MeanAggregation, filter_aggregation=NoAggregation,
+            min_pattern_size=5):
         self.model = model
         self.layer_aggregation = layer_aggregation
         self.filter_aggregation = filter_aggregation
+        self.min_pattern_size = min_pattern_size
 
     def layer_idx(self, layer):
         """Get layer index given either its layer name or its index.
@@ -180,7 +183,8 @@ class NeuralActivationPattern:
             agg_activations = [self.layer_aggregation.aggregate(
                 self.layer(layer), activation) for activation in activations]
 
-        clusterer = hdbscan.HDBSCAN(cluster_selection_method='leaf')
+        clusterer = hdbscan.HDBSCAN(
+            cluster_selection_method='leaf', min_cluster_size=self.min_pattern_size)
         clusterer.fit(agg_activations)
         print(
             F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}")
@@ -199,7 +203,8 @@ class NeuralActivationPattern:
         # Aggregate activations per input
         agg_activations = [self.filter_aggregation.aggregate(
             self.layer(layer), activation) for activation in filter_activations]
-        clusterer = hdbscan.HDBSCAN(cluster_selection_method='leaf')
+        clusterer = hdbscan.HDBSCAN(
+            cluster_selection_method='leaf', min_cluster_size=self.min_pattern_size)
         clusterer.fit(agg_activations)
 
         print(

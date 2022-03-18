@@ -37,7 +37,9 @@ def show_image_grid(images, labels, title, images_per_row, img_scale):
     fig.show()
 
 
-def show_pattern(average, representatives, representative_labels, outliers, outlier_labels, title):
+def show_pattern(average, representatives_dict, outliers_dict, title):
+    representatives = representatives_dict["images"]
+    outliers = outliers_dict["images"]
     if representatives[0].shape[2] > 1:
         im_size = (representatives[0].shape[0],
                    representatives[0].shape[1], representatives[0].shape[2])
@@ -53,10 +55,10 @@ def show_pattern(average, representatives, representative_labels, outliers, outl
     fig.layout.annotations[0]['text'] = "Average"
     for i, _ in enumerate(representatives):
         fig.layout.annotations[plotly_annotation_index(
-            n_rows, n_cols, 1+i)]['text'] = representative_labels[i]
+            n_rows, n_cols, 1+i)]['text'] = representatives_dict["labels"][i]
     for i, _ in enumerate(outliers):
         fig.layout.annotations[plotly_annotation_index(
-            n_rows, n_cols, len(representatives)+1+i)]['text'] = outlier_labels[i]
+            n_rows, n_cols, len(representatives)+1+i)]['text'] = outliers_dict["labels"][i]
     fig.show()
 
 
@@ -72,31 +74,41 @@ def show_outliers(model_name, input_data, labels, layer, patterns, quantile=0.95
     show_images(images, labels, title)
 
 
-def filter_analysis(model, model_name, input_data, labels, layer, filter_index):
-    # Show pattern representatives for filter
+def get_pattern_plot_data(input_data, labels, pattern):
+    to_average = util.filter_tf_dataset(input_data, pattern.index)
+    avg = tf.keras.layers.Average()(to_average).numpy()
+    centers = util.filter_tf_dataset(input_data, pattern.head(1).index)
+    outliers = util.filter_tf_dataset(input_data, pattern.tail(3).index)
+    center_labels = [
+        f"Representative | {labels[i]}" for i in pattern.head(1).index]
+    outlier_labels = [
+        f"Outlier | {labels[i]}" for i in pattern.tail(3).index]
+    return avg, {
+        "images": centers, "labels": center_labels}, {
+        "images": outliers, "labels": outlier_labels}
+
+
+def filter_analysis(model, model_name, input_data, labels, layer, filter_index, min_pattern_size):
+    # Show patter n representatives for filter
     sorted_patterns = nap.sort(nap.cache.get_filter_patterns(
-        input_data, model, model_name, layer, filter_index, "mean"))
+        input_data, model, model_name, layer, filter_index, "mean", min_pattern_size))
 
     for pattern_id, pattern in sorted_patterns.groupby('patternId'):
         if pattern_id == -1:
             continue
-        to_average = util.filter_tf_dataset(input_data, pattern.index)
-        avg = tf.keras.layers.Average()(to_average).numpy()
-        centers = util.filter_tf_dataset(input_data, pattern.head(1).index)
-        outliers = util.filter_tf_dataset(input_data, pattern.tail(3).index)
-        center_labels = [
-            f"Representative | {labels[i]}" for i in pattern.head(1).index]
-        outlier_labels = [
-            f"Outlier | {labels[i]}" for i in pattern.tail(3).index]
+        avg, centers, outliers = get_pattern_plot_data(
+            input_data, labels, pattern)
 
-        show_pattern(avg, centers, center_labels, outliers, outlier_labels,
+        show_pattern(avg, centers, outliers,
                      (F"{model_name}, Layer {layer}, Filter: {filter}"
                       F", Pattern: {pattern_id}, Size: {len(pattern)}"))
 
 
-def layer_analysis(model, model_name, input_data, labels, layer, aggregation=nap.MeanAggregation()):
+def layer_analysis(
+        model, model_name, input_data, labels, layer, aggregation=nap.MeanAggregation(),
+        min_pattern_size=5):
     patterns, _ = nap.cache.get_layer_patterns(
-        input_data, model, model_name, layer, aggregation)
+        input_data, model, model_name, layer, aggregation, min_pattern_size)
 
     show_outliers(model_name, input_data, labels, layer, patterns, number=100)
 
@@ -107,16 +119,8 @@ def layer_analysis(model, model_name, input_data, labels, layer, aggregation=nap
     for pattern_id, pattern in nap.sort(patterns).groupby('patternId'):
         if pattern_id == -1:
             continue
+        avg, centers, outliers = get_pattern_plot_data(
+            input_data, labels, pattern)
 
-        avg = tf.keras.layers.Average()(
-            util.filter_tf_dataset(input_data, pattern.index)).numpy()
-        centers = util.filter_tf_dataset(input_data, pattern.head(1).index)
-        outliers = util.filter_tf_dataset(input_data, pattern.tail(3).index)
-
-        center_labels = [
-            f"Representative | {labels[i]}" for i in pattern.head(1).index]
-        outlier_labels = [
-            f"Outlier | {labels[i]}" for i in pattern.tail(3).index]
-
-        show_pattern(avg, centers, center_labels, outliers, outlier_labels,
+        show_pattern(avg, centers, outliers,
                      F"{model_name}, Layer {layer}, Pattern: {pattern_id}, Size: {len(pattern)}")
