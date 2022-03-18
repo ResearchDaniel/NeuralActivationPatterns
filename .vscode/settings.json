@@ -1,10 +1,11 @@
 {
-  "editor.formatOnSave": true,
-  "python.linting.pylintEnabled": true,
-  "python.linting.enabled": true,
-  "python.formatting.autopep8Args": [
-    "--max-line-length",
-    "100",
-    "--experimental"
-  ]
+    "editor.formatOnSave": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.lintOnSave": true,
+    "python.formatting.autopep8Args": [
+        "--max-line-length",
+        "100",
+        "--experimental"
+    ]
 }
