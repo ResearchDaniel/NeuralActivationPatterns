@@ -72,10 +72,10 @@ def show_outliers(model_name, input_data, labels, layer, patterns, quantile=0.95
     show_images(images, labels, title)
 
 
-def filter_analysis(model, model_name, input_data, labels, layer, filter_index):
+def filter_analysis(model, model_name, input_data, labels, layer, filter_index, min_pattern_size):
     # Show pattern representatives for filter
     sorted_patterns = nap.sort(nap.cache.get_filter_patterns(
-        input_data, model, model_name, layer, filter_index, "mean"))
+        input_data, model, model_name, layer, filter_index, "mean", min_pattern_size))
 
     for pattern_id, pattern in sorted_patterns.groupby('patternId'):
         if pattern_id == -1:
@@ -94,9 +94,11 @@ def filter_analysis(model, model_name, input_data, labels, layer, filter_index):
                       F", Pattern: {pattern_id}, Size: {len(pattern)}"))
 
 
-def layer_analysis(model, model_name, input_data, labels, layer, aggregation=nap.MeanAggregation()):
+def layer_analysis(
+        model, model_name, input_data, labels, layer, aggregation=nap.MeanAggregation(),
+        min_pattern_size=5):
     patterns, _ = nap.cache.get_layer_patterns(
-        input_data, model, model_name, layer, aggregation)
+        input_data, model, model_name, layer, aggregation, min_pattern_size)
 
     show_outliers(model_name, input_data, labels, layer, patterns, number=100)
 

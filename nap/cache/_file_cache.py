@@ -25,13 +25,17 @@ def activation_statistics_path(destination, model_name, layer):
 
 
 def layer_patterns_activation_statistics_path(destination, model_name, layer, min_pattern_size):
-    return Path(destination, model_name, layer, f'layer_patterns_min_size_{min_pattern_size}_activation_statistics.pkl')
+    return Path(
+        destination, model_name, layer,
+        f'layer_patterns_min_size_{min_pattern_size}_activation_statistics.pkl')
 
 
 def filter_patterns_activation_statistics_path(destination, model_name, layer, filter_index,
                                                filter_aggregation, min_pattern_size):
-    return Path(destination, model_name, layer, 'filters', filter_aggregation.__class__.__name__,
-                str(filter_index), f'filter_patterns_min_size_{min_pattern_size}_activation_statistics.pkl')
+    return Path(
+        destination, model_name, layer, 'filters', filter_aggregation.__class__.__name__,
+        str(filter_index),
+        f'filter_patterns_min_size_{min_pattern_size}_activation_statistics.pkl')
 
 
 def filter_activation_statistics_path(destination, model_name, layer, filter_index):
@@ -44,15 +48,18 @@ def layer_patterns_path(destination, model_name, layer, min_pattern_size):
 
 
 def layer_patterns_info_path(destination, model_name, layer, min_pattern_size):
-    return Path(destination, model_name, layer, f'layer_patterns_min_size_{min_pattern_size}_info.h5')
+    return Path(destination, model_name, layer,
+                f'layer_patterns_min_size_{min_pattern_size}_info.h5')
 
 
-def filter_patterns_path(destination, model_name, layer, filter_index, filter_aggregation, min_pattern_size):
+def filter_patterns_path(
+        destination, model_name, layer, filter_index, filter_aggregation, min_pattern_size):
     return Path(destination, model_name, layer, 'filters', filter_aggregation.__class__.__name__,
                 str(filter_index), f'filter_patterns_min_size_{min_pattern_size}.h5')
 
 
-def filter_patterns_info_path(destination, model_name, layer, filter_index, filter_aggregation, min_pattern_size):
+def filter_patterns_info_path(
+        destination, model_name, layer, filter_index, filter_aggregation, min_pattern_size):
     return Path(destination, model_name, layer, 'filters', filter_aggregation.__class__.__name__,
                 str(filter_index), f'filter_patterns_min_size_{min_pattern_size}_info.h5')
 
@@ -180,8 +187,9 @@ def export_layer_activation_statistics(input_data, model, model_name, layers,
                 pickle.dump(statistics, output_file)
 
 
-def export_layer_patterns_activation_statistics(input_data, model, model_name, layer, patterns, min_pattern_size,
-                                                destination=CACHE_LOCATION):
+def export_layer_patterns_activation_statistics(
+        input_data, model, model_name, layer, patterns, min_pattern_size,
+        destination=CACHE_LOCATION):
     act_path = activations_path(destination, model_name, layer)
     if not act_path.exists():
         export_activations(input_data, model, model_name, [layer], destination)
@@ -237,8 +245,9 @@ def export_filter_activation_statistics(input_data, model, model_name, layers, f
         file_handle.close()
 
 
-def export_layer_patterns(input_data, model, model_name, layers, layer_aggregation, min_pattern_size,
-                          destination=CACHE_LOCATION):
+def export_layer_patterns(
+        input_data, model, model_name, layers, layer_aggregation, min_pattern_size,
+        destination=CACHE_LOCATION):
     activation_patterns = nap.NeuralActivationPattern(
         model, layer_aggregation=layer_aggregation, min_pattern_size=min_pattern_size)
     for layer in layers:
@@ -255,8 +264,9 @@ def export_layer_patterns(input_data, model, model_name, layers, layer_aggregati
         patterns_info.to_hdf(patterns_info_path, f'{layer}')
 
 
-def export_filter_patterns(input_data, model, model_name, layers, filters, filter_aggregation, min_pattern_size,
-                           destination=CACHE_LOCATION):
+def export_filter_patterns(
+        input_data, model, model_name, layers, filters, filter_aggregation, min_pattern_size,
+        destination=CACHE_LOCATION):
     activation_patterns = nap.NeuralActivationPattern(
         model, filter_aggregation=filter_aggregation, min_pattern_size=min_pattern_size)
     for layer in layers:
@@ -320,8 +330,9 @@ def get_layer_patterns(input_data, model, model_name, layer, layer_aggregation, 
     return pd.read_hdf(path), pd.read_hdf(info_path)
 
 
-def get_layer_patterns_activation_statistics(input_data, model, model_name, layer,
-                                             layer_aggregation, min_pattern_size, destination=CACHE_LOCATION):
+def get_layer_patterns_activation_statistics(
+        input_data, model, model_name, layer, layer_aggregation, min_pattern_size,
+        destination=CACHE_LOCATION):
     path = layer_patterns_activation_statistics_path(
         destination, model_name, layer, min_pattern_size)
     if not path.exists():
@@ -333,28 +344,33 @@ def get_layer_patterns_activation_statistics(input_data, model, model_name, laye
         return pickle.load(output_file)
 
 
-def get_filter_patterns(input_data, model, model_name, layer, filter_index, filter_aggregation, min_pattern_size,
-                        destination=CACHE_LOCATION):
+def get_filter_patterns(
+        input_data, model, model_name, layer, filter_index, filter_aggregation, min_pattern_size,
+        destination=CACHE_LOCATION):
     path = filter_patterns_path(
         destination, model_name, layer, filter_index, filter_aggregation, min_pattern_size)
     info_path = filter_patterns_info_path(
         destination, model_name, layer, filter_index, filter_aggregation, min_pattern_size)
     if not path.exists() or not info_path.exists():
-        export_filter_patterns(input_data, model, model_name, [
-                               layer], [filter_index], filter_aggregation, min_pattern_size, destination)
+        export_filter_patterns(
+            input_data, model, model_name, [layer],
+            [filter_index],
+            filter_aggregation, min_pattern_size, destination)
     return pd.read_hdf(path), pd.read_hdf(info_path)
 
 
-def get_filter_patterns_activation_statistics(input_data, model, model_name, layer, filter_index,
-                                              filter_aggregation, min_pattern_size, destination=CACHE_LOCATION):
+def get_filter_patterns_activation_statistics(
+        input_data, model, model_name, layer, filter_index, filter_aggregation, min_pattern_size,
+        destination=CACHE_LOCATION):
     path = filter_patterns_activation_statistics_path(
         destination, model_name, layer, filter_index, filter_aggregation, min_pattern_size)
     if not path.exists():
         patterns, _ = get_filter_patterns(
-            input_data, model, model_name, layer, filter_index, filter_aggregation, min_pattern_size, destination)
+            input_data, model, model_name, layer, filter_index, filter_aggregation,
+            min_pattern_size, destination)
         export_filter_patterns_activation_statistics(
-            input_data, model, model_name, layer, filter_index, filter_aggregation, patterns, min_pattern_size,
-            destination)
+            input_data, model, model_name, layer, filter_index, filter_aggregation, patterns,
+            min_pattern_size, destination)
     return pickle.load(open(path, "rb"))
 
 
