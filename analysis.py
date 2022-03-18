@@ -88,10 +88,10 @@ def get_pattern_plot_data(input_data, labels, pattern):
         "images": outliers, "labels": outlier_labels}
 
 
-def filter_analysis(model, model_name, input_data, labels, layer, filter_index, min_pattern_size):
+def filter_analysis(neural_activation, model_name, input_data, labels, layer, filter_index):
     # Show patter n representatives for filter
     sorted_patterns = nap.sort(nap.cache.get_filter_patterns(
-        input_data, model, model_name, layer, filter_index, "mean", min_pattern_size))
+        input_data, neural_activation, model_name, layer, filter_index, "mean"))
 
     for pattern_id, pattern in sorted_patterns.groupby('patternId'):
         if pattern_id == -1:
@@ -104,11 +104,9 @@ def filter_analysis(model, model_name, input_data, labels, layer, filter_index, 
                       F", Pattern: {pattern_id}, Size: {len(pattern)}"))
 
 
-def layer_analysis(
-        model, model_name, input_data, labels, layer, aggregation=nap.MeanAggregation(),
-        min_pattern_size=5):
+def layer_analysis(neural_activation, model_name, input_data, labels, layer):
     patterns, _ = nap.cache.get_layer_patterns(
-        input_data, model, model_name, layer, aggregation, min_pattern_size)
+        input_data, neural_activation, model_name, layer)
 
     show_outliers(model_name, input_data, labels, layer, patterns, number=100)
 
