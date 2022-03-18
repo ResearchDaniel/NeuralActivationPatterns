@@ -76,7 +76,9 @@ class NeuralActivationPattern:
     """ Computes neural network activation patterns using clustering.
     """
 
-    def __init__(self, model, layer_aggregation=MeanAggregation, filter_aggregation=NoAggregation, min_pattern_size=5):
+    def __init__(
+            self, model, layer_aggregation=MeanAggregation, filter_aggregation=NoAggregation,
+            min_pattern_size=5):
         self.model = model
         self.layer_aggregation = layer_aggregation
         self.filter_aggregation = filter_aggregation
