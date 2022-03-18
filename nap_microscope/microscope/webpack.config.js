@@ -39,7 +39,8 @@ module.exports = {
 						emitCss: prod,
 						hotReload: !prod,
 						preprocess: sveltePreprocess({
-							sourceMap: !prod, postcss: true,
+							sourceMap: !prod,
+							postcss: true,
 							plugins: [
 								require('tailwindcss'),
 								require('autoprefixer'),
