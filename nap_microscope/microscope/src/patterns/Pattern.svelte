@@ -12,16 +12,16 @@
   import IconButton from "../elements/IconButton.svelte";
   import PatternOverview from "./PatternOverview.svelte";
 
-  import type { PatternForSample } from "../types";
+  import type { PatternForSample, Pattern } from "../types";
 
-  export let samples: PatternForSample[];
+  export let pattern: Pattern;
   export let filteredSamples: PatternForSample[];
   export let expanded: boolean = false;
 
-  $: uid = samples[0].patternUid;
-  $: patternId = samples[0].patternId;
-  $: model = samples[0].model;
-  $: layer = samples[0].layer;
+  $: uid = pattern.samples[0].patternUid;
+  $: patternId = pattern.samples[0].patternId;
+  $: model = pattern.samples[0].model;
+  $: layer = pattern.samples[0].layer;
 
   function unpinPattern() {
     pinnedPatterns.update((patterns) => {
@@ -34,7 +34,7 @@
   }
 
   function pinPattern() {
-    $pinnedPatterns[uid] = samples;
+    $pinnedPatterns[uid] = pattern;
     pinnedPatterns.set({ ...$pinnedPatterns });
   }
 
@@ -67,12 +67,12 @@
   <div class="flex">
     <div class="flex flex-wrap">
       <SubSubHeading heading={`ID: ${patternId}`} />
-      <SubSubHeading heading={`Size: ${samples.length}`} />
+      <SubSubHeading heading={`Size: ${pattern.samples.length}`} />
       {#if expanded}
         <SubSubHeading heading={`Model: ${model}`} />
         <SubSubHeading heading={`Layer: ${layer}`} />
-        {#if samples[0].filter !== undefined}
-          <SubSubHeading heading={`Filter: ${samples[0].filter}`} />
+        {#if pattern.samples[0].filter !== undefined}
+          <SubSubHeading heading={`Filter: ${pattern.samples[0].filter}`} />
         {/if}
       {/if}
     </div>
@@ -96,7 +96,7 @@
   </div>
   <div class="flex flex-col" class:min-h-0={expanded}>
     <PatternOverview
-      {samples}
+      {pattern}
       {model}
       {layer}
       {patternId}

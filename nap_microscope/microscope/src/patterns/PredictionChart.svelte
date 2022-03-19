@@ -22,7 +22,6 @@
 
   $: predictionSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    description: "A simple bar chart with embedded data.",
     data: {
       values: Object.keys(metadata.predictions).map((key) => {
         return {

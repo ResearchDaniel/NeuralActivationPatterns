@@ -1,4 +1,4 @@
-import type { PatternForSample } from "./types";
+import type { Pattern, PatternForSample } from "./types";
 
 import {
   numCenters,
@@ -8,7 +8,37 @@ import {
   showLabels,
   showPredictions,
   showProbability,
+  showStatistics,
 } from "./stores";
+
+export function filterPattern(
+  pattern: Pattern,
+  labelFilter: string[],
+  predictionFilter: string[],
+  imageFilter: string[]
+): Pattern {
+  return {
+    ...pattern,
+    samples: pattern.samples.filter((pattern) => {
+      if (labelFilter.length !== 0) {
+        if (!labelFilter.includes(`${pattern.label}`)) {
+          return false;
+        }
+      }
+      if (predictionFilter.length !== 0) {
+        if (!predictionFilter.includes(`${pattern.prediction}`)) {
+          return false;
+        }
+      }
+      if (imageFilter.length !== 0) {
+        if (!imageFilter.includes(pattern.fileName)) {
+          return false;
+        }
+      }
+      return true;
+    }),
+  };
+}
 
 export function filterPatterns(
   patterns: PatternForSample[],
@@ -43,6 +73,8 @@ export function setupURLParams(urlParams: URLSearchParams) {
     showDistribution.set(
       JSON.parse(urlParams.get("showDistribution")) as boolean
     );
+  if (urlParams.has("showStatistics"))
+    showStatistics.set(JSON.parse(urlParams.get("showStatistics")) as boolean);
   if (urlParams.has("showProbability"))
     showProbability.set(
       JSON.parse(urlParams.get("showProbability")) as boolean
@@ -69,6 +101,9 @@ export function setupURLParams(urlParams: URLSearchParams) {
   );
   showDistribution.subscribe((setting) =>
     updateURLParams("showDistribution", `${setting}`, urlParams)
+  );
+  showStatistics.subscribe((setting) =>
+    updateURLParams("showStatistics", `${setting}`, urlParams)
   );
   showProbability.subscribe((setting) =>
     updateURLParams("showProbability", `${setting}`, urlParams)

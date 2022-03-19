@@ -15,6 +15,7 @@
     showLabels,
     showPredictions,
     showProbability,
+    showStatistics,
   } from "./stores";
   import NumericFieldStore from "./elements/NumericFieldStore.svelte";
 </script>
@@ -43,6 +44,12 @@
           <p>Show Distribution</p>
           <div class="ml-auto">
             <Switch checked={showDistribution} />
+          </div>
+        </div>
+        <div class="flex items-center mb-2">
+          <p>Show Statistics</p>
+          <div class="ml-auto">
+            <Switch checked={showStatistics} />
           </div>
         </div>
         <div class="flex items-center mb-2">

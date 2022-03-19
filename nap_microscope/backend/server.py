@@ -46,6 +46,18 @@ def get_layers(model):
     return jsonify(layers)
 
 
+@app.route('/api/get_pattern_statistics/<model>/<layer>')
+def get_pattern_statistics(model, layer):
+    pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns_statistics.pkl")
+    if not pickle_path.exists():
+        return "No such file", ERROR_STATUS
+    statistics = pd.read_pickle(pickle_path)
+    try:
+        return jsonify(statistics)
+    except TypeError:
+        return "JSON conversion error", ERROR_STATUS
+
+
 @app.route('/api/get_filter_methods/<model>/<layer>')
 def get_filter_methods(model, layer):
     methods = []

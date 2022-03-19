@@ -1,6 +1,6 @@
 import { derived, writable } from "svelte/store";
-import { filterPatterns } from "./helpers";
-import type { PatternForSample, TooltipSpec } from "./types";
+import { filterPattern } from "./helpers";
+import type { Pattern, TooltipSpec } from "./types";
 
 export const settingsOpen = writable<boolean>(false);
 export const tooltip = writable<TooltipSpec>({
@@ -13,10 +13,11 @@ export const minPatternSize = writable<number>(3);
 export const showAverage = writable<boolean>(false);
 export const showDistribution = writable<boolean>(false);
 export const showProbability = writable<boolean>(false);
+export const showStatistics = writable<boolean>(false);
 export const showLabels = writable<boolean>(false);
 export const showPredictions = writable<boolean>(false);
 export const selectedPage = writable<string>("Overview");
-export const pinnedPatterns = writable<Record<string, PatternForSample[]>>({});
+export const pinnedPatterns = writable<Record<string, Pattern>>({});
 export const patternFilter = writable<{ label: string; patternId: number }[]>(
   []
 );
@@ -36,13 +37,13 @@ export const filteredPinnedPatterns = derived(
     const filtered = {};
     const pinnedPatternUids = Object.keys($pinnedPatterns);
     pinnedPatternUids.forEach((uid) => {
-      const patterns = filterPatterns(
+      const patterns = filterPattern(
         $pinnedPatterns[uid],
         $labelFilter,
         $predictionFilter,
         $imageFilter
       );
-      if (patterns.length >= $minPatternSize) filtered[uid] = patterns;
+      if (patterns.samples.length >= $minPatternSize) filtered[uid] = patterns;
     });
     return filtered;
   }
