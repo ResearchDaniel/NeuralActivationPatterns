@@ -1,22 +1,24 @@
 <script lang="ts">
   import PatternImage from "./PatternImage.svelte";
   import PatternImageList from "./PatternImageList.svelte";
-  import type { PatternForSample } from "../types";
+  import ProbabilityChart from "./ProbabilityChart.svelte";
+  import LabelChart from "./LabelChart.svelte";
+  import PredictionChart from "./PredictionChart.svelte";
+  import StatisticsChart from "./StatisticsChart.svelte";
+
+  import type { PatternForSample, Pattern } from "../types";
 
   import {
     numCenters,
     numOutliers,
     showAverage,
-    showDistribution,
     showLabels,
     showPredictions,
     showProbability,
+    showStatistics,
   } from "../stores";
-  import ProbabilityChart from "./ProbabilityChart.svelte";
-  import LabelChart from "./LabelChart.svelte";
-  import PredictionChart from "./PredictionChart.svelte";
 
-  export let samples: PatternForSample[];
+  export let pattern: Pattern;
   export let filteredSamples: PatternForSample[];
   export let patternId: number;
   export let model: string;
@@ -30,7 +32,7 @@
       : filteredSamples.length - $numCenters;
   $: outliers =
     derivedNumOutliers > 0 ? filteredSamples.slice(-derivedNumOutliers) : [];
-  $: metadata = samples.reduce(sampleMetadata, {
+  $: metadata = pattern.samples.reduce(sampleMetadata, {
     labels: {},
     predictions: {},
   });
@@ -65,8 +67,8 @@
     <div class="flex flex-col pr-4">
       <p>Average</p>
       <PatternImage
-        imagePath={samples[0].filter !== undefined
-          ? `/api/get_filter_average/${model}/${layer}/${samples[0].filterMethod}/${samples[0].filter}/${patternId}`
+        imagePath={pattern.samples[0].filter !== undefined
+          ? `/api/get_filter_average/${model}/${layer}/${pattern.samples[0].filterMethod}/${pattern.samples[0].filter}/${patternId}`
           : `/api/get_average/${model}/${layer}/${patternId}`}
       />
     </div>
@@ -83,13 +85,18 @@
       </div>
     {/if}
   {/if}
-  {#if $showProbability || $showLabels || $showPredictions}
+  {#if $showProbability || $showLabels || $showPredictions || (pattern.statistics !== undefined && $showStatistics)}
     <div class="flex flex-col min-w-0">
       <p>Distribution</p>
       <div class="flex flex-wrap">
+        {#if pattern.statistics !== undefined && $showStatistics}
+          <div class="min-w-0 overflow-x-auto">
+            <StatisticsChart statistics={pattern.statistics} />
+          </div>
+        {/if}
         {#if $showProbability}
           <div class="min-w-0 overflow-x-auto">
-            <ProbabilityChart {samples} />
+            <ProbabilityChart samples={pattern.samples} />
           </div>
         {/if}
         {#if $showLabels}

@@ -1,4 +1,4 @@
-import type { PatternForSample, Patterns } from "./types";
+import type { PatternForSample, Patterns, Statistics } from "./types";
 
 export async function fetchModels(): Promise<string[]> {
   const response = await fetch(`/api/get_models`);
@@ -51,6 +51,15 @@ export async function fetchFilters(
     ]);
 }
 
+export async function fetchPatternStatistics(
+  model: string,
+  layer: string
+): Promise<Statistics[] | undefined> {
+  return fetch(`/api/get_pattern_statistics/${model}/${layer}`).then(
+    (response) => (response.ok ? response.json() : undefined)
+  );
+}
+
 export async function fetchPatterns(
   model: string,
   layer: string,
@@ -61,6 +70,7 @@ export async function fetchPatterns(
     return { samples: [], persistence: [] };
   const dataset = await fetchDataset(model);
   const labels = await fetchLabels(model);
+  const statistics = await fetchPatternStatistics(model, layer);
   if (dataset.length === 0 || labels === undefined)
     return { samples: [], persistence: [] };
   const infoResponse =
@@ -113,5 +123,6 @@ export async function fetchPatterns(
       )
       .filter((pattern) => pattern.patternId >= 0),
     persistence: info.map((infoElement) => infoElement.pattern_persistence),
+    statistics: statistics,
   } as Patterns;
 }

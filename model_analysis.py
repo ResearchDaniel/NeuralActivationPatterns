@@ -36,7 +36,6 @@ parser.add_argument("--all_filters", default=False, action='store_true')
 parser.add_argument("--filter_range", type=int, nargs=2, required=False)
 parser.add_argument("--filter_aggregation",
                     default='none', choices=["mean", "mean_std", "max", "none"])
-
 parser.add_argument("--size", type=int,
                     default=2000)
 parser.add_argument("--n_max_activations", type=int,
@@ -98,27 +97,9 @@ elif args.filter_range is not None:
         filters[f"{layer}"] = list(range(
             args.filter_range[0], args.filter_range[1]))
 
-# layers = ['Mixed_4b_Concatenated', 'Mixed_5b_Concatenated']
-# layer = 'Mixed_4b_Concatenated'
-
 layer_aggregation = create_aggregation_function(args.layer_aggregation)
 filter_aggregation = create_aggregation_function(args.filter_aggregation)
-
-
-# nap.cache.export_activations(X, ml_model, model_name, layers=layers)
-# nap.cache.export_layer_aggregation(X, ml_model, model_name, layers=layers, layer_aggregation=None)
-# nap.cache.export_layer_patterns(X, ml_model, model_name, layers=layers)
-# nap.cache.export_filter_patterns(X, ml_model, model_name, [layer], [filterId])
-# X = X.take(10)
-# y = y.take(10)
-# X = X.batch(1)
 y = list(tfds.as_numpy(y))
-# ap = nap.NeuralActivationPattern(ml_model)
-# ap.layer_summary("conv2d", X, y)
-
-
-# layer_analysis(ml_model, model_name, X, y, layer)
-# filter_analysis(ml_model, model_name, X, y, layer, filterId)
 
 
 ONLY_MAX_ACTIVATIONS = False
