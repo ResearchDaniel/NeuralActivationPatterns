@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { PatternForSample } from "../types";
+  import type { PatternForSample } from "../../types";
   import PatternImageList from "./PatternImageList.svelte";
 
   export let samples: PatternForSample[];

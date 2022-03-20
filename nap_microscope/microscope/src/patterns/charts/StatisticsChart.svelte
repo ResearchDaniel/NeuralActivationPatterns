@@ -3,9 +3,9 @@
   import type { EmbedOptions } from "vega-embed";
   import { VegaLite } from "svelte-vega";
 
-  import type { Statistics } from "../types";
-  import { themeConfig } from "../constants";
-  import { removeZerosStatistics } from "../stores";
+  import type { Statistics } from "../../types";
+  import { themeConfig } from "../../constants";
+  import { removeZerosStatistics } from "../../stores";
 
   export let statistics: Statistics;
 
@@ -36,14 +36,9 @@
     encoding: { x: { field: "index", type: "nominal", title: "unit" } },
     layer: [
       {
-        mark: { type: "rule" },
+        mark: { type: "circle" },
         encoding: {
-          y: {
-            field: "lower",
-            type: "quantitative",
-            title: "activation",
-          },
-          y2: { field: "upper" },
+          y: { field: "median", type: "quantitative", title: "activation" },
         },
       },
       {
@@ -54,9 +49,13 @@
         },
       },
       {
-        mark: { type: "circle" },
+        mark: { type: "rule", color: "#0071e355" },
         encoding: {
-          y: { field: "median", type: "quantitative" },
+          y: {
+            field: "lower",
+            type: "quantitative",
+          },
+          y2: { field: "upper" },
         },
       },
     ],

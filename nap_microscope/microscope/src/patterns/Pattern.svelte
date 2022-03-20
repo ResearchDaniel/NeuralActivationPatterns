@@ -13,7 +13,7 @@
   import { faFilter } from "@fortawesome/free-solid-svg-icons/faFilter";
 
   import SubSubHeading from "../elements/SubSubHeading.svelte";
-  import AllPatternImages from "./AllPatternImages.svelte";
+  import AllPatternImages from "./images/AllPatternImages.svelte";
   import IconButton from "../elements/IconButton.svelte";
   import PatternOverview from "./PatternOverview.svelte";
 
@@ -66,7 +66,7 @@
 </script>
 
 <div
-  class="flex flex-col box-shadow-xl p-2 border-grey border rounded-md"
+  class="flex flex-col box-shadow-xl p-2 border-grey border rounded-md min-w-0"
   class:min-h-0={expanded}
   class:mb-2={!expanded}
   class:w-full={!$compactPatterns && !expanded}
