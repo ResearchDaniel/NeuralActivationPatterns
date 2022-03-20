@@ -19,7 +19,7 @@ module.exports = {
       /* Text */
       text: {
         light: '#0f0f0f',
-        dimmed: '#cfcfcf',
+        dimmed: '#777777',
         dark: '#fff',
       },
 

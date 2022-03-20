@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { imageFilter, pinnedPatterns, selectedPage } from "../stores";
+  import {
+    compactPatterns,
+    imageFilter,
+    pinnedPatterns,
+    selectedPage,
+  } from "../stores";
 
   import Fa from "svelte-fa";
   import FaLayers from "svelte-fa/src/fa-layers.svelte";
@@ -17,6 +22,7 @@
   export let pattern: Pattern;
   export let filteredSamples: PatternForSample[];
   export let expanded: boolean = false;
+  export let patternWidth: number = undefined;
 
   $: uid = pattern.samples[0].patternUid;
   $: patternId = pattern.samples[0].patternId;
@@ -60,9 +66,12 @@
 </script>
 
 <div
-  class="flex flex-col box-shadow-xl p-2 border-grey border rounded-md {expanded
-    ? 'min-h-0 m-2 min-w-compare'
-    : 'w-full mb-2'}"
+  class="flex flex-col box-shadow-xl p-2 border-grey border rounded-md"
+  class:min-h-0={expanded}
+  class:mb-2={!expanded}
+  class:w-full={!$compactPatterns && !expanded}
+  class:mr-2={$compactPatterns || expanded}
+  style={expanded ? `width: ${patternWidth}px` : ""}
 >
   <div class="flex">
     <div class="flex flex-wrap">
@@ -76,7 +85,7 @@
         {/if}
       {/if}
     </div>
-    <div class="ml-auto">
+    <div class="flex ml-auto">
       <IconButton on:click={filterAll}>
         <Fa icon={faFilter} slot="icon" />
       </IconButton>

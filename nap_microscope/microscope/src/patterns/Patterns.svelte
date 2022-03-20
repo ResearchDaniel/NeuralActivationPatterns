@@ -3,7 +3,12 @@
   import SubHeading from "../elements/SubHeading.svelte";
 
   import type { PatternForSample, Patterns } from "../types";
-  import { imageFilter, labelFilter, predictionFilter } from "../stores";
+  import {
+    compactPatterns,
+    imageFilter,
+    labelFilter,
+    predictionFilter,
+  } from "../stores";
   import { filterPatterns } from "../helpers";
 
   export let patterns: Patterns;
@@ -23,7 +28,11 @@
 
 <div class="flex flex-col min-h-0">
   <SubHeading heading={`Patterns (${patternIds.length})`} />
-  <div class="flex flex-col items-start overflow-y-auto min-h-0 pt-2">
+  <div
+    class="flex items-start overflow-y-auto min-h-0 pt-2"
+    class:flex-wrap={$compactPatterns}
+    class:flex-col={!$compactPatterns}
+  >
     {#each patternIds as patternId}
       <Pattern
         pattern={{

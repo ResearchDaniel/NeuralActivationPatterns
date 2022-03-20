@@ -12,7 +12,8 @@
     on:change={() => checked.set(!$checked)}
   />
   <span
-    class="absolute cursor-pointer top-0 left-0 bottom-0 right-0 bg-grey transition rounded-full"
+    class="absolute cursor-pointer top-0 left-0 bottom-0 right-0 transition rounded-full"
+    class:bg-grey={!$checked}
     class:bg-highlight={$checked}
   />
   <span
