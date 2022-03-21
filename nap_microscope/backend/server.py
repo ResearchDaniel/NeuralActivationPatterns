@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import pandas as pd
 
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, request, send_file
 
 app = Flask(__name__)
 OK_STATUS = 200
@@ -155,6 +155,42 @@ def get_labels(model):
         data = json.load(json_file)
     labels = pd.read_pickle(Path(data["data_path"], 'label_names.pkl'))
     return jsonify(labels)
+
+
+@app.route('/api/get_image_patterns', methods=["POST"])
+def get_image_patterns():
+    pattern_result = []
+    for model in json.loads(get_models().data)["networks"]:
+        dataset = pd.read_pickle(Path(DATA_DIR, model, 'dataset.pkl'))
+        image_rows = dataset.loc[dataset['file_name'].isin(json.loads(request.data))]
+        if not image_rows.empty:
+            for layer in json.loads(get_layers(model).data)["layers"]:
+                patterns_path = Path(DATA_DIR, model, "layers", layer, "patterns.pkl")
+                if patterns_path.exists():
+                    patterns = pd.read_pickle(patterns_path)
+                    pattern_indices = set(
+                        filter(
+                            lambda pattern: pattern != -1, patterns.loc[image_rows.index.values]
+                            ["patternId"].tolist()))
+                    stats_path = Path(DATA_DIR, model, "layers", layer, "patterns_statistics.pkl")
+                    if stats_path.exists():
+                        statistics = pd.read_pickle(stats_path)
+                    pattern_info = pd.read_pickle(
+                        Path(
+                            DATA_DIR, model, "layers", layer,
+                            "patterns_info.pkl"))
+                    for pattern_index in pattern_indices:
+                        pattern_samples = patterns.loc[patterns["patternId"] == pattern_index].join(
+                            dataset)
+                        pattern_result.append({
+                            "samples": pattern_samples.to_json(orient="records"),
+                            "statistics": json.dumps(statistics[pattern_index]),
+                            "persistence": pattern_info.loc[pattern_index]["pattern_persistence"],
+                            "model": model,
+                            "layer": layer,
+                            "labels": json.loads(get_labels(model).data)
+                        })
+    return jsonify(pattern_result), OK_STATUS
 
 
 if __name__ == '__main__':

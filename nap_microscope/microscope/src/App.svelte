@@ -10,9 +10,9 @@
   import ImageTooltip from "./elements/ImageTooltip.svelte";
   import PatternCompare from "./patterns/PatternCompare.svelte";
   import LoadingIndicator from "./elements/LoadingIndicator.svelte";
+  import ImageCompare from "./patterns/ImageCompare.svelte";
 
   import {
-    imageFilter,
     labelFilter,
     predictionFilter,
     selectedPage,
@@ -50,10 +50,12 @@
           <Main {patterns} />
         {/await}
       {/if}
-    {:else}
+    {:else if $selectedPage === "Compare"}
       <PatternCompare />
+    {:else}
+      <ImageCompare />
     {/if}
-    {#if $labelFilter.length > 0 || $predictionFilter.length > 0 || $imageFilter.length > 0}
+    {#if $labelFilter.length > 0 || $predictionFilter.length > 0}
       <Filters />
     {/if}
   </div>

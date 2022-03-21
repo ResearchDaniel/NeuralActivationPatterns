@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { labelFilter, predictionFilter, imageFilter } from "./stores";
+  import { labelFilter, predictionFilter, selectedPage } from "./stores";
   import Pill from "./elements/Pill.svelte";
   import SubSubHeading from "./elements/SubSubHeading.svelte";
   import IconButton from "./elements/IconButton.svelte";
@@ -17,15 +17,6 @@
   }
   function removePredictionFilter(element: string) {
     predictionFilter.update((filters) => {
-      const index = filters.indexOf(element, 0);
-      if (index > -1) {
-        filters.splice(index, 1);
-      }
-      return filters;
-    });
-  }
-  function removeImageFilter(element: string) {
-    imageFilter.update((filters) => {
       const index = filters.indexOf(element, 0);
       if (index > -1) {
         filters.splice(index, 1);
@@ -57,18 +48,6 @@
         {/each}
       </div>
     {/if}
-    {#if $imageFilter.length > 0}
-      <div class="flex items-center ml-4">
-        <p>Images:</p>
-        {#each $imageFilter as filter}
-          {@const splitName = filter.split("/")}
-          <Pill
-            element={splitName[splitName.length - 1]}
-            on:remove={() => removeImageFilter(filter)}
-          />
-        {/each}
-      </div>
-    {/if}
   </div>
   <div class="ml-auto">
     <IconButton
@@ -77,7 +56,9 @@
       on:click={() => {
         labelFilter.set([]);
         predictionFilter.set([]);
-        imageFilter.set([]);
+        if ($selectedPage === "Images") {
+          selectedPage.set("Overview");
+        }
       }}
     >
       <p slot="text" class="whitespace-nowrap">Clear All</p>

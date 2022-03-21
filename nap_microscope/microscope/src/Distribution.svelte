@@ -8,7 +8,7 @@
   import type { PatternForSample } from "./types";
   import { themeConfig } from "./constants";
   import { patternFilter } from "./stores";
-  import { imageFilter, labelFilter, predictionFilter } from "./stores";
+  import { labelFilter, predictionFilter } from "./stores";
   import { filterPatterns } from "./helpers";
 
   export let patterns: PatternForSample[];
@@ -21,8 +21,7 @@
   $: filteredPatterns = filterPatterns(
     patterns,
     $labelFilter,
-    $predictionFilter,
-    $imageFilter
+    $predictionFilter
   );
   $: spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
