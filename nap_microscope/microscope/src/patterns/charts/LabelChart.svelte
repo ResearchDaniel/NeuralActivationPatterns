@@ -3,8 +3,8 @@
   import type { EmbedOptions } from "vega-embed";
   import { VegaLite } from "svelte-vega";
 
-  import { themeConfig } from "../constants";
-  import { predictionFilter } from "../stores";
+  import { themeConfig } from "../../constants";
+  import { labelFilter } from "../../stores";
 
   export let metadata: {
     labels: Record<string, number>;
@@ -20,13 +20,13 @@
     actions: false,
   } as EmbedOptions;
 
-  $: predictionSpec = {
+  $: labelSpec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     data: {
-      values: Object.keys(metadata.predictions).map((key) => {
+      values: Object.keys(metadata.labels).map((key) => {
         return {
-          prediction: key,
-          samples: metadata.predictions[key],
+          label: key,
+          samples: metadata.labels[key],
         };
       }),
     },
@@ -34,23 +34,20 @@
     height: 100,
     mark: { type: "bar", tooltip: true },
     encoding: {
-      x: { field: "prediction", type: "nominal" },
+      x: { field: "label", type: "nominal" },
       y: { field: "samples", type: "quantitative" },
     },
   } as VegaLiteSpec;
-  $: layeredPredictionSpec = {
+  $: layeredLabelSpec = {
     layer: [
+      { ...labelSpec, mark: { ...labelSpec.mark, color: "#dcdcdc" } },
       {
-        ...predictionSpec,
-        mark: { ...predictionSpec.mark, color: "#dcdcdc" },
-      },
-      {
-        ...predictionSpec,
+        ...labelSpec,
         data: {
-          values: Object.keys(filteredMetadata.predictions).map((key) => {
+          values: Object.keys(filteredMetadata.labels).map((key) => {
             return {
-              prediction: key,
-              samples: filteredMetadata.predictions[key],
+              label: key,
+              samples: filteredMetadata.labels[key],
             };
           }),
         },
@@ -59,17 +56,17 @@
     ],
   } as VegaLiteSpec;
 
-  function handleSelectionPrediction(...args: any) {
-    if (args[1].prediction !== undefined) {
-      const index = $predictionFilter.indexOf(args[1].prediction[0], 0);
+  function handleSelectionLabel(...args: any) {
+    if (args[1].label !== undefined) {
+      const index = $labelFilter.indexOf(args[1].label[0], 0);
       if (index > -1) {
-        predictionFilter.update((filters) => {
+        labelFilter.update((filters) => {
           filters.splice(index, 1);
           return filters;
         });
       } else {
-        predictionFilter.update((filters) => [
-          ...new Set([...filters, ...args[1].prediction]),
+        labelFilter.update((filters) => [
+          ...new Set([...filters, ...args[1].label]),
         ]);
       }
     }
@@ -77,7 +74,7 @@
 </script>
 
 <VegaLite
-  spec={layeredPredictionSpec}
+  spec={layeredLabelSpec}
   {options}
-  signalListeners={{ select: handleSelectionPrediction }}
+  signalListeners={{ select: handleSelectionLabel }}
 />

@@ -3,9 +3,9 @@
   import type { EmbedOptions } from "vega-embed";
   import { VegaLite } from "svelte-vega";
 
-  import type { PatternForSample } from "../types";
+  import type { PatternForSample } from "../../types";
 
-  import { themeConfig } from "../constants";
+  import { themeConfig } from "../../constants";
 
   export let samples: PatternForSample[];
 

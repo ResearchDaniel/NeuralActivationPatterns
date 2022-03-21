@@ -9,6 +9,8 @@ import {
   showPredictions,
   showProbability,
   showStatistics,
+  removeZerosStatistics,
+  compactPatterns,
 } from "./stores";
 
 export function filterPattern(
@@ -67,14 +69,22 @@ export function filterPatterns(
 }
 
 export function setupURLParams(urlParams: URLSearchParams) {
-  if (urlParams.has("showAverage"))
-    showAverage.set(JSON.parse(urlParams.get("showAverage")) as boolean);
   if (urlParams.has("showDistribution"))
     showDistribution.set(
       JSON.parse(urlParams.get("showDistribution")) as boolean
     );
+  if (urlParams.has("compactPatterns"))
+    compactPatterns.set(
+      JSON.parse(urlParams.get("compactPatterns")) as boolean
+    );
+  if (urlParams.has("showAverage"))
+    showAverage.set(JSON.parse(urlParams.get("showAverage")) as boolean);
   if (urlParams.has("showStatistics"))
     showStatistics.set(JSON.parse(urlParams.get("showStatistics")) as boolean);
+  if (urlParams.has("removeZerosStatistics"))
+    removeZerosStatistics.set(
+      JSON.parse(urlParams.get("removeZerosStatistics")) as boolean
+    );
   if (urlParams.has("showProbability"))
     showProbability.set(
       JSON.parse(urlParams.get("showProbability")) as boolean
@@ -90,6 +100,12 @@ export function setupURLParams(urlParams: URLSearchParams) {
   if (urlParams.has("numOutliers"))
     numOutliers.set(JSON.parse(urlParams.get("numOutliers")) as number);
 
+  showDistribution.subscribe((setting) =>
+    updateURLParams("showDistribution", `${setting}`, urlParams)
+  );
+  compactPatterns.subscribe((setting) =>
+    updateURLParams("compactPatterns", `${setting}`, urlParams)
+  );
   showAverage.subscribe((setting) =>
     updateURLParams("showAverage", `${setting}`, urlParams)
   );
@@ -99,11 +115,11 @@ export function setupURLParams(urlParams: URLSearchParams) {
   numOutliers.subscribe((setting) =>
     updateURLParams("numOutliers", `${setting}`, urlParams)
   );
-  showDistribution.subscribe((setting) =>
-    updateURLParams("showDistribution", `${setting}`, urlParams)
-  );
   showStatistics.subscribe((setting) =>
     updateURLParams("showStatistics", `${setting}`, urlParams)
+  );
+  removeZerosStatistics.subscribe((setting) =>
+    updateURLParams("removeZerosStatistics", `${setting}`, urlParams)
   );
   showProbability.subscribe((setting) =>
     updateURLParams("showProbability", `${setting}`, urlParams)

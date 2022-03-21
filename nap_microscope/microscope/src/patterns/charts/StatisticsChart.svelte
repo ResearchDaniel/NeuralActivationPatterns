@@ -3,8 +3,9 @@
   import type { EmbedOptions } from "vega-embed";
   import { VegaLite } from "svelte-vega";
 
-  import type { Statistics } from "../types";
-  import { themeConfig } from "../constants";
+  import type { Statistics } from "../../types";
+  import { themeConfig } from "../../constants";
+  import { removeZerosStatistics } from "../../stores";
 
   export let statistics: Statistics;
 
@@ -23,38 +24,38 @@
       median: statistics.mean[index],
     };
   });
+  $: filteredStatistics = $removeZerosStatistics
+    ? mappedStatistics.filter((element) => element.upper > 0.05)
+    : mappedStatistics;
   $: spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     data: {
-      values: mappedStatistics,
+      values: filteredStatistics,
     },
     height: 100,
     encoding: { x: { field: "index", type: "nominal", title: "unit" } },
     layer: [
       {
-        mark: { type: "rule" },
+        mark: { type: "circle" },
+        encoding: {
+          y: { field: "median", type: "quantitative", title: "activation" },
+        },
+      },
+      {
+        mark: { type: "bar", color: "#0071e355" },
+        encoding: {
+          y: { field: "q1", type: "quantitative" },
+          y2: { field: "q3" },
+        },
+      },
+      {
+        mark: { type: "rule", color: "#0071e355" },
         encoding: {
           y: {
             field: "lower",
             type: "quantitative",
-            scale: { zero: false },
-            title: "activation",
           },
           y2: { field: "upper" },
-        },
-      },
-      {
-        mark: { type: "bar", color: "black" },
-        encoding: {
-          y: { field: "q1", type: "quantitative" },
-          y2: { field: "q3" },
-          color: { field: "Species", type: "nominal", legend: null },
-        },
-      },
-      {
-        mark: { type: "circle" },
-        encoding: {
-          y: { field: "median", type: "quantitative" },
         },
       },
     ],

@@ -8,12 +8,14 @@ export const tooltip = writable<TooltipSpec>({
   mousePos: { x: 0, y: 0 },
 });
 export const numCenters = writable<number>(1);
-export const numOutliers = writable<number>(3);
+export const numOutliers = writable<number>(0);
 export const minPatternSize = writable<number>(3);
 export const showAverage = writable<boolean>(false);
 export const showDistribution = writable<boolean>(false);
+export const compactPatterns = writable<boolean>(true);
 export const showProbability = writable<boolean>(false);
-export const showStatistics = writable<boolean>(false);
+export const showStatistics = writable<boolean>(true);
+export const removeZerosStatistics = writable<boolean>(false);
 export const showLabels = writable<boolean>(false);
 export const showPredictions = writable<boolean>(false);
 export const selectedPage = writable<string>("Overview");

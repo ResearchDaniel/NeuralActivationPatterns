@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { imageFilter, tooltip } from "../stores";
+  import { imageFilter, tooltip } from "../../stores";
   import Fa from "svelte-fa";
   import FaLayers from "svelte-fa/src/fa-layers.svelte";
   import { faPlay } from "@fortawesome/free-solid-svg-icons/faPlay";
   import { faExclamation } from "@fortawesome/free-solid-svg-icons/faExclamation";
-  import type { PatternForSample } from "../types";
+  import type { PatternForSample } from "../../types";
 
   export let imagePath: string;
   export let sample: PatternForSample = undefined;
