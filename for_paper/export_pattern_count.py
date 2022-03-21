@@ -20,7 +20,8 @@ for models in os.scandir(DATA_DIR):
 
     model_dir = models.name  # 'cifar10_cifar10_test_2000_MeanAggregation_min_pattern_5'
 
-    matches = re.match(r"(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)", model_dir)
+    matches = re.match(
+        r"(inception_v3|.*)_(imagenet2012_subset|.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)", model_dir)
     model = matches.group(1)
     dataset = matches.group(2)
     split = matches.group(3)
