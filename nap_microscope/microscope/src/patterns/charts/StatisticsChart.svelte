@@ -25,7 +25,9 @@
     };
   });
   $: filteredStatistics = $removeZerosStatistics
-    ? mappedStatistics.filter((element) => element.upper > 0.05)
+    ? mappedStatistics.filter(
+        (element) => element.upper > 0.05 || element.lower < -0.05
+      )
     : mappedStatistics;
   $: spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
