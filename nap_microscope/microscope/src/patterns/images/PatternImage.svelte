@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { imageFilter, tooltip } from "../../stores";
+  import { imageFilter, selectedPage, tooltip } from "../../stores";
   import Fa from "svelte-fa";
   import FaLayers from "svelte-fa/src/fa-layers.svelte";
   import { faPlay } from "@fortawesome/free-solid-svg-icons/faPlay";
   import { faExclamation } from "@fortawesome/free-solid-svg-icons/faExclamation";
+  import { faSquareCheck } from "@fortawesome/free-solid-svg-icons/faSquareCheck";
   import type { PatternForSample } from "../../types";
 
   export let imagePath: string;
@@ -28,14 +29,25 @@
     });
   }
 
-  function addImageFilter() {
-    imageFilter.update((filters) => [
-      ...new Set([...filters, sample.fileName]),
-    ]);
+  function handleSelectionImage() {
+    const index = $imageFilter.indexOf(sample.fileName, 0);
+    if (index > -1) {
+      imageFilter.update((filters) => {
+        filters.splice(index, 1);
+        if (filters.length === 0 && $selectedPage === "Images") {
+          selectedPage.set("Overview");
+        }
+        return filters;
+      });
+    } else {
+      imageFilter.update((filters) => [
+        ...new Set([...filters, sample.fileName]),
+      ]);
+    }
   }
 </script>
 
-<div class="relative" on:click={addImageFilter}>
+<div class="relative" on:click={handleSelectionImage}>
   <img
     class="h-32"
     src={imagePath}
@@ -54,12 +66,17 @@
     on:mousemove={handleMousemove}
     alt="Data Sample"
   />
-  {#if sample !== undefined && sample.label !== undefined && sample.prediction !== undefined && sample.label !== sample.prediction}
-    <div class="absolute top-1 right-2">
+  <div class="absolute top-1 right-1 flex">
+    {#if $imageFilter.includes(sample.fileName)}
+      <FaLayers>
+        <Fa icon={faSquareCheck} color="white" />
+      </FaLayers>
+    {/if}
+    {#if sample !== undefined && sample.label !== undefined && sample.prediction !== undefined && sample.label !== sample.prediction}
       <FaLayers>
         <Fa icon={faPlay} rotate={-90} color="#ff453a" />
         <Fa icon={faExclamation} scale={0.5} translateY={0.1} color="white" />
       </FaLayers>
-    </div>
-  {/if}
+    {/if}
+  </div>
 </div>

@@ -16,8 +16,7 @@ import {
 export function filterPattern(
   pattern: Pattern,
   labelFilter: string[],
-  predictionFilter: string[],
-  imageFilter: string[]
+  predictionFilter: string[]
 ): Pattern {
   return {
     ...pattern,
@@ -32,11 +31,6 @@ export function filterPattern(
           return false;
         }
       }
-      if (imageFilter.length !== 0) {
-        if (!imageFilter.includes(pattern.fileName)) {
-          return false;
-        }
-      }
       return true;
     }),
   };
@@ -45,8 +39,7 @@ export function filterPattern(
 export function filterPatterns(
   patterns: PatternForSample[],
   labelFilter: string[],
-  predictionFilter: string[],
-  imageFilter: string[]
+  predictionFilter: string[]
 ): PatternForSample[] {
   return patterns.filter((pattern) => {
     if (labelFilter.length !== 0) {
@@ -56,11 +49,6 @@ export function filterPatterns(
     }
     if (predictionFilter.length !== 0) {
       if (!predictionFilter.includes(`${pattern.prediction}`)) {
-        return false;
-      }
-    }
-    if (imageFilter.length !== 0) {
-      if (!imageFilter.includes(pattern.fileName)) {
         return false;
       }
     }

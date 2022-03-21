@@ -3,12 +3,7 @@
   import SubHeading from "../elements/SubHeading.svelte";
 
   import type { PatternForSample, Patterns } from "../types";
-  import {
-    compactPatterns,
-    imageFilter,
-    labelFilter,
-    predictionFilter,
-  } from "../stores";
+  import { compactPatterns, labelFilter, predictionFilter } from "../stores";
   import { filterPatterns } from "../helpers";
 
   export let patterns: Patterns;
@@ -18,8 +13,7 @@
   $: filteredPatterns = filterPatterns(
     filteredSamples,
     $labelFilter,
-    $predictionFilter,
-    $imageFilter
+    $predictionFilter
   );
   $: patternIds = [
     ...new Set(filteredPatterns.map((element) => element.patternId)),

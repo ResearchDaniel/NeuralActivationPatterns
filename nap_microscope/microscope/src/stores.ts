@@ -28,22 +28,15 @@ export const predictionFilter = writable<string[]>([]);
 export const imageFilter = writable<string[]>([]);
 
 export const filteredPinnedPatterns = derived(
-  [pinnedPatterns, labelFilter, predictionFilter, imageFilter, minPatternSize],
-  ([
-    $pinnedPatterns,
-    $labelFilter,
-    $predictionFilter,
-    $imageFilter,
-    $minPatternSize,
-  ]) => {
+  [pinnedPatterns, labelFilter, predictionFilter, minPatternSize],
+  ([$pinnedPatterns, $labelFilter, $predictionFilter, $minPatternSize]) => {
     const filtered = {};
     const pinnedPatternUids = Object.keys($pinnedPatterns);
     pinnedPatternUids.forEach((uid) => {
       const patterns = filterPattern(
         $pinnedPatterns[uid],
         $labelFilter,
-        $predictionFilter,
-        $imageFilter
+        $predictionFilter
       );
       if (patterns.samples.length >= $minPatternSize) filtered[uid] = patterns;
     });
@@ -54,6 +47,12 @@ export const filteredPinnedPatternUids = derived(
   filteredPinnedPatterns,
   ($pinnedPatterns) => Object.keys($pinnedPatterns)
 );
-export const pages = derived(filteredPinnedPatternUids, ($pinnedPatternUids) =>
-  $pinnedPatternUids.length === 0 ? ["Overview"] : ["Overview", "Compare"]
+export const pages = derived(
+  [filteredPinnedPatternUids, imageFilter],
+  ([$pinnedPatternUids, $imageFilter]) => {
+    let pages = ["Overview"];
+    pages = $pinnedPatternUids.length === 0 ? pages : [...pages, "Compare"];
+    pages = $imageFilter.length === 0 ? pages : [...pages, "Images"];
+    return pages;
+  }
 );

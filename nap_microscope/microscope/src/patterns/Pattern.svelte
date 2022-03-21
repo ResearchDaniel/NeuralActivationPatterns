@@ -68,6 +68,7 @@
 <div
   class="flex flex-col box-shadow-xl p-2 border-grey border rounded-md min-w-0"
   class:min-h-0={expanded}
+  class:shrink-0={expanded}
   class:mb-2={!expanded}
   class:w-full={!$compactPatterns && !expanded}
   class:mr-2={$compactPatterns || expanded}

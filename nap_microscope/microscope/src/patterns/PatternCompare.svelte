@@ -9,7 +9,10 @@
 
   let width: number;
 
-  $: patternWidth = Math.max(width / $filteredPinnedPatternUids.length, 800);
+  $: patternWidth = Math.max(
+    width / $filteredPinnedPatternUids.length - 16,
+    800
+  );
 </script>
 
 <div class="flex min-w-0 overflow-x-auto h-full p-2" bind:clientWidth={width}>

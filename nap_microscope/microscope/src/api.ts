@@ -1,4 +1,4 @@
-import type { PatternForSample, Patterns, Statistics } from "./types";
+import type { PatternForSample, Patterns, Pattern, Statistics } from "./types";
 
 export async function fetchModels(): Promise<string[]> {
   const response = await fetch(`/api/get_models`);
@@ -125,4 +125,41 @@ export async function fetchPatterns(
     persistence: info.map((infoElement) => infoElement.pattern_persistence),
     statistics: statistics,
   } as Patterns;
+}
+
+export async function fetchPatternsForImages(
+  images: string[]
+): Promise<Pattern[]> {
+  const response = await fetch("/api/get_image_patterns", {
+    method: "POST",
+    body: JSON.stringify(images),
+  });
+  const jsonResponse = await response.json();
+  return jsonResponse.map((patternResponse) => {
+    const samples = JSON.parse(patternResponse["samples"]);
+    const statistics = JSON.parse(patternResponse["statistics"]);
+    const persistence = patternResponse["persistence"];
+    const model = patternResponse["model"];
+    const layer = patternResponse["layer"];
+    const labels = patternResponse["labels"];
+    return {
+      samples: samples.map((sample) => {
+        return {
+          patternUid: `${model}_${layer}_${sample.patternId}`,
+          model: model,
+          layer: layer,
+          patternId: sample.patternId,
+          probability: sample.probability,
+          outlierScore: sample.outlier_score,
+          fileName: sample.file_name,
+          labelIndex: sample.label,
+          label: labels[sample.label],
+          predictionIndex: sample.prediction,
+          prediction: labels[sample.prediction],
+        } as PatternForSample;
+      }),
+      persistence: persistence,
+      statistics: statistics,
+    } as Pattern;
+  }) as Pattern[];
 }
