@@ -2,10 +2,26 @@
 import json
 from pathlib import Path
 import pandas as pd
+import numpy as np
 
 from flask import Flask, jsonify, request, send_file
 
+
+class NpEncoder(json.JSONEncoder):
+    """An encoder that can handle numpy data types."""
+
+    def default(self, o):
+        if isinstance(o, np.integer):
+            return int(o)
+        if isinstance(o, np.floating):
+            return float(o)
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        return super().default(o)
+
+
 app = Flask(__name__)
+app.json_encoder = NpEncoder
 OK_STATUS = 200
 ERROR_STATUS = 400
 TEXT_TYPE = {'ContentType': 'text/plain'}
@@ -184,7 +200,7 @@ def get_image_patterns():
                             dataset)
                         pattern_result.append({
                             "samples": pattern_samples.to_json(orient="records"),
-                            "statistics": json.dumps(statistics[pattern_index]),
+                            "statistics": json.dumps(statistics[pattern_index], cls=NpEncoder),
                             "persistence": pattern_info.loc[pattern_index]["pattern_persistence"],
                             "model": model,
                             "layer": layer,
