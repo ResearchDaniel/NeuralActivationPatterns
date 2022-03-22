@@ -154,19 +154,19 @@ def activation_statistics(activations, axis):
     q1s = []
     q3s = []
     if axis is None:
-        means.append(np.mean(activations).item())
-        mins.append(np.min(activations).item())
-        maxs.append(np.max(activations).item())
-        q1s.append(np.quantile(activations, 0.25).item())
-        q3s.append(np.quantile(activations, 0.75).item())
+        means.append(np.mean(activations))
+        mins.append(np.min(activations))
+        maxs.append(np.max(activations))
+        q1s.append(np.quantile(activations, 0.25))
+        q3s.append(np.quantile(activations, 0.75))
     else:
         for feature in range(activations.shape[axis]):
             f_act = activations[..., feature]
-            means.append(np.mean(f_act).item())
-            mins.append(np.min(f_act).item())
-            maxs.append(np.max(f_act).item())
-            q1s.append(np.quantile(f_act, 0.25).item())
-            q3s.append(np.quantile(f_act, 0.75).item())
+            means.append(np.mean(f_act))
+            mins.append(np.min(f_act))
+            maxs.append(np.max(f_act))
+            q1s.append(np.quantile(f_act, 0.25))
+            q3s.append(np.quantile(f_act, 0.75))
     iqr = [q3 - q1 for q1, q3 in zip(q1s, q3s)]
 
     lower = [max(q1-1.5*iqr, min_v)
