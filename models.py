@@ -7,7 +7,6 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 
 import util
-from inception_v1 import inception_v1
 
 
 def get_data_set(data_path, data_set, data_set_size, split='test'):
@@ -68,19 +67,6 @@ def setup_cifar10(data_set):
     path = F"{model_save_name}"
     model = tf.keras.models.load_model(path)
     model.summary()
-    return model, data_set
-
-
-def setup_inception_v1(data_set):
-    model = inception_v1()
-
-    def transform_images(image, new_size):
-        img = tf.keras.layers.Rescaling(scale=1./255)(image)
-        img = tf.image.convert_image_dtype(img, tf.float32)
-        img = tf.image.resize(img, [new_size, new_size])
-        return img
-    data_set = data_set.map(lambda row: transform_images(row, 224),
-                            num_parallel_calls=tf.data.AUTOTUNE)
     return model, data_set
 
 

@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description="Running a model analysis run.")
 parser.add_argument("--data_path", type=dir_path,
                     default='D:/data/tensorflow_datasets')
 parser.add_argument("--model",
-                    default='mnist', choices=["mnist", "cifar10", "inception_v1", "inception_v3"])
+                    default='mnist', choices=["mnist", "cifar10", "inception_v3"])
 parser.add_argument("--data_set",
                     default='mnist')
 parser.add_argument("--split",
@@ -64,8 +64,6 @@ def setup_model(model_type, data_path, data_set, data_set_size, split):
         model, processing_data = models.setup_mnist(processing_data)
     elif model_type == "cifar10":
         model, processing_data = models.setup_cifar10(processing_data)
-    elif model_type == "inception_v1":
-        model, processing_data = models.setup_inception_v1(processing_data)
     elif model_type == "inception_v3":
         model, processing_data = models.setup_inception_v3(processing_data)
     else:
