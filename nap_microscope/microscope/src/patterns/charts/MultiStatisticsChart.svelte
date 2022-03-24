@@ -45,7 +45,7 @@
         },
       },
       {
-        mark: { type: "bar", color: "#0071e355" },
+        mark: { type: "bar", opacity: 0.3 },
         encoding: {
           y: { field: "q1", type: "quantitative" },
           y2: { field: "q3" },
@@ -54,7 +54,7 @@
         },
       },
       {
-        mark: { type: "rule", color: "#0071e355" },
+        mark: { type: "rule", opacity: 0.3 },
         encoding: {
           y: {
             field: "lower",
@@ -68,6 +68,31 @@
           },
           y2: { field: "upper" },
         },
+      },
+      {
+        mark: "rule",
+        encoding: {
+          opacity: { value: 0 },
+          tooltip: [
+            { field: "median", type: "quantitative" },
+            { field: "lower", type: "quantitative" },
+            { field: "upper", type: "quantitative" },
+            { field: "q1", type: "quantitative" },
+            { field: "q3", type: "quantitative" },
+          ],
+        },
+        params: [
+          {
+            name: "hover",
+            select: {
+              type: "point",
+              fields: ["index"],
+              nearest: true,
+              on: "mouseover",
+              clear: "mouseout",
+            },
+          },
+        ],
       },
     ],
   } as VegaLiteSpec;

@@ -21,8 +21,9 @@
     <MultiStatisticsChart />
   </div>
   <div class="flex min-w-0 overflow-x-auto h-full p-2" bind:clientWidth={width}>
-    {#each $filteredPinnedPatternUids as uid}
+    {#each $filteredPinnedPatternUids as uid, patternIndex}
       <Pattern
+        {patternIndex}
         pattern={$pinnedPatterns[uid]}
         expanded={true}
         {patternWidth}
