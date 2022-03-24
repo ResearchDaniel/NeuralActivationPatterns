@@ -15,6 +15,7 @@
 
   export let pattern: Pattern;
   export let filteredSamples: PatternForSample[];
+  export let expanded: boolean;
 
   $: metadata = pattern.samples.reduce(sampleMetadata, {
     labels: {},
@@ -49,7 +50,7 @@
 <div class="flex flex-col min-w-0">
   <p>Distribution</p>
   <div class="flex flex-wrap">
-    {#if pattern.statistics !== undefined && $showStatistics}
+    {#if pattern.statistics !== undefined && $showStatistics && !expanded}
       <div class="min-w-0 overflow-x-auto">
         <StatisticsChart statistics={pattern.statistics} />
       </div>

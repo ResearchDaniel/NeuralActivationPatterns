@@ -6,6 +6,7 @@
     filteredPinnedPatternUids,
     filteredPinnedPatterns,
   } from "../stores";
+  import MultiStatisticsChart from "./charts/MultiStatisticsChart.svelte";
 
   let width: number;
 
@@ -15,13 +16,18 @@
   );
 </script>
 
-<div class="flex min-w-0 overflow-x-auto h-full p-2" bind:clientWidth={width}>
-  {#each $filteredPinnedPatternUids as uid}
-    <Pattern
-      pattern={$pinnedPatterns[uid]}
-      expanded={true}
-      {patternWidth}
-      filteredSamples={$filteredPinnedPatterns[uid].samples}
-    />
-  {/each}
+<div class="flex flex-col w-full h-full">
+  <div class="w-full p-2 overflow-x-auto shrink-0">
+    <MultiStatisticsChart />
+  </div>
+  <div class="flex min-w-0 overflow-x-auto h-full p-2" bind:clientWidth={width}>
+    {#each $filteredPinnedPatternUids as uid}
+      <Pattern
+        pattern={$pinnedPatterns[uid]}
+        expanded={true}
+        {patternWidth}
+        filteredSamples={$filteredPinnedPatterns[uid].samples}
+      />
+    {/each}
+  </div>
 </div>
