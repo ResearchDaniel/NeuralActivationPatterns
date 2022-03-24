@@ -1,12 +1,12 @@
 <script lang="ts">
   import Pattern from "./Pattern.svelte";
+  import MultiStatisticsChart from "./charts/MultiStatisticsChart.svelte";
 
   import {
     pinnedPatterns,
     filteredPinnedPatternUids,
     filteredPinnedPatterns,
   } from "../stores";
-  import MultiStatisticsChart from "./charts/MultiStatisticsChart.svelte";
 
   let width: number;
 
@@ -18,7 +18,7 @@
 
 <div class="flex flex-col w-full h-full">
   <div class="w-full p-2 overflow-x-auto shrink-0">
-    <MultiStatisticsChart />
+    <MultiStatisticsChart patterns={$pinnedPatterns} />
   </div>
   <div class="flex min-w-0 overflow-x-auto h-full p-2" bind:clientWidth={width}>
     {#each $filteredPinnedPatternUids as uid, patternIndex}

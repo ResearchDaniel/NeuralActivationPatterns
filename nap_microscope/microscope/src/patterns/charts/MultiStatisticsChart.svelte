@@ -3,17 +3,20 @@
   import type { EmbedOptions } from "vega-embed";
   import { VegaLite } from "svelte-vega";
 
-  import { pinnedPatterns } from "../../stores";
   import { themeConfig } from "../../constants";
+
+  import type { Pattern, Patterns } from "../../types";
+
+  export let patterns: Patterns[] | Record<string, Pattern>;
 
   const options = {
     config: themeConfig,
     actions: false,
   } as EmbedOptions;
 
-  $: stats = Object.keys($pinnedPatterns)
+  $: stats = Object.keys(patterns)
     .map((key) => {
-      const keyStats = $pinnedPatterns[key].statistics;
+      const keyStats = patterns[key].statistics;
       const mappedKeyStats = keyStats.min.map((min, index) => {
         return {
           index: index,
