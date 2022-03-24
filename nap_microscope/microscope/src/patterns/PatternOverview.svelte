@@ -44,12 +44,12 @@
   {/if}
   {#if !expanded}
     <div class="flex flex-col pr-4">
-      <p>Most Salient</p>
+      <p>Most Stable</p>
       <PatternImageList {model} samples={centers} {layer} />
     </div>
     {#if outliers.length > 0}
       <div class="flex flex-col pr-4">
-        <p>Least Salient</p>
+        <p>Least Stable</p>
         <PatternImageList {model} samples={outliers} {layer} />
       </div>
     {/if}
