@@ -54,10 +54,10 @@
         <SettingItem title={"Average"}>
           <Switch checked={showAverage} />
         </SettingItem>
-        <SettingItem title={"Most Salient"}>
+        <SettingItem title={"Most Stable"}>
           <NumericFieldStore value={numCenters} />
         </SettingItem>
-        <SettingItem title={"Least Salient"}>
+        <SettingItem title={"Least Stable"}>
           <NumericFieldStore value={numOutliers} />
         </SettingItem>
         <SubSubHeading heading={"Charts"} />
