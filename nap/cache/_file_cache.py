@@ -12,12 +12,18 @@ CACHE_LOCATION = Path("results")
 
 def layer_settings_string(neural_activation):
     return (f'layer_agg_{neural_activation.layer_aggregation.__class__.__name__}'
-            f'_min_size_{neural_activation.min_pattern_size}')
+            f'_min_size_{neural_activation.min_pattern_size}'
+            f'_min_samples_{neural_activation.min_samples}'
+            f'_cluster_selection_epsilon_{neural_activation.cluster_selection_epsilon:1.0e}'
+            f'_{neural_activation.cluster_selection_method}')
 
 
 def filter_settings_string(neural_activation):
     return (f'filter_agg_{neural_activation.filter_aggregation.__class__.__name__}'
-            f'_min_size_{neural_activation.min_pattern_size}')
+            f'_min_size_{neural_activation.min_pattern_size}'
+            f'_min_samples_{neural_activation.min_samples}'
+            f'_cluster_selection_epsilon_{neural_activation.cluster_selection_epsilon:1.0e}'
+            f'_{neural_activation.cluster_selection_method}')
 
 
 def activations_path(destination, model_name, layer):

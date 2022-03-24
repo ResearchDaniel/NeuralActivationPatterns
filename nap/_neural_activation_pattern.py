@@ -78,11 +78,15 @@ class NeuralActivationPattern:
 
     def __init__(
             self, model, layer_aggregation=MeanAggregation, filter_aggregation=NoAggregation,
-            min_pattern_size=5):
+            min_pattern_size=5, min_samples=5, cluster_selection_epsilon=0,
+            cluster_selection_method="leaf"):
         self.model = model
         self.layer_aggregation = layer_aggregation
         self.filter_aggregation = filter_aggregation
         self.min_pattern_size = min_pattern_size
+        self.min_samples = min_samples
+        self.cluster_selection_epsilon = cluster_selection_epsilon
+        self.cluster_selection_method = cluster_selection_method
 
     def layer_idx(self, layer):
         """Get layer index given either its layer name or its index.
@@ -184,7 +188,9 @@ class NeuralActivationPattern:
                 self.layer(layer), activation) for activation in activations]
 
         clusterer = hdbscan.HDBSCAN(
-            cluster_selection_method='leaf', min_cluster_size=self.min_pattern_size)
+            cluster_selection_method=self.cluster_selection_method,
+            min_cluster_size=self.min_pattern_size,
+            cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples)
         clusterer.fit(agg_activations)
         print(
             F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}")
@@ -204,7 +210,9 @@ class NeuralActivationPattern:
         agg_activations = [self.filter_aggregation.aggregate(
             self.layer(layer), activation) for activation in filter_activations]
         clusterer = hdbscan.HDBSCAN(
-            cluster_selection_method='leaf', min_cluster_size=self.min_pattern_size)
+            cluster_selection_method=self.cluster_selection_method,
+            min_cluster_size=self.min_pattern_size,
+            cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples)
         clusterer.fit(agg_activations)
 
         print(
