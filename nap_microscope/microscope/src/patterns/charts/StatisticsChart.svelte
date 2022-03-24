@@ -60,6 +60,29 @@
           y2: { field: "upper" },
         },
       },
+      {
+        mark: "rule",
+        encoding: {
+          opacity: { value: 0 },
+          tooltip: [
+            { field: "lower", type: "quantitative" },
+            { field: "upper", type: "quantitative" },
+            { field: "median", type: "quantitative" },
+          ],
+        },
+        params: [
+          {
+            name: "hover",
+            select: {
+              type: "point",
+              fields: ["index"],
+              nearest: true,
+              on: "mouseover",
+              clear: "mouseout",
+            },
+          },
+        ],
+      },
     ],
   } as VegaLiteSpec;
 </script>
