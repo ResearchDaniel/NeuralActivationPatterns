@@ -54,7 +54,7 @@
       </div>
     {/if}
   {/if}
-  {#if $showProbability || $showLabels || $showPredictions || (pattern.statistics !== undefined && $showStatistics)}
-    <Charts {pattern} {filteredSamples} />
+  {#if $showProbability || $showLabels || $showPredictions || (pattern.statistics !== undefined && $showStatistics && !expanded)}
+    <Charts {pattern} {filteredSamples} {expanded} />
   {/if}
 </div>

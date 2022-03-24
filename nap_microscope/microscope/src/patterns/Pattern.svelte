@@ -19,10 +19,34 @@
 
   import type { PatternForSample, Pattern } from "../types";
 
+  export let patternIndex: number = undefined;
   export let pattern: Pattern;
   export let filteredSamples: PatternForSample[];
   export let expanded: boolean = false;
   export let patternWidth: number = undefined;
+
+  const tableau20 = [
+    "#4c78a8",
+    "#9ecae9",
+    "#f58518",
+    "#ffbf79",
+    "#54a24b",
+    "#88d27a",
+    "#b79a20",
+    "#f2cf5b",
+    "#439894",
+    "#83bcb6",
+    "#e45756",
+    "#ff9d98",
+    "#79706e",
+    "#bab0ac",
+    "#d67195",
+    "#fcbfd2",
+    "#b279a2",
+    "#d6a5c9",
+    "#9e765f",
+    "#d8b5a5",
+  ];
 
   $: uid = pattern.samples[0].patternUid;
   $: patternId = pattern.samples[0].patternId;
@@ -76,7 +100,10 @@
 >
   <div class="flex">
     <div class="flex flex-wrap">
-      <SubSubHeading heading={`ID: ${patternId}`} />
+      <SubSubHeading
+        heading={`ID: ${patternId}`}
+        color={expanded ? tableau20[patternIndex] : undefined}
+      />
       <SubSubHeading heading={`Size: ${pattern.samples.length}`} />
       {#if expanded}
         <SubSubHeading heading={`Model: ${model}`} />

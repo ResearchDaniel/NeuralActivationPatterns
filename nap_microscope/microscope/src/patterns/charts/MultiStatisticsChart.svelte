@@ -3,36 +3,38 @@
   import type { EmbedOptions } from "vega-embed";
   import { VegaLite } from "svelte-vega";
 
-  import type { Statistics } from "../../types";
   import { themeConfig } from "../../constants";
-  import { removeZerosStatistics } from "../../stores";
 
-  export let statistics: Statistics;
+  import type { Pattern, Patterns } from "../../types";
+
+  export let patterns: Patterns[] | Record<string, Pattern>;
 
   const options = {
     config: themeConfig,
     actions: false,
   } as EmbedOptions;
 
-  $: mappedStatistics = statistics.min.map((min, index) => {
-    return {
-      index: index,
-      lower: min,
-      upper: statistics.max[index],
-      q1: statistics.q1[index],
-      q3: statistics.q3[index],
-      median: statistics.mean[index],
-    };
-  });
-  $: filteredStatistics = $removeZerosStatistics
-    ? mappedStatistics.filter(
-        (element) => element.upper > 0.05 || element.lower < -0.05
-      )
-    : mappedStatistics;
+  $: stats = Object.keys(patterns)
+    .map((key) => {
+      const keyStats = patterns[key].statistics;
+      const mappedKeyStats = keyStats.min.map((min, index) => {
+        return {
+          index: index,
+          lower: min,
+          upper: keyStats.max[index],
+          q1: keyStats.q1[index],
+          q3: keyStats.q3[index],
+          median: keyStats.mean[index],
+          key: key,
+        };
+      });
+      return mappedKeyStats;
+    })
+    .flat();
   $: spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     data: {
-      values: filteredStatistics,
+      values: stats,
     },
     height: 100,
     encoding: { x: { field: "index", type: "nominal", title: "unit" } },
@@ -41,6 +43,8 @@
         mark: { type: "circle" },
         encoding: {
           y: { field: "median", type: "quantitative", title: "activation" },
+          xOffset: { field: "key" },
+          color: { field: "key" },
         },
       },
       {
@@ -48,6 +52,8 @@
         encoding: {
           y: { field: "q1", type: "quantitative" },
           y2: { field: "q3" },
+          xOffset: { field: "key" },
+          color: { field: "key" },
         },
       },
       {
@@ -56,6 +62,12 @@
           y: {
             field: "lower",
             type: "quantitative",
+          },
+          xOffset: { field: "key" },
+          color: {
+            field: "key",
+            scale: { scheme: "tableau20" },
+            legend: null,
           },
           y2: { field: "upper" },
         },

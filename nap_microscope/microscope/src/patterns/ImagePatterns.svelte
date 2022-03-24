@@ -25,8 +25,9 @@
   );
 </script>
 
-{#each patternsWithFilteredSamples as item}
+{#each patternsWithFilteredSamples as item, patternIndex}
   <PatternComponent
+    {patternIndex}
     pattern={item.pattern}
     expanded={true}
     {patternWidth}
