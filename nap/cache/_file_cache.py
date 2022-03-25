@@ -212,8 +212,9 @@ def export_layer_activation_statistics(input_data, neural_activation, model_name
                                layer], destination)
         with h5py.File(act_path, 'r') as f_act:
             activations = f_act["activations"]
+            # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
             statistics = activation_statistics(
-                activations, axis=-1)
+                activations[()], axis=-1)
             path = activation_statistics_path(destination, model_name, layer)
             with open(path, "wb") as output_file:
                 pickle.dump(statistics, output_file)
