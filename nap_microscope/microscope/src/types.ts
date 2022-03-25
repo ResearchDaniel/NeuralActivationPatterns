@@ -7,7 +7,6 @@ export interface PatternForSample {
   model: string;
   layer: string;
   filter?: string;
-  filterMethod?: string;
   label?: string;
   prediction?: string;
 }

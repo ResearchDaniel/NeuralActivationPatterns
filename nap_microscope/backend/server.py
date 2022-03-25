@@ -74,34 +74,6 @@ def get_pattern_statistics(model, layer):
         return "JSON conversion error", ERROR_STATUS
 
 
-@app.route('/api/get_filter_methods/<model>/<layer>')
-def get_filter_methods(model, layer):
-    methods = []
-    methods_path = Path(DATA_DIR, model, "layers", layer, "filters")
-    if methods_path.exists():
-        for path in methods_path.iterdir():
-            if path.is_dir():
-                methods.append(path.stem)
-    methods = {
-        'methods': methods
-    }
-    return jsonify(methods)
-
-
-@app.route('/api/get_filters/<model>/<layer>/<method>')
-def get_filters(model, layer, method):
-    filters = []
-    filters_path = Path(DATA_DIR, model, "layers", layer, "filters", method)
-    if filters_path.exists():
-        for path in filters_path.iterdir():
-            if path.is_dir():
-                filters.append(path.stem)
-    filters = {
-        'filters': filters
-    }
-    return jsonify(filters)
-
-
 @app.route('/api/get_patterns/<model>/<layer>')
 def get_patterns(model, layer):
     pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns.pkl")
@@ -111,29 +83,9 @@ def get_patterns(model, layer):
     return jsonify(patterns.to_json(orient="records"))
 
 
-@app.route('/api/get_filter_patterns/<model>/<layer>/<method>/<filter_index>')
-def get_filter_patterns(model, layer, filter_index, method):
-    pickle_path = Path(DATA_DIR, model, "layers", layer,
-                       "filters", method, filter_index, "patterns.pkl")
-    if not pickle_path.exists():
-        return "No such file", ERROR_STATUS
-    patterns = pd.read_pickle(pickle_path)
-    return jsonify(patterns.to_json(orient="records"))
-
-
 @app.route('/api/get_pattern_info/<model>/<layer>')
 def get_pattern_info(model, layer):
     pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns_info.pkl")
-    if not pickle_path.exists():
-        return "No such file", ERROR_STATUS
-    patterns = pd.read_pickle(pickle_path)
-    return jsonify(patterns.to_json(orient="records"))
-
-
-@app.route('/api/get_filter_pattern_info/<model>/<layer>/<method>/<filter_index>')
-def get_filter_pattern_info(model, layer, filter_index, method):
-    pickle_path = Path(DATA_DIR, model, "layers", layer,
-                       "filters", method, filter_index, "patterns_info.pkl")
     if not pickle_path.exists():
         return "No such file", ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
@@ -150,12 +102,6 @@ def get_dataset(model):
 def get_average(model, layer, pattern):
     return send_file(Path(DATA_DIR, model, "layers", layer, pattern, 'average.jpeg'),
                      mimetype='image/jpeg')
-
-
-@app.route('/api/get_filter_average/<model>/<layer>/<method>/<filter_index>/<pattern>')
-def get_filter_average(model, layer, method, filter_index, pattern):
-    return send_file(Path(DATA_DIR, model, "layers", layer, method, filter_index, pattern,
-                          'average.jpeg'), mimetype='image/jpeg')
 
 
 @app.route('/api/get_image/<model>/<identifier>')
