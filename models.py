@@ -81,3 +81,29 @@ def setup_inception_v3(data_set):
         include_top=True, weights='imagenet')
 
     return model, data_set
+
+
+def setup_resnet50(data_set):
+    def transform_images(image, new_size):
+        return tf.keras.applications.resnet50.preprocess_input(
+            tf.keras.layers.Resizing(new_size, new_size)(image))
+    data_set = data_set.map(lambda row: transform_images(row, 224),
+                            num_parallel_calls=tf.data.AUTOTUNE)
+
+    model = tf.keras.applications.resnet50.ResNet50(
+        include_top=True, weights='imagenet')
+
+    return model, data_set
+
+
+def setup_resnet_rs50(data_set):
+    def transform_images(image, new_size):
+        return tf.keras.applications.resnet_rs.preprocess_input(
+            tf.keras.layers.Resizing(new_size, new_size)(image))
+    data_set = data_set.map(lambda row: transform_images(row, 224),
+                            num_parallel_calls=tf.data.AUTOTUNE)
+
+    model = tf.keras.applications.resnet_rs.ResNetRS50(
+        include_top=True, weights='imagenet')
+
+    return model, data_set
