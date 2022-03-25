@@ -96,14 +96,14 @@ def setup_resnet50(data_set):
     return model, data_set
 
 
-def setup_resnet_rs50(data_set):
+def setup_resnet50_v2(data_set):
     def transform_images(image, new_size):
-        return tf.keras.applications.resnet_rs.preprocess_input(
+        return tf.keras.applications.resnet_v2.preprocess_input(
             tf.keras.layers.Resizing(new_size, new_size)(image))
     data_set = data_set.map(lambda row: transform_images(row, 224),
                             num_parallel_calls=tf.data.AUTOTUNE)
 
-    model = tf.keras.applications.resnet_rs.ResNetRS50(
+    model = tf.keras.applications.resnet_v2.ResNet50V2(
         include_top=True, weights='imagenet')
 
     return model, data_set

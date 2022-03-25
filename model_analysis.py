@@ -25,7 +25,7 @@ parser.add_argument("--data_path", type=dir_path,
                     default='D:/data/tensorflow_datasets')
 parser.add_argument(
     "--model", default='mnist',
-    choices=["mnist", "cifar10", "inception_v3", "resnet50", "resnet-rs50"])
+    choices=["mnist", "cifar10", "inception_v3", "resnet50", "resnet50v2"])
 parser.add_argument("--data_set",
                     default='mnist')
 parser.add_argument("--split",
@@ -72,8 +72,8 @@ def setup_model(model_type, data_path, data_set, data_set_size, split):
         model, processing_data = models.setup_inception_v3(processing_data)
     elif model_type == "resnet50":
         model, processing_data = models.setup_resnet50(processing_data)
-    elif model_type == "resnet-rs50":
-        model, processing_data = models.setup_resnet_rs50(processing_data)
+    elif model_type == "resnet50v2":
+        model, processing_data = models.setup_resnet50_v2(processing_data)
     else:
         raise Exception(f"Invalid model: {model}")
     print(model.summary())
