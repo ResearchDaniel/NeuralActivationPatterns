@@ -47,7 +47,9 @@
         {#await patternsRequest}
           <LoadingIndicator />
         {:then patterns}
-          <Main {patterns} />
+          {#if patterns.samples.length > 0}
+            <Main {patterns} />
+          {/if}
         {/await}
       {/if}
     {:else if $selectedPage === "Compare"}

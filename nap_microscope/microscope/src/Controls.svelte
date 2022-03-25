@@ -1,7 +1,5 @@
 <script lang="ts">
-  import Dropdown from "./elements/Dropdown.svelte";
-  import LabeledComponent from "./elements/LabeledComponent.svelte";
-  import SubHeading from "./elements/SubHeading.svelte";
+  import Select from "svelte-select";
 
   import { fetchLayers, fetchModels, fetchPatterns } from "./api";
   import type { Patterns } from "./types";
@@ -14,29 +12,36 @@
   $: patternsRequest = fetchPatterns(model, layer);
 </script>
 
-<div class="flex flex-col">
-  <SubHeading heading={"Configuration"} />
+<div class="flex flex-col w-full">
   {#await fetchModels() then models}
     <div class="pt-2">
-      <LabeledComponent name={"Model"}>
-        <Dropdown
-          items={models}
-          bind:value={model}
-          on:change={() => {
-            layer = undefined;
-            filter = "---";
-            filterMethod = undefined;
-          }}
-        />
-      </LabeledComponent>
+      <Select
+        placeholder="Model"
+        items={models}
+        on:select={(event) => {
+          model = event.detail.value;
+          layer = undefined;
+        }}
+        on:clear={() => {
+          model = undefined;
+          layer = undefined;
+        }}
+      />
     </div>
   {/await}
   {#if model !== undefined}
     {#await fetchLayers(model) then layers}
       <div class="pt-2">
-        <LabeledComponent name={"Layer"}>
-          <Dropdown items={layers} bind:value={layer} />
-        </LabeledComponent>
+        <Select
+          placeholder="Layer"
+          items={layers}
+          on:select={(event) => {
+            layer = event.detail.value;
+          }}
+          on:clear={() => {
+            layer = undefined;
+          }}
+        />
       </div>
     {/await}
   {/if}
