@@ -11,6 +11,8 @@ import {
   showStatistics,
   removeZerosStatistics,
   compactPatterns,
+  model,
+  layer,
 } from "./stores";
 
 export function filterPattern(
@@ -57,6 +59,10 @@ export function filterPatterns(
 }
 
 export function setupURLParams(urlParams: URLSearchParams) {
+  if (urlParams.has("model"))
+    model.set(JSON.parse(urlParams.get("model")) as string);
+  if (urlParams.has("layer"))
+    layer.set(JSON.parse(urlParams.get("layer")) as string);
   if (urlParams.has("showDistribution"))
     showDistribution.set(
       JSON.parse(urlParams.get("showDistribution")) as boolean
@@ -88,6 +94,12 @@ export function setupURLParams(urlParams: URLSearchParams) {
   if (urlParams.has("numOutliers"))
     numOutliers.set(JSON.parse(urlParams.get("numOutliers")) as number);
 
+  model.subscribe((setting) =>
+    updateURLParams("model", `${setting}`, urlParams)
+  );
+  layer.subscribe((setting) =>
+    updateURLParams("layer", `${setting}`, urlParams)
+  );
   showDistribution.subscribe((setting) =>
     updateURLParams("showDistribution", `${setting}`, urlParams)
   );

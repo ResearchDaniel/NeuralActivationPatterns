@@ -2,6 +2,8 @@ import { derived, writable } from "svelte/store";
 import { filterPattern } from "./helpers";
 import type { Pattern, TooltipSpec } from "./types";
 
+export const model = writable<string>();
+export const layer = writable<string>();
 export const settingsOpen = writable<boolean>(false);
 export const tooltip = writable<TooltipSpec>({
   hover: false,
