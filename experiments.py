@@ -2,7 +2,7 @@
 import subprocess
 import sys
 
-models = ["mnist"]
+models = ["mnist", "cifar10"]
 # ["mixed5", "mixed6", "mixed10", "predictions"]}
 layers = {"inception_v3": ["mixed1", "mixed2", "mixed3", "mixed4", "mixed5",
                            "mixed6", "mixed7", "mixed8", "mixed9", "mixed10", "predictions"]}
@@ -13,12 +13,12 @@ splits = {"inception_v3": "validation"}
 layer_aggregations = ["mean"]  # , "mean_std", 'none']
 #data_set_sizes = range(1000, 12811, 1000)
 data_set_sizes = range(10000, 11000, 1000)
-minimum_pattern_sizes = range(5, 6, 1)
+minimum_pattern_sizes = [5, 10]  # range(5, 6, 1)
 
 cluster_selection_epsilons = [0]  # + [pow(10, exponent) for exponent in range(-2, -1, 1)]
 
-cluster_selection_methods = ["eom"]
-cluster_min_samples = [5]
+cluster_selection_methods = ["leaf"]
+cluster_min_samples = [5, 10]
 
 # FILTERS = " --all_filters "
 #FILTERS = " --filter_range 0 2 "
@@ -47,7 +47,8 @@ for model in models:
                     for cluster_min_sample in cluster_min_samples:
                         for cluster_selection_method in cluster_selection_methods:
                             cmd = (
-                                f"python model_analysis.py --model {model} --data_set {data_sets[model]}"
+                                f"python model_analysis.py --model {model}"
+                                f" --data_set {data_sets[model]}"
                                 f" --size {data_set_size} --layer_aggregation {layer_aggregation}"
                                 f" --minimum_pattern_size {minimum_pattern_size}"
                                 f" --cluster_min_samples {cluster_min_sample}"
