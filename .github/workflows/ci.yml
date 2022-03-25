@@ -25,10 +25,10 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Install Node dependencies
-        run: yarn --cwd nap_microscope/microscope --frozen-lockfile
+        run: yarn --cwd magnifying_glass/frontend --frozen-lockfile
 
       - name: Build
-        run: yarn --cwd nap_microscope/microscope build
+        run: yarn --cwd magnifying_glass/frontend build
 
       - name: Python Packages
         run: pip install -r requirements.txt
@@ -39,5 +39,5 @@ jobs:
       - name: Pylint NAP
         run: pylint nap
 
-      - name: Pylint Microscope Server
-        run: pylint nap_microscope/backend/server.py
+      - name: Pylint Magnifying Glass Server
+        run: pylint magnifying_glass/backend/server.py

@@ -131,6 +131,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-nap_microscope/backend/data
-nap_microscope/backend/images
+magnifying_glass/backend/data
+magnifying_glass/backend/images
 results/

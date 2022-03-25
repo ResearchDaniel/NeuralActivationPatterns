@@ -8,7 +8,7 @@ import pandas as pd
 
 # Export data for producing paper figures
 
-DATA_DIR = '../nap_microscope/backend/data'
+DATA_DIR = '../magnifying_glass/backend/data'
 
 m = []
 l = []
