@@ -92,7 +92,10 @@ export async function fetchPatterns(
 }
 
 export async function fetchPatternsForImages(
-  images: string[]
+  images: {
+    image: string;
+    model: string;
+  }[]
 ): Promise<Pattern[]> {
   const response = await fetch("/api/get_image_patterns", {
     method: "POST",

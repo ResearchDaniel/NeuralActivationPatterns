@@ -6,6 +6,7 @@
   import { faExclamation } from "@fortawesome/free-solid-svg-icons/faExclamation";
   import { faSquareCheck } from "@fortawesome/free-solid-svg-icons/faSquareCheck";
   import type { PatternForSample } from "../../types";
+  import { filterPattern } from "../../helpers";
 
   export let imagePath: string;
   export let sample: PatternForSample = undefined;
@@ -30,7 +31,11 @@
   }
 
   function handleSelectionImage() {
-    const index = $imageFilter.indexOf(sample.fileName, 0);
+    const index = $imageFilter.findIndex(
+      (filter) =>
+        filter.image === sample.fileName && filter.model === sample.model,
+      0
+    );
     if (index > -1) {
       imageFilter.update((filters) => {
         filters.splice(index, 1);
@@ -41,7 +46,10 @@
       });
     } else {
       imageFilter.update((filters) => [
-        ...new Set([...filters, sample.fileName]),
+        ...new Set([
+          ...filters,
+          { image: sample.fileName, model: sample.model },
+        ]),
       ]);
     }
   }
@@ -67,7 +75,7 @@
     alt="Data Sample"
   />
   <div class="absolute top-1 right-1 flex">
-    {#if $imageFilter.includes(sample.fileName)}
+    {#if $imageFilter.some((filter) => filter.image === sample.fileName && filter.model === sample.model)}
       <FaLayers>
         <Fa icon={faSquareCheck} color="white" />
       </FaLayers>

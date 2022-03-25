@@ -5,9 +5,9 @@
 
   import { themeConfig } from "../../constants";
 
-  import type { Pattern, Patterns } from "../../types";
+  import type { Pattern } from "../../types";
 
-  export let patterns: Patterns[] | Record<string, Pattern>;
+  export let patterns: Pattern[] | Record<string, Pattern>;
 
   const options = {
     config: themeConfig,

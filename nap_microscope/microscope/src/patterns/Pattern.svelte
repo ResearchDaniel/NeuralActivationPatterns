@@ -70,12 +70,20 @@
 
   function filterAll() {
     const notFiltered = filteredSamples.filter(
-      (sample) => !$imageFilter.includes(sample.fileName)
+      (sample) =>
+        !$imageFilter.some(
+          (filter) =>
+            sample.fileName === filter.image && sample.model == filter.model
+        )
     );
     if (notFiltered.length === 0) {
       imageFilter.update((filters) => {
         filteredSamples.forEach((sample) => {
-          const index = filters.indexOf(sample.fileName, 0);
+          const index = $imageFilter.findIndex(
+            (filter) =>
+              filter.image === sample.fileName && filter.model === sample.model,
+            0
+          );
           if (index > -1) {
             filters.splice(index, 1);
           }
@@ -83,8 +91,10 @@
         return filters;
       });
     } else {
-      const fileNames = notFiltered.map((item) => item.fileName);
-      imageFilter.update((filters) => [...new Set([...filters, ...fileNames])]);
+      const toAdd = notFiltered.map((item) => {
+        return { image: item.fileName, model: item.model };
+      });
+      imageFilter.update((filters) => [...filters, ...toAdd]);
     }
   }
 </script>
