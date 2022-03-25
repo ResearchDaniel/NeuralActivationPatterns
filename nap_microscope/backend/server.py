@@ -176,9 +176,12 @@ def get_labels(model):
 @app.route('/api/get_image_patterns', methods=["POST"])
 def get_image_patterns():
     pattern_result = []
-    for model in json.loads(get_models().data)["networks"]:
+    request_data = json.loads(request.data)
+    for model in set(map(lambda x: x['model'], request_data)):
+        images = map(lambda x: x['image'], filter(
+            lambda item, current_model=model: item['model'] == current_model, request_data))
         dataset = pd.read_pickle(Path(DATA_DIR, model, 'dataset.pkl'))
-        image_rows = dataset.loc[dataset['file_name'].isin(json.loads(request.data))]
+        image_rows = dataset.loc[dataset['file_name'].isin(images)]
         if not image_rows.empty:
             for layer in json.loads(get_layers(model).data)["layers"]:
                 patterns_path = Path(DATA_DIR, model, "layers", layer, "patterns.pkl")

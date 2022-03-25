@@ -25,7 +25,7 @@ export const patternFilter = writable<{ label: string; patternId: number }[]>(
 );
 export const labelFilter = writable<string[]>([]);
 export const predictionFilter = writable<string[]>([]);
-export const imageFilter = writable<string[]>([]);
+export const imageFilter = writable<{ image: string; model: string }[]>([]);
 
 export const filteredPinnedPatterns = derived(
   [pinnedPatterns, labelFilter, predictionFilter, minPatternSize],
