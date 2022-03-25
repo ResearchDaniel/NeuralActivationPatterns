@@ -15,10 +15,16 @@ import util
 EXPORT_LOCATION = Path("nap_microscope/backend/data")
 
 
-def export_config(image_dir, model, export_name, destination=EXPORT_LOCATION):
+def export_config(image_dir, neural_activation, export_name, destination=EXPORT_LOCATION):
     config = {
         "data_path": image_dir,
-        "layers": [layer.name for layer in model.layers]
+        "layers": [layer.name for layer in neural_activation.model.layers],
+        "layer_aggregation": neural_activation.layer_aggregation.__class__.__name__,
+        "filter_aggregation": neural_activation.filter_aggregation.__class__.__name__,
+        "min_pattern_size": neural_activation.min_pattern_size,
+        "min_samples": neural_activation.min_samples,
+        "cluster_selection_epsilon": neural_activation.cluster_selection_epsilon,
+        "cluster_selection_method": neural_activation.cluster_selection_method
     }
     Path(destination, export_name).mkdir(parents=True, exist_ok=True)
     with open(Path(destination, export_name, "config.json"), 'w', encoding="utf8") as outfile:
@@ -172,7 +178,7 @@ def export_all(model_name, input_data, labels, predictions, file_names, layers, 
                    f'_cluster_selection_epsilon_{neural_activation.cluster_selection_epsilon:1.0e}'
                    f'_{neural_activation.cluster_selection_method}')
 
-    export_config(image_dir, neural_activation.model, export_name, destination)
+    export_config(image_dir, neural_activation, export_name, destination)
     export_dataset(file_names, labels, predictions, export_name, destination)
     export_patterns(neural_activation, model_name, export_name, input_data, layers,
                     filters, destination)
