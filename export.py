@@ -166,8 +166,11 @@ def export_all(model_name, input_data, labels, predictions, file_names, layers, 
                destination=EXPORT_LOCATION):
     # Differentiate between model and export name to be able to cache activation data
     # between configs.
-    export_name = (f"{model_name}_{neural_activation.layer_aggregation.__class__.__name__}"
-                   f"_min_pattern_{neural_activation.min_pattern_size}")
+    export_name = (f'{model_name}_{neural_activation.layer_aggregation.__class__.__name__}'
+                   f'_min_pattern_{neural_activation.min_pattern_size}'
+                   f'_min_samples_{neural_activation.min_samples}'
+                   f'_cluster_selection_epsilon_{neural_activation.cluster_selection_epsilon:1.0e}'
+                   f'_{neural_activation.cluster_selection_method}')
 
     export_config(image_dir, neural_activation.model, export_name, destination)
     export_dataset(file_names, labels, predictions, export_name, destination)

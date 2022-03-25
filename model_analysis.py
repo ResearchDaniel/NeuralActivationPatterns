@@ -42,6 +42,9 @@ parser.add_argument("--n_max_activations", type=int,
                     default=0)
 parser.add_argument("--minimum_pattern_size", type=int,
                     default=5)
+parser.add_argument("--cluster_min_samples", type=int, default=5)
+parser.add_argument("--cluster_selection_epsilon", type=float, default=0)
+parser.add_argument("--cluster_selection_method", default="leaf", choices=["leaf", "eom"])
 args = parser.parse_args()
 
 
@@ -122,6 +125,8 @@ else:
             pickle.dump(predictions, output)
 
 neural_activation_pattern = nap.NeuralActivationPattern(
-    ml_model, layer_aggregation, filter_aggregation, args.minimum_pattern_size)
+    ml_model, layer_aggregation, filter_aggregation, args.minimum_pattern_size,
+    min_samples=args.cluster_min_samples, cluster_selection_epsilon=args.cluster_selection_epsilon,
+    cluster_selection_method=args.cluster_selection_method)
 export.export_all(model_name, X, y, predictions, files, layers, filters, str(data_dir),
                   neural_activation_pattern, n_max_activations=args.n_max_activations)
