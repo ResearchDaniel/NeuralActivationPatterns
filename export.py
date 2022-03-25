@@ -12,7 +12,7 @@ import nap
 import nap.cache
 import util
 
-EXPORT_LOCATION = Path("nap_microscope/backend/data")
+EXPORT_LOCATION = Path("magnifying_glass/backend/data")
 
 
 def export_config(image_dir, neural_activation, export_name, destination=EXPORT_LOCATION):
