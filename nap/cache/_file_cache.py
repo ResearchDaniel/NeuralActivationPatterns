@@ -179,15 +179,16 @@ def activation_statistics(activations, axis):
         q1s.append(quantiles[0])
         q3s.append(quantiles[1])
     else:
-        # Improve performance by operating on a per chunk-basis
-        n_chunks = 0
         # Preallocate arrays
         means = [0]*activations.shape[axis]
         mins = [float('inf')]*activations.shape[axis]
         maxs = [float('-inf')]*activations.shape[axis]
-        q1s = [None]*activations.shape[axis]
-        q3s = [None]*activations.shape[axis]
+        q1s = [0]*activations.shape[axis]
+        q3s = [0]*activations.shape[axis]
         if isinstance(activations, h5py.Dataset):
+            # Improve performance by operating on a per chunk-basis
+            # h5py is super-slow when accessing the last (feature) dimension
+            n_chunks = 0
             for chunk in activations.iter_chunks():
                 n_chunks += 1
                 # [()] fetches all data into memory.
@@ -197,18 +198,23 @@ def activation_statistics(activations, axis):
                     means[feature] += np.mean(f_act)
                     mins[feature] = min(mins[feature], np.min(f_act))
                     maxs[feature] = max(maxs[feature], np.max(f_act))
+                    quantiles = np.quantile(f_act, [0.25, 0.75])
+                    # Quantiles will not be exact when computed chunked.
+                    # Small bias, but much faster computation compared to computing it with all data
+                    # cinot
+                    # https://stackoverflow.com/questions/40291135/iterative-quantile-estimation-in-matlab
+                    q1s[feature] += quantiles[0]
+                    q3s[feature] += quantiles[1]
 
             for feature in range(activations.shape[axis]):
                 means[feature] /= n_chunks
-            for feature in range(activations.shape[axis]):
-                f_act = activations[..., feature]
-                quantiles = np.quantile(f_act, [0.25, 0.75])
-                q1s[feature] = quantiles[0]
-                q3s[feature] = quantiles[1]
+                q1s[feature] /= n_chunks
+                q3s[feature] /= n_chunks
+
         else:
             for feature in range(activations.shape[axis]):
                 f_act = activations[..., feature]
-                means[feature] += np.mean(f_act)
+                means[feature] = np.mean(f_act)
                 mins[feature] = np.min(f_act)
                 maxs[feature] = np.max(f_act)
                 quantiles = np.quantile(f_act, [0.25, 0.75])
