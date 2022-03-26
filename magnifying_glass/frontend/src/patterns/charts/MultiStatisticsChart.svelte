@@ -17,6 +17,9 @@
   $: stats = Object.keys(patterns)
     .map((key) => {
       const keyStats = patterns[key].statistics;
+      if (keyStats === undefined) {
+        return undefined;
+      }
       const mappedKeyStats = keyStats.min.map((min, index) => {
         return {
           index: index,
