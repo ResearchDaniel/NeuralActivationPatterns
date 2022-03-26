@@ -107,7 +107,7 @@ def export_activations(input_data, neural_activation, model_name, layers,
             iterator = 0
             minimum = float('inf')
             maximum = float('-inf')
-            for data_set in input_data.batch(1000).cache().prefetch(tf.data.AUTOTUNE):
+            for data_set in input_data.batch(128).cache().prefetch(tf.data.AUTOTUNE):
                 num_inputs = data_set.shape[0]
                 activations = neural_activation.layer_activations(
                     layer, data_set)
@@ -175,16 +175,46 @@ def activation_statistics(activations, axis):
         means.append(np.mean(activations))
         mins.append(np.min(activations))
         maxs.append(np.max(activations))
-        q1s.append(np.quantile(activations, 0.25))
-        q3s.append(np.quantile(activations, 0.75))
+        quantiles = np.quantile(activations, [0.25, 0.75])
+        q1s.append(quantiles[0])
+        q3s.append(quantiles[1])
     else:
-        for feature in range(activations.shape[axis]):
-            f_act = activations[..., feature]
-            means.append(np.mean(f_act))
-            mins.append(np.min(f_act))
-            maxs.append(np.max(f_act))
-            q1s.append(np.quantile(f_act, 0.25))
-            q3s.append(np.quantile(f_act, 0.75))
+        # Improve performance by operating on a per chunk-basis
+        n_chunks = 0
+        # Preallocate arrays
+        means = [0]*activations.shape[axis]
+        mins = [float('inf')]*activations.shape[axis]
+        maxs = [float('-inf')]*activations.shape[axis]
+        q1s = [None]*activations.shape[axis]
+        q3s = [None]*activations.shape[axis]
+        if isinstance(activations, h5py.Dataset):
+            for chunk in activations.iter_chunks():
+                n_chunks += 1
+                # [()] fetches all data into memory.
+                data = activations[chunk][()]
+                for feature in range(data.shape[axis]):
+                    f_act = data[..., feature]
+                    means[feature] += np.mean(f_act)
+                    mins[feature] = min(mins[feature], np.min(f_act))
+                    maxs[feature] = max(maxs[feature], np.max(f_act))
+
+            for feature in range(activations.shape[axis]):
+                means[feature] /= n_chunks
+            for feature in range(activations.shape[axis]):
+                f_act = activations[..., feature]
+                quantiles = np.quantile(f_act, [0.25, 0.75])
+                q1s[feature] = quantiles[0]
+                q3s[feature] = quantiles[1]
+        else:
+            for feature in range(activations.shape[axis]):
+                f_act = activations[..., feature]
+                means[feature] += np.mean(f_act)
+                mins[feature] = np.min(f_act)
+                maxs[feature] = np.max(f_act)
+                quantiles = np.quantile(f_act, [0.25, 0.75])
+                q1s[feature] = quantiles[0]
+                q3s[feature] = quantiles[1]
+
     iqr = [q3 - q1 for q1, q3 in zip(q1s, q3s)]
 
     lower = [max(q1-1.5*iqr, min_v)
@@ -215,7 +245,7 @@ def export_layer_activation_statistics(input_data, neural_activation, model_name
             # [()] fetches all data into memory.
             # Needed because slicing the filter is super-slow in hdf5
             statistics = activation_statistics(
-                activations[()], axis=-1)
+                activations, axis=-1)
             path = activation_statistics_path(destination, model_name, layer)
             with open(path, "wb") as output_file:
                 pickle.dump(statistics, output_file)
