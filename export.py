@@ -182,7 +182,7 @@ def export_all(model_name, input_data, labels, predictions, file_names, layers, 
     export_dataset(file_names, labels, predictions, export_name, destination)
     export_patterns(neural_activation, model_name, export_name, input_data, layers,
                     filters, destination)
-    # We currently do not use these statisitics and they take a LONG time time compute.
+    # We currently do not use these statisitics and they take a LONG time to compute.
     # Remove comment when they are needed
     # export_statistics(neural_activation, model_name, export_name, input_data, layers,
     #                   filters, destination)
