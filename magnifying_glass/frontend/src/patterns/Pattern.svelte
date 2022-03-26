@@ -23,6 +23,7 @@
   export let pattern: Pattern;
   export let filteredSamples: PatternForSample[];
   export let expanded: boolean = false;
+  export let showStats: boolean = true;
   export let patternWidth: number = undefined;
 
   const tableau20 = [
@@ -149,6 +150,7 @@
       {patternId}
       {filteredSamples}
       {expanded}
+      {showStats}
     />
     {#if expanded}
       <AllPatternImages samples={filteredSamples} {model} {layer} />

@@ -9,13 +9,17 @@
 
   export let patterns: Pattern[];
   export let width: number;
+  export let model: string;
 
   $: patternsWithFilteredSamples = patterns
     .map((pattern) => {
       return {
         pattern: pattern,
-        filteredSamples: filterPattern(pattern, $labelFilter, $predictionFilter)
-          .samples,
+        filteredSamples: filterPattern(
+          pattern,
+          $labelFilter,
+          $predictionFilter
+        ).samples.filter((sample) => sample.model === model),
       };
     })
     .filter((item) => item.filteredSamples.length > 0);
