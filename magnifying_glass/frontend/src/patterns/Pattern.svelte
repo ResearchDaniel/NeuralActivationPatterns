@@ -109,7 +109,7 @@
   class:mr-2={$compactPatterns || expanded}
   style={expanded ? `width: ${patternWidth}px` : ""}
 >
-  <div class="flex">
+  <div class="flex items-baseline">
     <div class="flex flex-wrap">
       <SubSubHeading
         heading={`ID: ${patternId}`}

@@ -138,6 +138,7 @@ def get_image_patterns():
                             lambda pattern: pattern != -1, patterns.loc[image_rows.index.values]
                             ["patternId"].tolist()))
                     stats_path = Path(DATA_DIR, model, "layers", layer, "patterns_statistics.pkl")
+                    statistics = None
                     if stats_path.exists():
                         statistics = pd.read_pickle(stats_path)
                     pattern_info = pd.read_pickle(
@@ -147,15 +148,24 @@ def get_image_patterns():
                     for pattern_index in pattern_indices:
                         pattern_samples = patterns.loc[patterns["patternId"] == pattern_index].join(
                             dataset)
-                        pattern_result.append({
-                            "samples": pattern_samples.to_json(orient="records"),
-                            "statistics": json.dumps(statistics[pattern_index], cls=NpEncoder),
-                            "persistence": pattern_info.loc[pattern_index]["pattern_persistence"],
-                            "model": model,
-                            "layer": layer,
-                            "labels": json.loads(get_labels(model).data)
-                        })
+                        pattern_result.append(
+                            assemble_pattern(
+                                statistics, pattern_samples, pattern_index,
+                                pattern_info, model, layer))
     return jsonify(pattern_result), OK_STATUS
+
+
+def assemble_pattern(statistics, pattern_samples, pattern_index, pattern_info, model, layer):
+    if statistics is None:
+        return {"samples": pattern_samples.to_json(orient="records"),
+                "persistence": pattern_info.loc[pattern_index]["pattern_persistence"],
+                "model": model,
+                "layer": layer,
+                "labels": json.loads(get_labels(model).data)}
+    return {"samples": pattern_samples.to_json(orient="records"),
+            "statistics": json.dumps(statistics[pattern_index], cls=NpEncoder),
+            "persistence": pattern_info.loc[pattern_index]["pattern_persistence"],
+            "model": model, "layer": layer, "labels": json.loads(get_labels(model).data)}
 
 
 if __name__ == '__main__':

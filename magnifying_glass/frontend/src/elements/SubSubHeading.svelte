@@ -4,7 +4,7 @@
 </script>
 
 <h2
-  class="text-l font-bold leading-7 pr-2"
+  class="text-l font-bold leading-7 pr-2 break-all"
   style={color !== undefined ? `color: ${color}` : ""}
 >
   {heading}

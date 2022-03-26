@@ -104,7 +104,10 @@ export async function fetchPatternsForImages(
   const jsonResponse = await response.json();
   return jsonResponse.map((patternResponse) => {
     const samples = JSON.parse(patternResponse["samples"]);
-    const statistics = JSON.parse(patternResponse["statistics"]);
+    const statistics =
+      patternResponse["statistics"] === undefined
+        ? undefined
+        : JSON.parse(patternResponse["statistics"]);
     const persistence = patternResponse["persistence"];
     const model = patternResponse["model"];
     const layer = patternResponse["layer"];
