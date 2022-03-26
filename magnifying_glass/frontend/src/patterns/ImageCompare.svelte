@@ -26,9 +26,9 @@
   <div class="h-32 w-full" />
   <LoadingIndicator />
 {:then patterns}
-  <div class="flex flex-col w-full h-full p-2">
+  <div class="flex flex-col w-full h-full min-h-0 p-2">
     <div class="flex w-full">
-      <div class="grow">
+      <div class="grow min-w-0">
         <Select
           placeholder="Model"
           items={[
@@ -54,10 +54,7 @@
         </IconButton>
       </div>
     </div>
-    <div
-      class="flex min-w-0 overflow-x-auto h-full pt-2"
-      bind:clientWidth={width}
-    >
+    <div class="flex min-w-0 overflow-x-auto pt-2" bind:clientWidth={width}>
       {#if model !== undefined}
         <ImageComparePatterns {patterns} {width} {model} />
       {/if}
