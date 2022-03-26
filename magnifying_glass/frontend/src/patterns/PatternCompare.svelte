@@ -16,16 +16,20 @@
   );
 </script>
 
-<div class="flex flex-col w-full h-full">
+<div class="flex flex-col w-full h-full p-2">
   <div class="w-full p-2 overflow-x-auto shrink-0">
     <MultiStatisticsChart patterns={$pinnedPatterns} />
   </div>
-  <div class="flex min-w-0 overflow-x-auto h-full p-2" bind:clientWidth={width}>
+  <div
+    class="flex min-w-0 overflow-x-auto h-full pr-2"
+    bind:clientWidth={width}
+  >
     {#each $filteredPinnedPatternUids as uid, patternIndex}
       <Pattern
         {patternIndex}
         pattern={$pinnedPatterns[uid]}
         expanded={true}
+        showStats={false}
         {patternWidth}
         filteredSamples={$filteredPinnedPatterns[uid].samples}
       />

@@ -21,6 +21,7 @@
   export let model: string;
   export let layer: string;
   export let expanded: boolean;
+  export let showStats: boolean;
 
   $: centers = filteredSamples.slice(0, $numCenters);
   $: derivedNumOutliers =
@@ -52,7 +53,7 @@
       </div>
     {/if}
   {/if}
-  {#if $showProbability || $showLabels || $showPredictions || (pattern.statistics !== undefined && $showStatistics && !expanded)}
+  {#if $showProbability || $showLabels || $showPredictions || (pattern.statistics !== undefined && $showStatistics && showStats)}
     <Charts {pattern} {filteredSamples} {expanded} />
   {/if}
 </div>
