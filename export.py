@@ -1,11 +1,11 @@
 """Export the results of an NAP analysis run."""
 import json
-import pickle
 import shutil
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 from PIL import Image
 
 import nap
@@ -40,19 +40,23 @@ def export_dataset(file_names, labels, predictions, export_name, destination=EXP
 
 def export_patterns(neural_activation, model_name, export_name, input_data, layers, filters,
                     destination=EXPORT_LOCATION):
-    def export_pattern(path, patterns, info, statistics):
+    def export_pattern(path, patterns, info, layer, model_filter=None):
         path.mkdir(parents=True, exist_ok=True)
         patterns.to_pickle(Path(path, "patterns.pkl"))
         info.to_pickle(Path(path, "patterns_info.pkl"))
-        with open(Path(path, "patterns_statistics.pkl"), "wb") as outfile:
-            pickle.dump(statistics, outfile)
+        for index, _ in patterns.groupby("patternId"):
+            if model_filter is None:
+                statistics = nap.cache.get_layer_patterns_activation_statistics(
+                    input_data, neural_activation, model_name, layer, index)
+            else:
+                statistics = nap.cache.get_filter_patterns_activation_statistics(
+                    input_data, neural_activation, model_name, layer, model_filter, index)
+            export_pattern_statistics(index, path, statistics)
     for layer in layers:
         path = Path(destination, export_name, "layers", str(layer))
         patterns, info = nap.cache.get_layer_patterns(
             input_data, neural_activation, model_name, layer)
-        statistics = nap.cache.get_layer_patterns_activation_statistics(
-            input_data, neural_activation, model_name, layer)
-        export_pattern(path, patterns, info, statistics)
+        export_pattern(path, patterns, info, layer)
         if layer in filters:
             for model_filter in filters[layer]:
                 path = Path(
@@ -61,29 +65,13 @@ def export_patterns(neural_activation, model_name, export_name, input_data, laye
                     str(model_filter))
                 patterns, info = nap.cache.get_filter_patterns(
                     input_data, neural_activation, model_name, layer, model_filter)
-                statistics = nap.cache.get_filter_patterns_activation_statistics(
-                    input_data, neural_activation, model_name, layer, model_filter)
-                export_pattern(path, patterns, info, statistics)
+                export_pattern(path, patterns, info, layer, model_filter)
 
 
-def export_statistics(neural_activation, model_name, export_name, input_data, layers, filters,
-                      destination=EXPORT_LOCATION):
-    for layer in layers:
-        path = Path(destination, export_name, "layers", str(layer))
-        path.mkdir(parents=True, exist_ok=True)
-        stats = nap.cache.get_layer_activation_statistics(
-            input_data, neural_activation, model_name, layer)
-        with open(Path(path, "layer_statistics.pkl"), "wb") as outfile:
-            pickle.dump(stats, outfile)
-        if layer in filters:
-            for model_filter in filters[layer]:
-                path = Path(destination, export_name,
-                            "layers", str(layer), "filters", str(model_filter))
-                path.mkdir(parents=True, exist_ok=True)
-                stats = nap.cache.get_filter_activation_statistics(
-                    input_data, neural_activation, model_name, layer, model_filter)
-                with open(Path(path, "filter_statistics.pkl"), "wb") as outfile:
-                    pickle.dump(stats, outfile)
+def export_pattern_statistics(index, path, statistics):
+    writer = pa.ipc.new_file(Path(path, f"pattern_statistics_{index}.arrow"), statistics.schema)
+    writer.write(statistics)
+    writer.close()
 
 
 def export_pattern_averages(base_path, patterns, file_names, image_dir, input_data):
@@ -182,10 +170,6 @@ def export_all(model_name, input_data, labels, predictions, file_names, layers, 
     export_dataset(file_names, labels, predictions, export_name, destination)
     export_patterns(neural_activation, model_name, export_name, input_data, layers,
                     filters, destination)
-    # We currently do not use these statisitics and they take a LONG time to compute.
-    # Remove comment when they are needed
-    # export_statistics(neural_activation, model_name, export_name, input_data, layers,
-    #                   filters, destination)
     export_averages(image_dir, file_names, neural_activation, model_name,
                     export_name, input_data, layers, filters, destination)
 

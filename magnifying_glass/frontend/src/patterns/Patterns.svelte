@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { startswith } from "arquero";
+
   import Pattern from "./Pattern.svelte";
   import SubHeading from "../elements/SubHeading.svelte";
 
@@ -29,15 +31,12 @@
   >
     {#each patternIds as patternId}
       <Pattern
+        patternIndex={patternId}
         pattern={{
           samples: patterns.samples.filter(
             (sample) => sample.patternId === patternId
           ),
           persistence: patterns.persistence[patternId],
-          statistics:
-            patterns.statistics !== undefined
-              ? patterns.statistics[patternId]
-              : undefined,
         }}
         filteredSamples={filteredPatterns.filter(
           (sample) => sample.patternId === patternId

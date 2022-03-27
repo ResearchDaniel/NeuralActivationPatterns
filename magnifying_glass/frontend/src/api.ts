@@ -1,4 +1,7 @@
-import type { PatternForSample, Patterns, Pattern, Statistics } from "./types";
+import { fromArrow } from "arquero";
+
+import type ColumnTable from "arquero/dist/types/table/column-table";
+import type { PatternForSample, Patterns, Pattern } from "./types";
 
 export async function fetchModels(): Promise<string[]> {
   const response = await fetch(`/api/get_models`);
@@ -31,10 +34,17 @@ async function fetchLabels(model: string) {
 
 export async function fetchPatternStatistics(
   model: string,
-  layer: string
-): Promise<Statistics[] | undefined> {
-  return fetch(`/api/get_pattern_statistics/${model}/${layer}`).then(
-    (response) => (response.ok ? response.json() : undefined)
+  layer: string,
+  pattern: number,
+  key: string
+): Promise<{ table: ColumnTable; key: string } | undefined> {
+  return fetch(`/api/get_pattern_statistics/${model}/${layer}/${pattern}`).then(
+    (response) =>
+      response.ok
+        ? response.arrayBuffer().then((buffer) => {
+            return { table: fromArrow(new DataView(buffer)), key: key };
+          })
+        : undefined
   );
 }
 
@@ -46,7 +56,6 @@ export async function fetchPatterns(
     return { samples: [], persistence: [] };
   const dataset = await fetchDataset(model);
   const labels = await fetchLabels(model);
-  const statistics = await fetchPatternStatistics(model, layer);
   if (dataset.length === 0 || labels === undefined)
     return { samples: [], persistence: [] };
   const infoResponse = await fetch(`/api/get_pattern_info/${model}/${layer}`);
@@ -87,7 +96,6 @@ export async function fetchPatterns(
       )
       .filter((pattern) => pattern.patternId >= 0),
     persistence: info.map((infoElement) => infoElement.pattern_persistence),
-    statistics: statistics,
   } as Patterns;
 }
 

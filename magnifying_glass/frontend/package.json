@@ -40,6 +40,8 @@
     "@fortawesome/free-brands-svg-icons": "^6.1.0",
     "@fortawesome/free-solid-svg-icons": "^6.1.0",
     "@tailwindcss/forms": "^0.5.0",
+    "apache-arrow": "^7.0.0",
+    "arquero": "^4.8.8",
     "svelte-fa": "^2.4.0",
     "svelte-select": "^4.4.7",
     "svelte-vega": "^1.1.0",

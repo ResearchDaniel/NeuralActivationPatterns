@@ -2,7 +2,7 @@
   import ProbabilityChart from "./ProbabilityChart.svelte";
   import LabelChart from "./LabelChart.svelte";
   import PredictionChart from "./PredictionChart.svelte";
-  import StatisticsChart from "./StatisticsChart.svelte";
+  import MultiStatisticsChart from "./MultiStatisticsChart.svelte";
 
   import {
     showLabels,
@@ -12,10 +12,12 @@
   } from "../../stores";
 
   import type { PatternForSample, Pattern } from "../../types";
+  import type ColumnTable from "arquero/dist/types/table/column-table";
 
   export let pattern: Pattern;
   export let filteredSamples: PatternForSample[];
   export let expanded: boolean;
+  export let statsTable: ColumnTable = undefined;
 
   $: metadata = pattern.samples.reduce(sampleMetadata, {
     labels: {},
@@ -50,11 +52,6 @@
 <div class="flex flex-col min-w-0">
   <p>Distribution</p>
   <div class="flex flex-wrap">
-    {#if pattern.statistics !== undefined && $showStatistics && !expanded}
-      <div class="min-w-0 overflow-x-auto">
-        <StatisticsChart statistics={pattern.statistics} />
-      </div>
-    {/if}
     {#if $showProbability}
       <div class="min-w-0 overflow-x-auto">
         <ProbabilityChart samples={pattern.samples} />
@@ -68,6 +65,11 @@
     {#if $showPredictions}
       <div class="min-w-0 overflow-x-auto">
         <PredictionChart {metadata} {filteredMetadata} />
+      </div>
+    {/if}
+    {#if statsTable !== undefined && $showStatistics && !expanded}
+      <div class="min-w-0 overflow-x-auto">
+        <MultiStatisticsChart {statsTable} />
       </div>
     {/if}
   </div>

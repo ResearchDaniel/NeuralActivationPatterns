@@ -5,39 +5,19 @@
 
   import { themeConfig } from "../../constants";
 
-  import type { Pattern } from "../../types";
+  import type ColumnTable from "arquero/dist/types/table/column-table";
 
-  export let patterns: Pattern[] | Record<string, Pattern>;
+  export let statsTable: ColumnTable;
 
   const options = {
     config: themeConfig,
     actions: false,
   } as EmbedOptions;
 
-  $: stats = Object.keys(patterns)
-    .map((key) => {
-      const keyStats = patterns[key].statistics;
-      if (keyStats === undefined) {
-        return undefined;
-      }
-      const mappedKeyStats = keyStats.min.map((min, index) => {
-        return {
-          index: index,
-          lower: min,
-          upper: keyStats.max[index],
-          q1: keyStats.q1[index],
-          q3: keyStats.q3[index],
-          median: keyStats.mean[index],
-          key: key,
-        };
-      });
-      return mappedKeyStats;
-    })
-    .flat();
   $: spec = {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     data: {
-      values: stats,
+      values: statsTable,
     },
     height: 100,
     encoding: { x: { field: "index", type: "nominal", title: "unit" } },
@@ -45,7 +25,7 @@
       {
         mark: { type: "circle" },
         encoding: {
-          y: { field: "median", type: "quantitative", title: "activation" },
+          y: { field: "mean", type: "quantitative", title: "activation" },
           xOffset: { field: "key" },
           color: { field: "key" },
         },
@@ -80,7 +60,7 @@
         encoding: {
           opacity: { value: 0 },
           tooltip: [
-            { field: "median", type: "quantitative" },
+            { field: "mean", type: "quantitative" },
             { field: "lower", type: "quantitative" },
             { field: "upper", type: "quantitative" },
             { field: "q1", type: "quantitative" },

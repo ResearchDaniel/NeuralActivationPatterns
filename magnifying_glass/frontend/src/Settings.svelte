@@ -15,6 +15,7 @@
     numCenters,
     numOutliers,
     removeZerosStatistics,
+    showOverviewStatistics,
     settingsOpen,
     showAverage,
     showDistribution,
@@ -66,6 +67,9 @@
         </SettingItem>
         <SettingItem title={"Remove Zero Activations"} indent={true}>
           <Switch checked={removeZerosStatistics} />
+        </SettingItem>
+        <SettingItem title={"Statistics in Overview"} indent={true}>
+          <Switch checked={showOverviewStatistics} />
         </SettingItem>
         <SettingItem title={"Probability"}>
           <Switch checked={showProbability} />
