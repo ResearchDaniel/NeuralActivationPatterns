@@ -88,7 +88,7 @@ def setup_model(model_type, data_path, data_set, data_set_size, split):
 data_size = args.size
 ml_model, model_name, X, y, files, data_dir = setup_model(
     args.model, args.data_path, args.data_set, data_size, args.split)
-model_name += '_norm'
+model_name += '_unitnorm'
 if args.layer is None:
     layers = [layer.name for layer in ml_model.layers]
 else:

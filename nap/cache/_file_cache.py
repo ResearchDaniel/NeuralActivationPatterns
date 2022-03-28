@@ -105,23 +105,26 @@ def export_activations(input_data, neural_activation, model_name, layers,
             dset = file_handle.create_dataset(
                 "activations", output_shape, compression="gzip", chunks=chunk_size)
             iterator = 0
-            minimum = float('inf')
-            maximum = float('-inf')
+            num_units = output_shape[-1]
+            maximum = [float('-inf')]*num_units
             for data_set in input_data.batch(128).cache().prefetch(tf.data.AUTOTUNE):
                 num_inputs = data_set.shape[0]
                 activations = neural_activation.layer_activations(
                     layer, data_set)
-                maximum = max(np.max(activations), maximum)
-                minimum = min(np.min(activations), minimum)
+                unit_max = [np.max(np.abs(activations[..., unit])) for unit in range(num_units)]
+                maximum = np.maximum(unit_max, maximum)
                 dset[iterator:iterator+num_inputs] = activations
                 iterator += num_inputs
 
-            # Normalize activations
+            # Normalize units individually by their absolute max activation
             for chunk in dset.iter_chunks():
-                if minimum < 0:  # range [-1 1]
-                    dset[chunk] = -1 + 2*(dset[chunk] - minimum) / (maximum - minimum)
-                else:  # range [0 1]
-                    dset[chunk] = (dset[chunk] - minimum) / (maximum - minimum)
+                # [()] fetches all data into memory.
+                data = dset[chunk][()]
+                for unit in range(num_units):
+                    if maximum[unit] != 0:
+                        data[..., unit] /= maximum[unit]
+                dset[chunk] = data
+
 
 # pylint: disable=R0914
 
