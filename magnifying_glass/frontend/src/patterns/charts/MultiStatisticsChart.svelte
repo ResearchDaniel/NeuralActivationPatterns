@@ -20,7 +20,7 @@
       values: statsTable,
     },
     height: 100,
-    encoding: { x: { field: "index", type: "nominal", title: "unit" } },
+    encoding: { x: { field: "unit", type: "nominal", title: "unit" } },
     layer: [
       {
         mark: { type: "circle" },

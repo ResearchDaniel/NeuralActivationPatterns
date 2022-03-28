@@ -42,19 +42,20 @@ def activation_statistics_path(destination, model_name, layer):
 
 
 def layer_patterns_activation_statistics_path(
-        destination, model_name, layer, index, activation):
+        destination, model_name, layer, pattern_index, activation):
     return Path(
         destination, model_name, layer,
-        f'layer_patterns_{layer_settings_string(activation)}_activation_statistics_{index}.arrow')
+        (f'layer_patterns_{layer_settings_string(activation)}'
+         f'_activation_statistics_{pattern_index}.arrow'))
 
 
-def filter_patterns_activation_statistics_path(destination, model_name, layer, filter_index, index,
-                                               neural_activation):
+def filter_patterns_activation_statistics_path(
+        destination, model_name, layer, filter_index, pattern_index, neural_activation):
     return Path(
         destination, model_name, layer, 'filters',
         filter_settings_string(neural_activation),
         str(filter_index),
-        f'filter_patterns_activation_statistics_{index}.arrow')
+        f'filter_patterns_activation_statistics_{pattern_index}.arrow')
 
 
 def filter_activation_statistics_path(destination, model_name, layer, filter_index):
@@ -267,8 +268,8 @@ def export_layer_patterns_activation_statistics(
         activations = f_act["activations"]
         for index, pattern in patterns.groupby("patternId"):
             pattern_statistics = pa.Table.from_arrays(
-                [list(range(neural_activation.layer_output_shape(layer)[-1]))],
-                names=["index"])
+                [list(range(neural_activation.layer_output_units(layer)))],
+                names=["unit"])
             pattern_stats = activation_statistics(
                 activations[pattern.index.tolist()], axis=-1)
             for key, value in pattern_stats.items():
@@ -290,19 +291,15 @@ def export_filter_patterns_activation_statistics(
     with h5py.File(act_path, 'r') as f_act:
         for index, pattern in patterns.groupby("patternId"):
             pattern_statistics = pa.Table.from_arrays(
-                [list(range(neural_activation.layer_output_shape(layer)[-1]))],
-                names=["index"])
+                [list(range(neural_activation.layer_output_units(layer)))],
+                names=["unit"])
             pattern_stats = activation_statistics(
                 f_act["activations"][pattern.index.tolist()]
                 [..., filter_index],
                 axis=None)
             for key, value in pattern_stats.items():
-                if pattern_statistics is None:
-                    pattern_statistics = pa.Table.from_arrays(
-                        [pa.array(np.array(value).astype(np.float16))], names=[f"{index}_{key}"])
-                else:
-                    pattern_statistics.append_column(
-                        f"{index}_{key}", np.array(value).astype(np.float16))
+                pattern_statistics = pattern_statistics.append_column(
+                    f"{index}_{key}", np.array(value).astype(np.float16))
             path = filter_patterns_activation_statistics_path(
                 destination, model_name, layer, filter_index, index, neural_activation)
             writer = pa.ipc.new_file(path, pattern_statistics.schema)
@@ -414,10 +411,10 @@ def get_layer_patterns(input_data, neural_activation, model_name, layer,
 
 
 def get_layer_patterns_activation_statistics(
-        input_data, neural_activation, model_name, layer, index,
+        input_data, neural_activation, model_name, layer, pattern_index,
         destination=CACHE_LOCATION):
     path = layer_patterns_activation_statistics_path(
-        destination, model_name, layer, index, neural_activation)
+        destination, model_name, layer, pattern_index, neural_activation)
     if not path.exists():
         patterns, _ = get_layer_patterns(
             input_data, neural_activation, model_name, layer, destination)
@@ -443,10 +440,10 @@ def get_filter_patterns(
 
 
 def get_filter_patterns_activation_statistics(
-        input_data, neural_activation, model_name, layer, filter_index, index,
+        input_data, neural_activation, model_name, layer, filter_index, pattern_index,
         destination=CACHE_LOCATION):
     path = filter_patterns_activation_statistics_path(
-        destination, model_name, layer, filter_index, index, neural_activation)
+        destination, model_name, layer, filter_index, pattern_index, neural_activation)
     if not path.exists():
         patterns, _ = get_filter_patterns(
             input_data, neural_activation, model_name, layer, filter_index,

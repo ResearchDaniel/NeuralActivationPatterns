@@ -170,6 +170,9 @@ class NeuralActivationPattern:
         layer_idx = self.layer_idx(layer)
         return self.model.layers[layer_idx].output.shape
 
+    def layer_output_units(self, layer):
+        return self.layer_output_shape(layer)[-1]
+
     def layer_activations(self, layer, input_data):
         layer_idx = self.layer_idx(layer)
         layer_output = self.model.layers[layer_idx].output
@@ -196,7 +199,7 @@ class NeuralActivationPattern:
             F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}")
         patterns = pd.DataFrame({"patternId": clusterer.labels_,
                                  "probability": clusterer.probabilities_,
-                                 "outlier_score": clusterer.outlier_scores_})
+                                "outlier_score": clusterer.outlier_scores_})
         pattern_info = pd.DataFrame(
             {"pattern_persistence": clusterer.cluster_persistence_})
         return patterns, pattern_info
@@ -219,7 +222,7 @@ class NeuralActivationPattern:
             F"Layer {layer}, filter: {filter_id}, number of patterns: {clusterer.labels_.max()+1}")
         patterns = pd.DataFrame({"patternId": clusterer.labels_,
                                  "probability": clusterer.probabilities_,
-                                 "outlier_score": clusterer.outlier_scores_})
+                                "outlier_score": clusterer.outlier_scores_})
         pattern_info = pd.DataFrame(
             {"pattern_persistence": clusterer.cluster_persistence_})
         return patterns, pattern_info
