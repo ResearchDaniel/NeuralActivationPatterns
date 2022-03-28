@@ -268,7 +268,7 @@ def export_layer_patterns_activation_statistics(
         activations = f_act["activations"]
         for index, pattern in patterns.groupby("patternId"):
             pattern_statistics = pa.Table.from_arrays(
-                [list(range(neural_activation.layer_output_units(layer)))],
+                [list(range(neural_activation.layer_num_units(layer)))],
                 names=["unit"])
             pattern_stats = activation_statistics(
                 activations[pattern.index.tolist()], axis=-1)
@@ -291,7 +291,7 @@ def export_filter_patterns_activation_statistics(
     with h5py.File(act_path, 'r') as f_act:
         for index, pattern in patterns.groupby("patternId"):
             pattern_statistics = pa.Table.from_arrays(
-                [list(range(neural_activation.layer_output_units(layer)))],
+                [list(range(neural_activation.layer_num_units(layer)))],
                 names=["unit"])
             pattern_stats = activation_statistics(
                 f_act["activations"][pattern.index.tolist()]

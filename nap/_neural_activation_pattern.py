@@ -170,7 +170,7 @@ class NeuralActivationPattern:
         layer_idx = self.layer_idx(layer)
         return self.model.layers[layer_idx].output.shape
 
-    def layer_output_units(self, layer):
+    def layer_num_units(self, layer):
         return self.layer_output_shape(layer)[-1]
 
     def layer_activations(self, layer, input_data):
