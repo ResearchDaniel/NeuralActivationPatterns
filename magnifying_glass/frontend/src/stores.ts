@@ -17,6 +17,7 @@ export const showDistribution = writable<boolean>(false);
 export const compactPatterns = writable<boolean>(true);
 export const showProbability = writable<boolean>(false);
 export const showStatistics = writable<boolean>(true);
+export const showOverviewStatistics = writable<boolean>(false);
 export const removeZerosStatistics = writable<boolean>(false);
 export const showLabels = writable<boolean>(false);
 export const showPredictions = writable<boolean>(false);

@@ -21,21 +21,9 @@ export interface TooltipSpec {
 export interface Patterns {
   samples: PatternForSample[];
   persistence: number[];
-  statistics?: Statistics[];
 }
 
 export interface Pattern {
   samples: PatternForSample[];
   persistence: number;
-  statistics: Statistics;
-}
-
-export interface Statistics {
-  IQR: number[];
-  lower: number[];
-  max: number[];
-  mean: number[];
-  min: number[];
-  q1: number[];
-  q3: number[];
 }

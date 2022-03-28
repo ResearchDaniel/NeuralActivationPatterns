@@ -19,12 +19,11 @@
 
   import type { PatternForSample, Pattern } from "../types";
 
-  export let patternIndex: number = undefined;
   export let pattern: Pattern;
   export let filteredSamples: PatternForSample[];
   export let expanded: boolean = false;
-  export let showStats: boolean = true;
   export let patternWidth: number = undefined;
+  export let patternIndex: number = undefined;
 
   const tableau20 = [
     "#4c78a8",
@@ -150,7 +149,6 @@
       {patternId}
       {filteredSamples}
       {expanded}
-      {showStats}
     />
     {#if expanded}
       <AllPatternImages samples={filteredSamples} {model} {layer} />

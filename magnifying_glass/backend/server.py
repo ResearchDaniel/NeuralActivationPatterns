@@ -62,16 +62,14 @@ def get_layers(model):
     return jsonify(layers)
 
 
-@app.route('/api/get_pattern_statistics/<model>/<layer>')
-def get_pattern_statistics(model, layer):
-    pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns_statistics.pkl")
-    if not pickle_path.exists():
+@app.route('/api/get_pattern_statistics/<model>/<layer>/<pattern>')
+def get_pattern_statistics(model, layer, pattern):
+    arrow_path = Path(DATA_DIR, model, "layers", layer, f"pattern_statistics_{pattern}.arrow")
+    print(arrow_path)
+    if not arrow_path.exists():
+        print("does not exist")
         return "No such file", ERROR_STATUS
-    statistics = pd.read_pickle(pickle_path)
-    try:
-        return jsonify(statistics)
-    except TypeError:
-        return "JSON conversion error", ERROR_STATUS
+    return send_file(arrow_path, mimetype='application/octet-stream')
 
 
 @app.route('/api/get_patterns/<model>/<layer>')

@@ -9,6 +9,7 @@ import {
   showPredictions,
   showProbability,
   showStatistics,
+  showOverviewStatistics,
   removeZerosStatistics,
   compactPatterns,
   model,
@@ -79,6 +80,10 @@ export function setupURLParams(urlParams: URLSearchParams) {
     removeZerosStatistics.set(
       JSON.parse(urlParams.get("removeZerosStatistics")) as boolean
     );
+  if (urlParams.has("showOverviewStatistics"))
+    showOverviewStatistics.set(
+      JSON.parse(urlParams.get("showOverviewStatistics")) as boolean
+    );
   if (urlParams.has("showProbability"))
     showProbability.set(
       JSON.parse(urlParams.get("showProbability")) as boolean
@@ -117,6 +122,9 @@ export function setupURLParams(urlParams: URLSearchParams) {
   );
   showStatistics.subscribe((setting) =>
     updateURLParams("showStatistics", `${setting}`, urlParams)
+  );
+  showOverviewStatistics.subscribe((setting) =>
+    updateURLParams("showOverviewStatistics", `${setting}`, urlParams)
   );
   removeZerosStatistics.subscribe((setting) =>
     updateURLParams("removeZerosStatistics", `${setting}`, urlParams)

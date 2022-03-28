@@ -5,6 +5,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 import tensorflow as tf
 
 CACHE_LOCATION = Path("results")
@@ -41,19 +42,20 @@ def activation_statistics_path(destination, model_name, layer):
 
 
 def layer_patterns_activation_statistics_path(
-        destination, model_name, layer, neural_activation):
+        destination, model_name, layer, pattern_index, activation):
     return Path(
         destination, model_name, layer,
-        f'layer_patterns_{layer_settings_string(neural_activation)}_activation_statistics.pkl')
+        (f'layer_patterns_{layer_settings_string(activation)}'
+         f'_activation_statistics_{pattern_index}.arrow'))
 
 
-def filter_patterns_activation_statistics_path(destination, model_name, layer, filter_index,
-                                               neural_activation):
+def filter_patterns_activation_statistics_path(
+        destination, model_name, layer, filter_index, pattern_index, neural_activation):
     return Path(
         destination, model_name, layer, 'filters',
         filter_settings_string(neural_activation),
         str(filter_index),
-        'filter_patterns_activation_statistics.pkl')
+        f'filter_patterns_activation_statistics_{pattern_index}.arrow')
 
 
 def filter_activation_statistics_path(destination, model_name, layer, filter_index):
@@ -123,9 +125,8 @@ def export_activations(input_data, neural_activation, model_name, layers,
                 else:  # range [0 1]
                     dset[chunk] = (dset[chunk] - minimum) / (maximum - minimum)
 
+
 # pylint: disable=R0914
-
-
 def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                              destination=CACHE_LOCATION):
     for layer in layers:
@@ -265,15 +266,20 @@ def export_layer_patterns_activation_statistics(
         export_activations(input_data, neural_activation, model_name, [layer], destination)
     with h5py.File(act_path, 'r') as f_act:
         activations = f_act["activations"]
-        pattern_statistics = {}
         for index, pattern in patterns.groupby("patternId"):
-            pattern_statistics[index] = activation_statistics(
+            pattern_statistics = pa.Table.from_arrays(
+                [list(range(neural_activation.layer_output_units(layer)))],
+                names=["unit"])
+            pattern_stats = activation_statistics(
                 activations[pattern.index.tolist()], axis=-1)
-
-        path = layer_patterns_activation_statistics_path(
-            destination, model_name, layer, neural_activation)
-        with open(path, "wb") as output_file:
-            pickle.dump(pattern_statistics, output_file)
+            for key, value in pattern_stats.items():
+                pattern_statistics = pattern_statistics.append_column(
+                    key, pa.array(np.array(value).astype(np.float16)))
+            path = layer_patterns_activation_statistics_path(
+                destination, model_name, layer, index, neural_activation)
+            writer = pa.ipc.new_file(path, pattern_statistics.schema)
+            writer.write(pattern_statistics)
+            writer.close()
 
 
 def export_filter_patterns_activation_statistics(
@@ -283,15 +289,22 @@ def export_filter_patterns_activation_statistics(
     if not act_path.exists():
         export_activations(input_data, neural_activation, model_name, [layer], destination)
     with h5py.File(act_path, 'r') as f_act:
-        pattern_statistics = {}
         for index, pattern in patterns.groupby("patternId"):
-            pattern_statistics[index] = activation_statistics(
-                f_act["activations"][pattern.index.tolist()][..., filter_index], axis=None)
-
-        path = filter_patterns_activation_statistics_path(
-            destination, model_name, layer, filter_index, neural_activation)
-        with open(path, "wb") as output_file:
-            pickle.dump(pattern_statistics, output_file)
+            pattern_statistics = pa.Table.from_arrays(
+                [list(range(neural_activation.layer_output_units(layer)))],
+                names=["unit"])
+            pattern_stats = activation_statistics(
+                f_act["activations"][pattern.index.tolist()]
+                [..., filter_index],
+                axis=None)
+            for key, value in pattern_stats.items():
+                pattern_statistics = pattern_statistics.append_column(
+                    f"{index}_{key}", np.array(value).astype(np.float16))
+            path = filter_patterns_activation_statistics_path(
+                destination, model_name, layer, filter_index, index, neural_activation)
+            writer = pa.ipc.new_file(path, pattern_statistics.schema)
+            writer.write(pattern_statistics)
+            writer.close()
 
 
 def export_filter_activation_statistics(input_data, neural_activation, model_name, layers,
@@ -398,17 +411,18 @@ def get_layer_patterns(input_data, neural_activation, model_name, layer,
 
 
 def get_layer_patterns_activation_statistics(
-        input_data, neural_activation, model_name, layer,
+        input_data, neural_activation, model_name, layer, pattern_index,
         destination=CACHE_LOCATION):
     path = layer_patterns_activation_statistics_path(
-        destination, model_name, layer, neural_activation)
+        destination, model_name, layer, pattern_index, neural_activation)
     if not path.exists():
         patterns, _ = get_layer_patterns(
             input_data, neural_activation, model_name, layer, destination)
         export_layer_patterns_activation_statistics(
             input_data, neural_activation, model_name, layer, patterns, destination)
-    with open(path, "rb") as output_file:
-        return pickle.load(output_file)
+    reader = pa.ipc.open_file(path)
+    table = reader.read_all()
+    return table
 
 
 def get_filter_patterns(
@@ -426,10 +440,10 @@ def get_filter_patterns(
 
 
 def get_filter_patterns_activation_statistics(
-        input_data, neural_activation, model_name, layer, filter_index,
+        input_data, neural_activation, model_name, layer, filter_index, pattern_index,
         destination=CACHE_LOCATION):
     path = filter_patterns_activation_statistics_path(
-        destination, model_name, layer, filter_index, neural_activation)
+        destination, model_name, layer, filter_index, pattern_index, neural_activation)
     if not path.exists():
         patterns, _ = get_filter_patterns(
             input_data, neural_activation, model_name, layer, filter_index,
@@ -437,7 +451,9 @@ def get_filter_patterns_activation_statistics(
         export_filter_patterns_activation_statistics(
             input_data, neural_activation, model_name, layer, filter_index, patterns,
             destination)
-    return pickle.load(open(path, "rb"))
+    reader = pa.ipc.open_file(path)
+    table = reader.read_all()
+    return table
 
 
 def get_filter_activation_statistics(input_data, neural_activation, model_name, layer, filter_index,
