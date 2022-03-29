@@ -146,25 +146,28 @@ def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                 dset_aggregated = f_agg.create_dataset(
                     "activations", all_agg_shape, compression="gzip", chunks=chunk_size)
 
-                maximum = np.full(agg_shape, float('-inf'))
+                abs_max = np.full(agg_shape, float('-inf'))
                 i = 0
                 for chunk in activations.iter_chunks():
                     data = activations[chunk]
-                    aggregated = [
-                        neural_activation.layer_aggregation.aggregate(
-                            neural_activation.layer(layer), activation)
-                        for activation in data]
-                    abs_agg = np.abs(aggregated)
-                    unit_max = np.max(abs_agg, axis=0)
-                    maximum = np.maximum(unit_max, maximum)
-                    dset_aggregated[i:i+data.shape[0]] = aggregated
+                    if neural_activation.layer_aggregation.should_normalize(dset_aggregated.shape):
+                        aggregated = [neural_activation.layer_aggregation.aggregate(
+                            neural_activation.layer(layer), activation) for activation in data]
+                        abs_agg = np.abs(aggregated)
+                        unit_max = np.max(abs_agg, axis=0)
+                        abs_max = np.maximum(unit_max, abs_max)
+                        dset_aggregated[i:i+data.shape[0]] = aggregated
+                    else:
+                        dset_aggregated[i:i+data.shape[0]] = data
                     i += data.shape[0]
 
                 # Normalize aggregated dimensions individually by their absolute max activation
-                for chunk in dset_aggregated.iter_chunks():
-                    data = dset_aggregated[chunk]
-                    data = np.divide(data, maximum, out=np.zeros_like(data), where=maximum != 0)
-                    dset_aggregated[chunk] = data
+                if neural_activation.layer_aggregation.should_normalize(dset_aggregated.shape):
+                    norm_val = neural_activation.layer_aggregation.normalization_value(abs_max)
+                    for chunk in dset_aggregated.iter_chunks():
+                        data = dset_aggregated[chunk]
+                        dset_aggregated[chunk] = neural_activation.layer_aggregation.normalize(
+                            data, norm_val)
 
 
 def activation_statistics(activations, axis):
@@ -244,10 +247,10 @@ def activation_statistics(activations, axis):
 def export_layer_activation_statistics(input_data, neural_activation, model_name, layers,
                                        destination=CACHE_LOCATION):
     for layer in layers:
-        act_path = activations_path(destination, model_name, layer)
+        act_path = activations_agg_path(destination, model_name, layer, neural_activation)
         if not act_path.exists():
-            export_activations(input_data, neural_activation, model_name, [
-                               layer], destination)
+            export_layer_aggregation(input_data, neural_activation, model_name, [
+                layer], destination)
         with h5py.File(act_path, 'r') as f_act:
             statistics = activation_statistics(
                 f_act["activations"], axis=-1)

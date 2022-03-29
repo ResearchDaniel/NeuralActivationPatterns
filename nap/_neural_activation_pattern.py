@@ -194,11 +194,11 @@ class NeuralActivationPattern:
             cluster_selection_method=self.cluster_selection_method,
             min_cluster_size=self.min_pattern_size,
             cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples)
-        agg_2D = np.reshape(
+        agg_2d = np.reshape(
             agg_activations,
             [agg_activations.shape[0],
              np.prod(agg_activations.shape[1:])])
-        clusterer.fit(agg_2D)
+        clusterer.fit(agg_2d)
         print(
             F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}")
         patterns = pd.DataFrame({"patternId": clusterer.labels_,
@@ -215,7 +215,7 @@ class NeuralActivationPattern:
         filter_activations = activations[:, ..., filter_id]
         # Aggregate activations per input
         agg_activations = self.filter_aggregation.aggregate(self.layer(layer), filter_activations)
-        agg_2D = np.reshape(
+        agg_2d = np.reshape(
             agg_activations,
             [agg_activations.shape[0],
              np.prod(agg_activations.shape[1:])])
@@ -223,7 +223,7 @@ class NeuralActivationPattern:
             cluster_selection_method=self.cluster_selection_method,
             min_cluster_size=self.min_pattern_size,
             cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples)
-        clusterer.fit(agg_2D)
+        clusterer.fit(agg_2d)
 
         print(
             F"Layer {layer}, filter: {filter_id}, number of patterns: {clusterer.labels_.max()+1}")
