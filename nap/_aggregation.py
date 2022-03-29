@@ -123,3 +123,34 @@ class MaxAggregation(AggregationInterface):
         return np.divide(
             aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
             where=normalization_val != 0)
+
+
+class MinMaxAggregation(AggregationInterface):
+    """Compute minimum and maximum for convolutional layers,
+    does nothing for other types.
+    """
+
+    def shape(self, activation_shape) -> list:
+        """Return what the resulting shape of the aggragation will be for layer."""
+        if self.should_aggregate(activation_shape):
+            # Convolutional layer
+            return [2, activation_shape[-1]]
+        # Do nothing
+        return activation_shape
+
+    def aggregate(self, layer, activations) -> np.ndarray:
+        minimum = []
+        maximum = []
+        for feature in range(activations.shape[-1]):
+            activation = activations[..., feature].ravel()
+            minimum.append(np.min(activation))
+            maximum.append(np.max(activation))
+        return [minimum, maximum]
+
+    def normalization_value(self, abs_max):
+        return abs_max
+
+    def normalize(self, aggregated_activations, normalization_val) -> np.ndarray:
+        return np.divide(
+            aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
+            where=normalization_val != 0)

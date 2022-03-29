@@ -32,7 +32,7 @@ parser.add_argument("--split",
                     default='test')
 parser.add_argument("--layer")
 parser.add_argument("--layer_aggregation",
-                    default='mean', choices=["mean", "mean_std", "max", "none"])
+                    default='mean', choices=["mean", "mean_std", "max", "min_max", "none"])
 parser.add_argument("--all_filters", default=False, action='store_true')
 parser.add_argument("--filter_range", type=int, nargs=2, required=False)
 parser.add_argument("--filter_aggregation",
@@ -56,6 +56,8 @@ def create_aggregation_function(name):
         return nap.MeanStdAggregation()
     if name == "max":
         return nap.MaxAggregation()
+    if name == "min_max":
+        return nap.MinMaxAggregation()
     if name == "none":
         return nap.NoAggregation()
     raise Exception(f"Invalid aggregation function: {name}")
