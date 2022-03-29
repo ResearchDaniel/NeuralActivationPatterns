@@ -11,11 +11,7 @@
 
   function getSelectedModel(models: string[]): string | undefined {
     if ($model !== undefined) {
-      if (!models.includes($model)) {
-        model.set(undefined);
-      } else {
-        return $model;
-      }
+      return $model;
     }
     if ($model === undefined && models.length > 0) {
       model.set(models[0]);
@@ -26,11 +22,7 @@
 
   function getSelectedLayer(layers: string[]): string | undefined {
     if ($layer !== undefined) {
-      if (!layers.includes($layer)) {
-        layer.set(undefined);
-      } else {
-        return $layer;
-      }
+      return $layer;
     }
     if ($layer === undefined && layers.length > 0) {
       layer.set(layers[0]);

@@ -6,7 +6,6 @@
   import { faExclamation } from "@fortawesome/free-solid-svg-icons/faExclamation";
   import { faSquareCheck } from "@fortawesome/free-solid-svg-icons/faSquareCheck";
   import type { PatternForSample } from "../../types";
-  import { filterPattern } from "../../helpers";
 
   export let imagePath: string;
   export let sample: PatternForSample = undefined;
@@ -74,7 +73,7 @@
     on:mousemove={handleMousemove}
     alt="Data Sample"
   />
-  <div class="absolute top-1 right-1 flex">
+  <div class="absolute top-1 right-1 flex bg-black_semi p-1 rounded">
     {#if $imageFilter.some((filter) => filter.image === sample.fileName && filter.model === sample.model)}
       <FaLayers>
         <Fa icon={faSquareCheck} color="white" />

@@ -14,6 +14,7 @@ import {
   compactPatterns,
   model,
   layer,
+  imageFilter,
 } from "./stores";
 
 export function filterPattern(
@@ -60,10 +61,8 @@ export function filterPatterns(
 }
 
 export function setupURLParams(urlParams: URLSearchParams) {
-  if (urlParams.has("model"))
-    model.set(JSON.parse(urlParams.get("model")) as string);
-  if (urlParams.has("layer"))
-    layer.set(JSON.parse(urlParams.get("layer")) as string);
+  if (urlParams.has("model")) model.set(urlParams.get("model"));
+  if (urlParams.has("layer")) layer.set(urlParams.get("layer"));
   if (urlParams.has("showDistribution"))
     showDistribution.set(
       JSON.parse(urlParams.get("showDistribution")) as boolean
@@ -98,6 +97,13 @@ export function setupURLParams(urlParams: URLSearchParams) {
     numCenters.set(JSON.parse(urlParams.get("numCenters")) as number);
   if (urlParams.has("numOutliers"))
     numOutliers.set(JSON.parse(urlParams.get("numOutliers")) as number);
+  if (urlParams.has("selectedImages"))
+    imageFilter.set(
+      JSON.parse(urlParams.get("selectedImages")) as {
+        image: string;
+        model: string;
+      }[]
+    );
 
   model.subscribe((setting) =>
     updateURLParams("model", `${setting}`, urlParams)
@@ -138,6 +144,9 @@ export function setupURLParams(urlParams: URLSearchParams) {
   showPredictions.subscribe((setting) =>
     updateURLParams("showPredictions", `${setting}`, urlParams)
   );
+  imageFilter.subscribe((setting) => {
+    updateURLParams("selectedImages", JSON.stringify(setting), urlParams);
+  });
 }
 
 function updateURLParams(
