@@ -35,12 +35,14 @@ class NoAggregation(AggregationInterface):
         return activations
 
     def normalization_value(self, abs_max):
-        return np.max(abs_max)
+        # Per unit maximum
+        return [np.max(abs_max[..., unit].ravel())
+                for unit in range(abs_max.shape[-1])]
 
     def normalize(self, aggregated_activations, normalization_val) -> np.ndarray:
-        if normalization_val != 0:
-            return aggregated_activations / normalization_val
-        return aggregated_activations
+        return np.divide(
+            aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
+            where=normalization_val != 0)
 
 
 class MeanAggregation(AggregationInterface):
@@ -51,8 +53,6 @@ class MeanAggregation(AggregationInterface):
         if len(activation_shape) == 3:
             # Convolutional layer
             return activation_shape[-1]
-        if len(activation_shape) == 2 and activation_shape[1] > 1:
-            return 1
         return activation_shape
 
     def aggregate(self, layer, activations) -> np.ndarray:
@@ -78,8 +78,6 @@ class MeanStdAggregation(AggregationInterface):
         if len(activation_shape) == 3:
             # Convolutional layer
             return [2, activation_shape[-1]]
-        if len(activation_shape) == 2 and activation_shape[1] > 1:
-            return 2
         # Do nothing
         return activation_shape
 
