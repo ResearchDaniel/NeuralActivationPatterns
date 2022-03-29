@@ -4,6 +4,7 @@ from ._aggregation import NoAggregation
 from ._aggregation import MeanAggregation
 from ._aggregation import MeanStdAggregation
 from ._aggregation import MaxAggregation
+from ._aggregation import MinMaxAggregation
 
 from ._neural_activation_pattern import NeuralActivationPattern
 from ._neural_activation_pattern import sort
