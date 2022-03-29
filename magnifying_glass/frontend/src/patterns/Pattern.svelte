@@ -10,7 +10,8 @@
   import FaLayers from "svelte-fa/src/fa-layers.svelte";
   import { faThumbtack } from "@fortawesome/free-solid-svg-icons/faThumbtack";
   import { faSlash } from "@fortawesome/free-solid-svg-icons/faSlash";
-  import { faFilter } from "@fortawesome/free-solid-svg-icons/faFilter";
+  import { faSquareCheck } from "@fortawesome/free-solid-svg-icons/faSquareCheck";
+  import { faSquareXmark } from "@fortawesome/free-solid-svg-icons/faSquareXmark";
 
   import SubSubHeading from "../elements/SubSubHeading.svelte";
   import AllPatternImages from "./images/AllPatternImages.svelte";
@@ -88,6 +89,7 @@
             filters.splice(index, 1);
           }
         });
+        if (filters.length === 0) selectedPage.set("Overview");
         return filters;
       });
     } else {
@@ -124,9 +126,15 @@
       {/if}
     </div>
     <div class="flex ml-auto">
-      <IconButton on:click={filterAll}>
-        <Fa icon={faFilter} slot="icon" />
-      </IconButton>
+      {#if filteredSamples.every( (sample) => $imageFilter.some((filter) => filter.image == sample.fileName && filter.model == sample.model) )}
+        <IconButton on:click={filterAll}>
+          <Fa icon={faSquareXmark} slot="icon" />
+        </IconButton>
+      {:else}
+        <IconButton on:click={filterAll}>
+          <Fa icon={faSquareCheck} slot="icon" />
+        </IconButton>
+      {/if}
       {#if $pinnedPatterns[uid] !== undefined}
         <IconButton on:click={unpinPattern}>
           <FaLayers slot="icon">

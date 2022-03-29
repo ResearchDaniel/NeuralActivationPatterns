@@ -14,7 +14,6 @@ module.exports = {
 
       /* Highlight */
       highlight: '#0071e3',
-      highlight_hover: '#0077ed',
 
       /* Text */
       text: {

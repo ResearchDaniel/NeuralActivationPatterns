@@ -15,14 +15,16 @@
   let width: number;
   let model: string = undefined;
 
-  async function getPatterns(): Promise<Pattern[]> {
-    const patterns = await fetchPatternsForImages($imageFilter);
+  async function getPatterns(
+    imageFilter: { image: string; model: string }[]
+  ): Promise<Pattern[]> {
+    const patterns = await fetchPatternsForImages(imageFilter);
     model = patterns[0].samples[0].model;
     return patterns;
   }
 </script>
 
-{#await getPatterns()}
+{#await getPatterns($imageFilter)}
   <div class="h-32 w-full" />
   <LoadingIndicator />
 {:then patterns}
@@ -54,7 +56,10 @@
         </IconButton>
       </div>
     </div>
-    <div class="flex min-w-0 overflow-x-auto pt-2" bind:clientWidth={width}>
+    <div
+      class="flex min-w-0 overflow-x-auto pt-2 grow"
+      bind:clientWidth={width}
+    >
       {#if model !== undefined}
         <ImageComparePatterns {patterns} {width} {model} />
       {/if}
