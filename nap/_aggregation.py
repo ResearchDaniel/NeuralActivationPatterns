@@ -93,12 +93,11 @@ class MeanStdAggregation(AggregationInterface):
         return [mean, std]
 
     def normalization_value(self, abs_max):
-        std_norm = np.divide(1, np.sqrt(abs_max[0]), out=np.zeros_like(abs_max[1]),
-                             where=abs_max[0] != 0)
+        std_norm = np.sqrt(abs_max[0])
         return [abs_max[0], std_norm]
 
     def normalize(self, aggregated_activations, normalization_val) -> np.ndarray:
-        # Divide mean by 1/abs(mean) and standard deviation by 1/sqrt(mean), see normalization_value
+        # Divide mean by 1/abs(mean) and multiply standard deviation by 1/sqrt(mean), see normalization_value
         return np.divide(
             aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
             where=normalization_val != 0)
