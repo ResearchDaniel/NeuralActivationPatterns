@@ -17,10 +17,10 @@ class NoAggregation(AggregationInterface):
 
     def shape(self, activation_shape) -> list:
         """Return what the resulting shape of the aggragation will be for layer."""
-        return np.prod(activation_shape)
+        return activation_shape
 
     def aggregate(self, layer, activations) -> np.ndarray:
-        return activations.ravel()
+        return activations
 
 
 class MeanAggregation(AggregationInterface):

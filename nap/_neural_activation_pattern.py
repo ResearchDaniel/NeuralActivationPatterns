@@ -185,16 +185,20 @@ class NeuralActivationPattern:
         return layer_activations
 
     def layer_patterns(self, layer, input_data=None, agg_activations=None):
-        if not agg_activations:
+        if agg_activations is None:
             activations = self.layer_activations(layer, input_data)
-            agg_activations = [self.layer_aggregation.aggregate(
-                self.layer(layer), activation) for activation in activations]
+            agg_activations = self.layer_aggregation.aggregate(
+                self.layer(layer), activations)
 
         clusterer = hdbscan.HDBSCAN(
             cluster_selection_method=self.cluster_selection_method,
             min_cluster_size=self.min_pattern_size,
             cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples)
-        clusterer.fit(agg_activations)
+        agg_2D = np.reshape(
+            agg_activations,
+            [agg_activations.shape[0],
+             np.prod(agg_activations.shape[1:])])
+        clusterer.fit(agg_2D)
         print(
             F"Layer {layer}, number of patterns: {clusterer.labels_.max() + 1}")
         patterns = pd.DataFrame({"patternId": clusterer.labels_,
@@ -210,13 +214,16 @@ class NeuralActivationPattern:
         # Extract filter activations for each input
         filter_activations = activations[:, ..., filter_id]
         # Aggregate activations per input
-        agg_activations = [self.filter_aggregation.aggregate(
-            self.layer(layer), activation) for activation in filter_activations]
+        agg_activations = self.filter_aggregation.aggregate(self.layer(layer), filter_activations)
+        agg_2D = np.reshape(
+            agg_activations,
+            [agg_activations.shape[0],
+             np.prod(agg_activations.shape[1:])])
         clusterer = hdbscan.HDBSCAN(
             cluster_selection_method=self.cluster_selection_method,
             min_cluster_size=self.min_pattern_size,
             cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples)
-        clusterer.fit(agg_activations)
+        clusterer.fit(agg_2D)
 
         print(
             F"Layer {layer}, filter: {filter_id}, number of patterns: {clusterer.labels_.max()+1}")

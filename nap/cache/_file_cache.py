@@ -107,26 +107,12 @@ def export_activations(input_data, neural_activation, model_name, layers,
             dset = file_handle.create_dataset(
                 "activations", output_shape, compression="gzip", chunks=chunk_size)
             iterator = 0
-            num_units = output_shape[-1]
-            maximum = [float('-inf')]*num_units
             for data_set in input_data.batch(128).cache().prefetch(tf.data.AUTOTUNE):
                 num_inputs = data_set.shape[0]
                 activations = neural_activation.layer_activations(
                     layer, data_set)
-                unit_max = [np.max(np.abs(activations[..., unit].ravel()))
-                            for unit in range(num_units)]
-                maximum = np.maximum(unit_max, maximum)
                 dset[iterator:iterator+num_inputs] = activations
                 iterator += num_inputs
-
-            # Normalize units individually by their absolute max activation
-            for chunk in dset.iter_chunks():
-                # [()] fetches all data into memory.
-                data = dset[chunk][()]
-                for unit in range(num_units):
-                    if maximum[unit] != 0:
-                        data[..., unit] /= maximum[unit]
-                dset[chunk] = data
 
 
 # pylint: disable=R0914
@@ -152,13 +138,15 @@ def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                     1, int(1000000 / (agg_size*bytes_per_float))))
                 if isinstance(agg_shape, list):
                     all_agg_shape = [total_num_inputs] + agg_shape
-                    chunk_size = (num_activations_in_one_mb) + tuple(agg_shape)
+                    chunk_size = tuple([num_activations_in_one_mb] + agg_shape)
                 else:
                     all_agg_shape = [total_num_inputs] + [agg_shape]
                     chunk_size = (num_activations_in_one_mb, agg_shape)
 
                 dset_aggregated = f_agg.create_dataset(
                     "activations", all_agg_shape, compression="gzip", chunks=chunk_size)
+
+                maximum = np.full(agg_shape, float('-inf'))
                 i = 0
                 for chunk in activations.iter_chunks():
                     data = activations[chunk]
@@ -166,8 +154,17 @@ def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                         neural_activation.layer_aggregation.aggregate(
                             neural_activation.layer(layer), activation)
                         for activation in data]
+                    abs_agg = np.abs(aggregated)
+                    unit_max = np.max(abs_agg, axis=0)
+                    maximum = np.maximum(unit_max, maximum)
                     dset_aggregated[i:i+data.shape[0]] = aggregated
                     i += data.shape[0]
+
+                # Normalize aggregated dimensions individually by their absolute max activation
+                for chunk in dset_aggregated.iter_chunks():
+                    data = dset_aggregated[chunk]
+                    data = np.divide(data, maximum, out=np.zeros_like(data), where=maximum != 0)
+                    dset_aggregated[chunk] = data
 
 
 def activation_statistics(activations, axis):
