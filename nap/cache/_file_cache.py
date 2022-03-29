@@ -107,14 +107,26 @@ def export_activations(input_data, neural_activation, model_name, layers,
             dset = file_handle.create_dataset(
                 "activations", output_shape, compression="gzip", chunks=chunk_size)
             iterator = 0
-
+            num_units = output_shape[-1]
+            maximum = [float('-inf')]*num_units
             for data_set in input_data.batch(128).cache().prefetch(tf.data.AUTOTUNE):
                 num_inputs = data_set.shape[0]
                 activations = neural_activation.layer_activations(
                     layer, data_set)
+                unit_max = [np.max(np.abs(activations[..., unit].ravel()))
+                            for unit in range(num_units)]
+                maximum = np.maximum(unit_max, maximum)
                 dset[iterator:iterator+num_inputs] = activations
                 iterator += num_inputs
 
+            # Normalize units individually by their absolute max activation
+            for chunk in dset.iter_chunks():
+                # [()] fetches all data into memory.
+                data = dset[chunk][()]
+                for unit in range(num_units):
+                    if maximum[unit] != 0:
+                        data[..., unit] /= maximum[unit]
+                dset[chunk] = data
 
 
 # pylint: disable=R0914
@@ -148,27 +160,14 @@ def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                 dset_aggregated = f_agg.create_dataset(
                     "activations", all_agg_shape, compression="gzip", chunks=chunk_size)
                 i = 0
-                num_units = output_shape[-1]
-                maximum = [float('-inf')]*num_units
                 for chunk in activations.iter_chunks():
                     data = activations[chunk]
                     aggregated = [
                         neural_activation.layer_aggregation.aggregate(
                             neural_activation.layer(layer), activation)
                         for activation in data]
-                    unit_max = np.max(np.abs(aggregated), axis=0)
-                    maximum = np.maximum(unit_max, maximum)
                     dset_aggregated[i:i+data.shape[0]] = aggregated
                     i += data.shape[0]
-
-                # Normalize units individually by their absolute max activation
-                for chunk in dset_aggregated.iter_chunks():
-                    # [()] fetches all data into memory.
-                    data = dset_aggregated[chunk][()]
-                    for unit in range(num_units):
-                        if maximum[unit] != 0:
-                            data[..., unit] /= maximum[unit]
-                    dset_aggregated[chunk] = data
 
 
 def activation_statistics(activations, axis):
@@ -200,7 +199,7 @@ def activation_statistics(activations, axis):
                 # [()] fetches all data into memory.
                 data = activations[chunk][()]
                 for feature in range(data.shape[axis]):
-                    f_act = data[..., feature]
+                    f_act = data[..., feature].ravel()
                     means[feature] += np.mean(f_act)
                     mins[feature] = min(mins[feature], np.min(f_act))
                     maxs[feature] = max(maxs[feature], np.max(f_act))
@@ -219,7 +218,7 @@ def activation_statistics(activations, axis):
 
         else:
             for feature in range(activations.shape[axis]):
-                f_act = activations[..., feature]
+                f_act = activations[..., feature].ravel()
                 means[feature] = np.mean(f_act)
                 mins[feature] = np.min(f_act)
                 maxs[feature] = np.max(f_act)
@@ -253,11 +252,8 @@ def export_layer_activation_statistics(input_data, neural_activation, model_name
             export_activations(input_data, neural_activation, model_name, [
                                layer], destination)
         with h5py.File(act_path, 'r') as f_act:
-            activations = f_act["activations"]
-            # [()] fetches all data into memory.
-            # Needed because slicing the filter is super-slow in hdf5
             statistics = activation_statistics(
-                activations, axis=-1)
+                f_act["activations"], axis=-1)
             path = activation_statistics_path(destination, model_name, layer)
             with open(path, "wb") as output_file:
                 pickle.dump(statistics, output_file)
@@ -266,9 +262,10 @@ def export_layer_activation_statistics(input_data, neural_activation, model_name
 def export_layer_patterns_activation_statistics(
         input_data, neural_activation, model_name, layer, patterns,
         destination=CACHE_LOCATION):
-    act_path = activations_agg_path(destination, model_name, layer, neural_activation)
+    act_path = activations_path(destination, model_name, layer)
     if not act_path.exists():
-        export_layer_aggregation(input_data, neural_activation, model_name, [layer], destination)
+        export_activations(input_data, neural_activation, model_name, [
+            layer], destination)
     with h5py.File(act_path, 'r') as f_act:
         activations = f_act["activations"]
         for index, pattern in patterns.groupby("patternId"):
@@ -398,7 +395,7 @@ def get_layer_activations_agg(input_data, neural_activation, model_name, layer,
         destination, model_name, layer, neural_activation)
     if not path.exists():
         export_layer_aggregation(input_data, neural_activation, model_name, [
-                                 layer], destination)
+            layer], destination)
     file_handle = h5py.File(path, 'r')
     return file_handle["activations"], file_handle
 
