@@ -18,7 +18,7 @@ class AggregationInterface:
         """Normalize aggregated activations"""
 
     @staticmethod
-    def should_normalize(shape):
+    def should_aggregate(shape):
         if len(shape) == 3:
             return True
         return False
@@ -114,7 +114,7 @@ class MaxAggregation(AggregationInterface):
             return activation_shape[-1]
         if len(activation_shape) == 2 and activation_shape[1] > 1:
             return 1
-        return np.prod(activation_shape)
+        return activation_shape
 
     def aggregate(self, layer, activations) -> np.ndarray:
         """Aggregate layer activations"""
