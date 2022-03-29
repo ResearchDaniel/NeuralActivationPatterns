@@ -181,7 +181,7 @@ def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                         data = dset_aggregated[chunk]
                         dset_aggregated[chunk] = np.divide(
                             data, normalization_val, out=np.zeros_like(data),
-                            where=normalization_val != 0)
+                            where=~np.isclose(normalization_val, np.zeros_like(normalization_val)))
 
 
 def activation_statistics(activations, axis):

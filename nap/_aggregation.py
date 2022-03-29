@@ -42,7 +42,7 @@ class NoAggregation(AggregationInterface):
     def normalize(self, aggregated_activations, normalization_val) -> np.ndarray:
         return np.divide(
             aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
-            where=normalization_val != 0)
+            where=~np.isclose(normalization_val, np.zeros_like(normalization_val)))
 
 
 class MeanAggregation(AggregationInterface):
@@ -65,7 +65,7 @@ class MeanAggregation(AggregationInterface):
     def normalize(self, aggregated_activations, normalization_val) -> np.ndarray:
         return np.divide(
             aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
-            where=normalization_val != 0)
+            where=~np.isclose(normalization_val, np.zeros_like(normalization_val)))
 
 
 class MeanStdAggregation(AggregationInterface):
@@ -98,7 +98,7 @@ class MeanStdAggregation(AggregationInterface):
         # Divide mean by abs(mean) and standard deviation by sqrt(mean)
         return np.divide(
             aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
-            where=normalization_val != 0)
+            where=~np.isclose(normalization_val, np.zeros_like(normalization_val)))
 
 
 class MaxAggregation(AggregationInterface):
@@ -122,7 +122,7 @@ class MaxAggregation(AggregationInterface):
     def normalize(self, aggregated_activations, normalization_val) -> np.ndarray:
         return np.divide(
             aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
-            where=normalization_val != 0)
+            where=~np.isclose(normalization_val, np.zeros_like(normalization_val)))
 
 
 class MinMaxAggregation(AggregationInterface):
@@ -153,4 +153,4 @@ class MinMaxAggregation(AggregationInterface):
     def normalize(self, aggregated_activations, normalization_val) -> np.ndarray:
         return np.divide(
             aggregated_activations, normalization_val, out=np.zeros_like(aggregated_activations),
-            where=normalization_val != 0)
+            where=~np.isclose(normalization_val, np.zeros_like(normalization_val)))
