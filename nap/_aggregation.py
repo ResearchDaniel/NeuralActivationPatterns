@@ -19,7 +19,7 @@ class AggregationInterface:
 
     @staticmethod
     def should_aggregate(shape):
-        if len(shape) == 3:
+        if len(shape) != 1:
             return True
         return False
 
@@ -50,7 +50,7 @@ class MeanAggregation(AggregationInterface):
 
     def shape(self, activation_shape) -> list:
         """Return what the resulting shape of the aggragation will be for layer."""
-        if len(activation_shape) == 3:
+        if self.should_aggregate(activation_shape):
             # Convolutional layer
             return activation_shape[-1]
         return activation_shape
@@ -75,7 +75,7 @@ class MeanStdAggregation(AggregationInterface):
 
     def shape(self, activation_shape) -> list:
         """Return what the resulting shape of the aggragation will be for layer."""
-        if len(activation_shape) == 3:
+        if self.should_aggregate(activation_shape):
             # Convolutional layer
             return [2, activation_shape[-1]]
         # Do nothing
@@ -106,11 +106,9 @@ class MaxAggregation(AggregationInterface):
 
     def shape(self, activation_shape) -> list:
         """Return what the resulting shape of the aggragation will be for layer."""
-        if len(activation_shape) == 3:
+        if self.should_aggregate(activation_shape):
             # Convolutional layer
             return activation_shape[-1]
-        if len(activation_shape) == 2 and activation_shape[1] > 1:
-            return 1
         return activation_shape
 
     def aggregate(self, layer, activations) -> np.ndarray:
