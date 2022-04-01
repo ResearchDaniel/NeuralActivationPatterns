@@ -16,7 +16,6 @@
     showOverviewStatistics,
     showPredictions,
     showProbability,
-    showStatistics,
   } from "../stores";
   import { fetchPatternStatistics } from "../api";
 
@@ -55,7 +54,7 @@
     derivedNumOutliers > 0 ? filteredSamples.slice(-derivedNumOutliers) : [];
 </script>
 
-<div class="flex flex-wrap" class:overflow-y-auto={expanded}>
+<div class="flex flex-wrap shrink-0" class:overflow-y-auto={expanded}>
   {#if $showAverage}
     <div class="flex flex-col pr-4">
       <p>Average</p>

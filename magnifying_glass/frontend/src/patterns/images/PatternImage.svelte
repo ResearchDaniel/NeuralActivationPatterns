@@ -14,6 +14,16 @@
   let hover = false;
   let m = { x: 0, y: 0 };
 
+  $: selected = $imageFilter.some(
+    (filter) =>
+      filter.image === sample.fileName && filter.model === sample.model
+  );
+  $: misclassified =
+    sample !== undefined &&
+    sample.label !== undefined &&
+    sample.prediction !== undefined &&
+    sample.label !== sample.prediction;
+
   function handleMousemove(event: MouseEvent) {
     m.x = event.clientX;
     m.y = event.clientY;
@@ -73,17 +83,19 @@
     on:mousemove={handleMousemove}
     alt="Data Sample"
   />
-  <div class="absolute top-1 right-1 flex bg-black_semi p-1 rounded">
-    {#if $imageFilter.some((filter) => filter.image === sample.fileName && filter.model === sample.model)}
-      <FaLayers>
-        <Fa icon={faSquareCheck} color="white" />
-      </FaLayers>
-    {/if}
-    {#if sample !== undefined && sample.label !== undefined && sample.prediction !== undefined && sample.label !== sample.prediction}
-      <FaLayers>
-        <Fa icon={faPlay} rotate={-90} color="#ff453a" />
-        <Fa icon={faExclamation} scale={0.5} translateY={0.1} color="white" />
-      </FaLayers>
-    {/if}
-  </div>
+  {#if selected || misclassified}
+    <div class="absolute top-1 right-1 flex bg-black_semi p-1 rounded">
+      {#if selected}
+        <FaLayers>
+          <Fa icon={faSquareCheck} color="white" />
+        </FaLayers>
+      {/if}
+      {#if misclassified}
+        <FaLayers>
+          <Fa icon={faPlay} rotate={-90} color="#ff453a" />
+          <Fa icon={faExclamation} scale={0.5} translateY={0.1} color="white" />
+        </FaLayers>
+      {/if}
+    </div>
+  {/if}
 </div>
