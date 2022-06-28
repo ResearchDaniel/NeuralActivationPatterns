@@ -8,7 +8,12 @@ import pandas as pd
 
 # Export data for producing paper figures
 
-DATA_DIR = '../magnifying_glass/backend/data'
+DATA_DIR = 'magnifying_glass/backend/data'
+
+try:
+    dirs = os.scandir(DATA_DIR)
+except FileNotFoundError:
+    dirs = os.scandir(Path("../", DATA_DIR))
 
 m = []
 l = []
@@ -22,16 +27,13 @@ num_patterns = []
 min_samples = []
 cluster_selection_epsilons = []
 cluster_selection_methods = []
-for models in os.scandir(DATA_DIR):
-
-    model_dir = models.name
-
+for model_dir in dirs:
     # cifar10_cifar10_test_1000_norm_MeanAggregation_min_pattern_5_
     # min_samples_5_cluster_selection_epsilon_1e-01_leaf
     matches = re.match(
-        (r"(inception_v3|.*)_(imagenet2012_subset|.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)"
+        (r"(inception_v3|resnet50|resnet50v2|cifar10|mnist|.*)_(imagenet_subset|imagenet2012_subset|.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)"
          r"_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)"),
-        model_dir)
+        model_dir.name)
     model = matches.group(1)
     dataset = matches.group(2)
     split = matches.group(3)
@@ -43,19 +45,26 @@ for models in os.scandir(DATA_DIR):
     cluster_selection_epsilon = float(matches.group(16))
     cluster_selection_method = matches.group(17)
 
-    model_path = Path(DATA_DIR, model_dir, "layers")
-    layer_dirs = [f.name for f in os.scandir(model_path) if f.is_dir()]
+    layers_path = Path(model_dir.path, "layers")
+    try:
+        layer_dirs = [f.name for f in os.scandir(layers_path) if f.is_dir()]
+    except FileNotFoundError as ex:
+        print(ex)
+        continue
 
-    with open(Path(DATA_DIR, model_dir, 'config.json'), encoding='utf8') as json_file:
+    with open(Path(model_dir.path, 'config.json'), encoding='utf8') as json_file:
         config = json.load(json_file)
     layers = list(
         filter(lambda layer: layer in layer_dirs, config["layers"]))
 
     for layer in layers:
-        patterns_info = pd.read_pickle(
-            Path(
-                DATA_DIR, model_dir, 'layers', layer,
-                'patterns_info.pkl'))
+        try:
+            patterns_info = pd.read_pickle(
+                Path(layers_path, layer,
+                     'patterns_info.pkl'))
+        except Exception as ex:
+            print(ex)
+            continue
 
         m.append(model)
         ds.append(dataset)
