@@ -1,62 +1,60 @@
-const isProduction = !process.env.NODE_ENV === 'production';
+const isProduction = !process.env.NODE_ENV === "production";
 
 module.exports = {
   theme: {
     colors: {
-      transparent: 'transparent',
-      current: 'currentColor',
+      transparent: "transparent",
+      current: "currentColor",
 
       /* Greyscale */
-      white: '#fff',
-      grey: '#cfcfcf',
-      black: '#0f0f0f',
-      black_semi: '#0f0f0f77',
+      white: "#fff",
+      grey: "#cfcfcf",
+      black: "#0f0f0f",
+      black_semi: "#0f0f0f77",
 
       /* Highlight */
-      highlight: '#0071e3',
+      highlight: "#0071e3",
 
       /* Text */
       text: {
-        light: '#0f0f0f',
-        dimmed: '#777777',
-        dark: '#fff',
+        light: "#0f0f0f",
+        dimmed: "#777777",
+        dark: "#fff",
       },
 
       /* Buttons */
-      button: '#0071e3',
-      button_hover: '#0077ed',
+      button: "#0071e3",
+      button_hover: "#0077ed",
     },
     extend: {
       animation: {
-        "ping-slow": "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite"
+        "ping-slow": "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite",
       },
       boxShadow: {
-        "top": "0 -5px 10px 0px rgba(0, 0, 0, 0.25)"
+        top: "0 -5px 10px 0px rgba(0, 0, 0, 0.25)",
       },
       minWidth: {
-        'compare': '800px',
+        compare: "800px",
       },
-    }
+    },
   },
   fontFamily: {
-    sans: ['-apple-system', 'BlinkMacSystemFont', 'Helvetica', 'sans-serif'],
+    sans: ["-apple-system", "BlinkMacSystemFont", "Helvetica", "sans-serif"],
   },
-  darkMode: 'media',
-  plugins: [require('@tailwindcss/forms')],
-  content: {
-    files: ['./src/**/*.svelte'],
-    extract: {
-      // this is for extracting Svelte `class:` syntax but is not perfect yet
-      defaultExtractor: (content) => {
-        const broadMatches = content.match(/[^<>"'`\s]*[^<>"'`\s:]/g) || [];
-        const broadMatchesWithoutTrailingSlash = broadMatches.map((match) =>
-          _.trimEnd(match, '\\')
-        );
-        const matches = broadMatches.concat(broadMatchesWithoutTrailingSlash);
-        return matches;
-      },
-      enabled: isProduction,
+  darkMode: "media",
+  plugins: [require("@tailwindcss/forms")],
+  purge: {
+    content: ["./src/**/*.svelte"],
+    // this is for extracting Svelte `class:` syntax but is not perfect yet
+    defaultExtractor: (content) => {
+      const broadMatches = content.match(/[^<>"'`\s]*[^<>"'`\s:]/g) || [];
+      const broadMatchesWithoutTrailingSlash = broadMatches.map((match) =>
+        _.trimEnd(match, "\\")
+      );
+      const matches = broadMatches.concat(broadMatchesWithoutTrailingSlash);
+      return matches;
     },
+    enabled: isProduction,
   },
   future: {
     purgeLayersByDefault: true,
