@@ -3,7 +3,7 @@
 
   import Main from "./Main.svelte";
   import Distribution from "./Distribution.svelte";
-  import Controls from "./Controls.svelte";
+  import Controls from "./controls/Controls.svelte";
   import Filters from "./Filters.svelte";
   import Header from "./Header.svelte";
   import Settings from "./Settings.svelte";
