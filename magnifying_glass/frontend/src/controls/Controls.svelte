@@ -1,15 +1,25 @@
 <script lang="ts">
   import Select from "svelte-select";
-
   import Network from "./Network.svelte";
 
-  import { fetchLayers, fetchModels, fetchPatterns } from "../api";
-  import { model, layer } from "../stores";
+  import {
+    fetchLayers,
+    fetchModels,
+    fetchPatterns,
+    fetchMaxActivating,
+  } from "../api";
+  import { model, layer, showMaxActivating } from "../stores";
   import type { Patterns } from "../types";
 
   export let patternsRequest: Promise<Patterns> = undefined;
+  export let maxActivatingRequest: Promise<string[]> = undefined;
 
   $: patternsRequest = fetchPatterns($model, $layer);
+  $: maxActivatingRequest = fetchMaxActivating(
+    $model,
+    $layer,
+    $showMaxActivating
+  );
 
   function getSelectedModel(models: string[]): string | undefined {
     if ($model !== undefined) {

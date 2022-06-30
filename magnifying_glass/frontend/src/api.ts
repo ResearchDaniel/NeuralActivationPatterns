@@ -99,6 +99,18 @@ export async function fetchPatterns(
   } as Patterns;
 }
 
+export async function fetchMaxActivating(
+  model: string,
+  layer: string,
+  showMaxActivating: boolean
+): Promise<string[]> {
+  if (!showMaxActivating) return [];
+  if (model === undefined || layer === undefined) return [];
+  return fetch(`/api/get_max_activations/${model}/${layer}`)
+    .then((response) => response.json())
+    .then((jsonResponse) => jsonResponse["images"] as string[]);
+}
+
 export async function fetchPatternsForImages(
   images: {
     image: string;
