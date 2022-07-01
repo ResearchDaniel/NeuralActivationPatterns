@@ -2,6 +2,7 @@
   import { layer, layerWidth, layerHeight } from "../stores";
 
   export let layers: string[];
+  export let maxActivatingRequest: Promise<string[]>;
 
   $: getSelectedLayer(layers);
 
@@ -38,6 +39,7 @@
         rx={5}
         fill={$layer === currentLayer ? "#0071e3" : "black"}
         on:click={() => {
+          maxActivatingRequest = undefined;
           layer.set(currentLayer);
         }}
       />

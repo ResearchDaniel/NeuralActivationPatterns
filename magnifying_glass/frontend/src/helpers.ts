@@ -10,6 +10,7 @@ import {
   showProbability,
   showStatistics,
   showOverviewStatistics,
+  showMaxActivating,
   removeZerosStatistics,
   compactPatterns,
   model,
@@ -93,6 +94,10 @@ export function setupURLParams(urlParams: URLSearchParams) {
     showPredictions.set(
       JSON.parse(urlParams.get("showPredictions")) as boolean
     );
+  if (urlParams.has("showMaxActivating"))
+    showMaxActivating.set(
+      JSON.parse(urlParams.get("showMaxActivating")) as boolean
+    );
   if (urlParams.has("numCenters"))
     numCenters.set(JSON.parse(urlParams.get("numCenters")) as number);
   if (urlParams.has("numOutliers"))
@@ -143,6 +148,9 @@ export function setupURLParams(urlParams: URLSearchParams) {
   );
   showPredictions.subscribe((setting) =>
     updateURLParams("showPredictions", `${setting}`, urlParams)
+  );
+  showMaxActivating.subscribe((setting) =>
+    updateURLParams("showMaxActivating", `${setting}`, urlParams)
   );
   imageFilter.subscribe((setting) => {
     updateURLParams("selectedImages", JSON.stringify(setting), urlParams);

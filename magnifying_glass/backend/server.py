@@ -65,9 +65,7 @@ def get_layers(model):
 @app.route('/api/get_pattern_statistics/<model>/<layer>/<pattern>')
 def get_pattern_statistics(model, layer, pattern):
     arrow_path = Path(DATA_DIR, model, "layers", layer, f"pattern_statistics_{pattern}.arrow")
-    print(arrow_path)
     if not arrow_path.exists():
-        print("does not exist")
         return "No such file", ERROR_STATUS
     return send_file(arrow_path, mimetype='application/octet-stream')
 
@@ -79,6 +77,28 @@ def get_patterns(model, layer):
         return "No such file", ERROR_STATUS
     patterns = pd.read_pickle(pickle_path)
     return jsonify(patterns.to_json(orient="records"))
+
+
+@app.route('/api/get_max_activations/<model>/<layer>')
+def get_max_activating(model, layer):
+    max_activating = []
+    max_path = Path(DATA_DIR, model, "layers", layer, "max_activations")
+    if Path.exists(max_path):
+        for path in max_path.iterdir():
+            if path.is_file():
+                max_activating.append(path.name)
+        max_activating.sort(key=lambda x: int(x.split("_")[0]))
+    images = {
+        'images': max_activating
+    }
+    return jsonify(images)
+
+
+@app.route('/api/get_max_activation_image/<model>/<layer>/<identifier>')
+def get_max_activation_image(model, layer, identifier):
+    return send_file(
+        Path(DATA_DIR, model, "layers", layer, "max_activations", identifier),
+        mimetype='image/jpeg')
 
 
 @app.route('/api/get_pattern_info/<model>/<layer>')

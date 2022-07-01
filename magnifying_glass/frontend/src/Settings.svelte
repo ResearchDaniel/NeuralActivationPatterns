@@ -23,6 +23,7 @@
     showPredictions,
     showProbability,
     showStatistics,
+    showMaxActivating,
   } from "./stores";
 </script>
 
@@ -79,6 +80,10 @@
         </SettingItem>
         <SettingItem title={"Predictions"}>
           <Switch checked={showPredictions} />
+        </SettingItem>
+        <SettingHeading title="Additional Explainability" />
+        <SettingItem title={"Show Max Activating"}>
+          <Switch checked={showMaxActivating} />
         </SettingItem>
       </div>
     </div>

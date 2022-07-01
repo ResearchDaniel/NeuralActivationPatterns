@@ -22,6 +22,7 @@
   import { setupURLParams } from "./helpers";
 
   let patternsRequest: Promise<Patterns> = undefined;
+  let maxActivatingRequest: Promise<string[]> = undefined;
   const urlParams = new URLSearchParams(window.location.search);
 
   onMount(() => {
@@ -34,7 +35,7 @@
     <Header />
     {#if $selectedPage === "Overview"}
       <div class="flex flex-row p-2">
-        <Controls bind:patternsRequest />
+        <Controls bind:patternsRequest bind:maxActivatingRequest />
         {#if patternsRequest !== undefined && $showDistribution}
           {#await patternsRequest then patterns}
             {#if patterns.samples.length > 0}
@@ -43,13 +44,17 @@
           {/await}
         {/if}
       </div>
-      {#if patternsRequest !== undefined}
+      {#if patternsRequest !== undefined && maxActivatingRequest !== undefined}
         {#await patternsRequest}
           <LoadingIndicator />
         {:then patterns}
-          {#if patterns.samples.length > 0}
-            <Main {patterns} />
-          {/if}
+          {#await maxActivatingRequest}
+            <LoadingIndicator />
+          {:then maxActivating}
+            {#if patterns.samples.length > 0}
+              <Main {patterns} {maxActivating} />
+            {/if}
+          {/await}
         {/await}
       {/if}
     {:else if $selectedPage === "Compare"}

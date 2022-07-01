@@ -21,6 +21,7 @@ export const showOverviewStatistics = writable<boolean>(false);
 export const removeZerosStatistics = writable<boolean>(false);
 export const showLabels = writable<boolean>(false);
 export const showPredictions = writable<boolean>(false);
+export const showMaxActivating = writable<boolean>(true);
 export const selectedPage = writable<string>("Overview");
 export const pinnedPatterns = writable<Record<string, Pattern>>({});
 export const patternFilter = writable<{ label: string; patternId: number }[]>(
