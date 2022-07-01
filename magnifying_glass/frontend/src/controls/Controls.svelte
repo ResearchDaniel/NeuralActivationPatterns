@@ -41,10 +41,12 @@
         items={models}
         value={getSelectedModel(models)}
         on:select={(event) => {
+          maxActivatingRequest = undefined;
           model.set(event.detail.value);
           layer.set(undefined);
         }}
         on:clear={() => {
+          maxActivatingRequest = undefined;
           model.set(undefined);
           layer.set(undefined);
         }}
@@ -53,7 +55,7 @@
   {/await}
   {#if $model !== undefined}
     {#await fetchLayers($model) then layers}
-      <Network {layers} />
+      <Network {layers} bind:maxActivatingRequest />
     {/await}
   {/if}
 </div>

@@ -82,10 +82,12 @@ def get_patterns(model, layer):
 @app.route('/api/get_max_activations/<model>/<layer>')
 def get_max_activating(model, layer):
     max_activating = []
-    for path in Path(DATA_DIR, model, "layers", layer, "max_activations").iterdir():
-        if path.is_file():
-            max_activating.append(path.name)
-    max_activating.sort(key=lambda x: int(x.split("_")[0]))
+    max_path = Path(DATA_DIR, model, "layers", layer, "max_activations")
+    if Path.exists(max_path):
+        for path in max_path.iterdir():
+            if path.is_file():
+                max_activating.append(path.name)
+        max_activating.sort(key=lambda x: int(x.split("_")[0]))
     images = {
         'images': max_activating
     }
