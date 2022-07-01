@@ -85,6 +85,7 @@ def get_max_activating(model, layer):
     for path in Path(DATA_DIR, model, "layers", layer, "max_activations").iterdir():
         if path.is_file():
             max_activating.append(path.name)
+    max_activating.sort(key=lambda x: int(x.split("_")[0]))
     images = {
         'images': max_activating
     }
