@@ -40,7 +40,7 @@ parser.add_argument("--filter_aggregation",
 parser.add_argument("--size", type=int,
                     default=2000)
 parser.add_argument("--n_max_activations", type=int,
-                    default=0)
+                    default=100)
 parser.add_argument("--minimum_pattern_size", type=int,
                     default=5)
 parser.add_argument("--cluster_min_samples", type=int, default=5)
