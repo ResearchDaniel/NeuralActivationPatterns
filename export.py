@@ -1,6 +1,5 @@
 """Export the results of an NAP analysis run."""
 import json
-import shutil
 from pathlib import Path
 
 import numpy as np
@@ -124,26 +123,26 @@ def export_image(path, name, array):
     image.save(Path(path, f"{name}.jpeg"))
 
 
-def export_activations(base_path, max_activations, file_names, image_dir):
-    # Copies the N most activating input images into destination/layer/max_activations
+def export_activations(base_path, max_activations, file_names):
+    # Writes the activations into a json file with max_activations as key
+    # and a list of file names as element.
+    # The output list will be ordered according to activation value in descending order.
     base_path.mkdir(parents=True, exist_ok=True)
-    for order, max_activation in enumerate(max_activations):
-        path = Path(base_path, f"{order}_{file_names[max_activation]}")
-        old_name = f"{image_dir}/{file_names[max_activation]}"
-        shutil.copy(old_name, path)
+    sorted_max_activations = [x for _, x in sorted(zip(max_activations, file_names))]
+    with open(Path(base_path, "max_activations.json"), 'w', encoding="utf8") as outfile:
+        json.dump({"max_activations": sorted_max_activations}, outfile)
 
 
 def export_max_activations(
-        image_dir, file_names, activation_pattern, model_name, export_name, input_data, layers,
+        file_names, activation_pattern, model_name, export_name, input_data, layers,
         filters, number, destination=EXPORT_LOCATION):
     for layer in layers:
         activations, outfile = nap.cache.get_layer_activations(
             input_data, activation_pattern.model, model_name, layer)
         # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
-        layer_path = Path(destination, export_name, "layers",
-                          str(layer), "max_activations")
+        layer_path = Path(destination, export_name, "layers", str(layer))
         export_activations(layer_path, activation_pattern.layer_max_activations(
-            layer, activations=activations[()], samples_per_layer=number), file_names, image_dir)
+            layer, activations=activations[()], samples_per_layer=number), file_names)
 
         if layer in filters:
             for model_filter in filters[layer]:
@@ -151,7 +150,7 @@ def export_max_activations(
                                    activation_pattern.filter_max_activations(
                                        layer, model_filter, activations=activations,
                                        samples_per_layer=number),
-                                   file_names, image_dir)
+                                   file_names)
         outfile.close()
 
 
@@ -175,5 +174,5 @@ def export_all(model_name, input_data, labels, predictions, file_names, layers, 
 
     if n_max_activations > 0:
         export_max_activations(
-            image_dir, file_names, neural_activation, model_name, export_name,
+            file_names, neural_activation, model_name, export_name,
             input_data, layers, filters, number=n_max_activations)
