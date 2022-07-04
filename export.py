@@ -140,8 +140,7 @@ def export_max_activations(
         activations, outfile = nap.cache.get_layer_activations(
             input_data, activation_pattern.model, model_name, layer)
         # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
-        layer_path = Path(destination, export_name, "layers",
-                          str(layer))
+        layer_path = Path(destination, export_name, "layers", str(layer))
         export_activations(layer_path, activation_pattern.layer_max_activations(
             layer, activations=activations[()], samples_per_layer=number), file_names)
 
