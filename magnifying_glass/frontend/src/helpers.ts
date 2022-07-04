@@ -16,6 +16,7 @@ import {
   model,
   layer,
   imageFilter,
+  patternsWidth,
 } from "./stores";
 
 export function filterPattern(
@@ -109,6 +110,11 @@ export function setupURLParams(urlParams: URLSearchParams) {
         model: string;
       }[]
     );
+  if (urlParams.has("patternsWidth")) {
+    patternsWidth.set(JSON.parse(urlParams.get("patternsWidth")) as number);
+  } else {
+    patternsWidth.set(window.innerWidth / 2);
+  }
 
   model.subscribe((setting) =>
     updateURLParams("model", `${setting}`, urlParams)
@@ -152,9 +158,12 @@ export function setupURLParams(urlParams: URLSearchParams) {
   showMaxActivating.subscribe((setting) =>
     updateURLParams("showMaxActivating", `${setting}`, urlParams)
   );
-  imageFilter.subscribe((setting) => {
-    updateURLParams("selectedImages", JSON.stringify(setting), urlParams);
-  });
+  imageFilter.subscribe((setting) =>
+    updateURLParams("selectedImages", JSON.stringify(setting), urlParams)
+  );
+  patternsWidth.subscribe((setting) =>
+    updateURLParams("patternsWidth", `${setting}`, urlParams)
+  );
 }
 
 function updateURLParams(
