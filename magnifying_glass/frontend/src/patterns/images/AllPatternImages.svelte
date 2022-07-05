@@ -8,6 +8,5 @@
 </script>
 
 <div class="flex flex-col min-h-0">
-  <p>Samples ({samples.length})</p>
   <PatternImageList {model} {samples} {layer} />
 </div>
