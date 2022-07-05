@@ -3,7 +3,8 @@
   import type { EmbedOptions } from "vega-embed";
   import { VegaLite } from "svelte-vega";
 
-  import { themeConfig } from "../../constants";
+  import { tableau20, themeConfig } from "../../constants";
+  import { filteredPinnedPatternUids } from "../../stores";
 
   import type ColumnTable from "arquero/dist/types/table/column-table";
 
@@ -49,7 +50,10 @@
           xOffset: { field: "key" },
           color: {
             field: "key",
-            scale: { scheme: "tableau20" },
+            scale: {
+              domain: $filteredPinnedPatternUids,
+              range: tableau20,
+            },
             legend: null,
           },
           y2: { field: "upper" },
