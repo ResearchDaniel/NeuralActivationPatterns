@@ -10,6 +10,7 @@ import export
 import models
 import nap
 import util
+import feature_visualization
 
 print(tf.__version__)
 
@@ -46,6 +47,18 @@ parser.add_argument("--minimum_pattern_size", type=int,
 parser.add_argument("--cluster_min_samples", type=int, default=5)
 parser.add_argument("--cluster_selection_epsilon", type=float, default=0)
 parser.add_argument("--cluster_selection_method", default="leaf", choices=["leaf", "eom"])
+parser.add_argument(
+    '--layer_feature_vis', action='store_true',
+    help="Computes layer-level feature visualizations for specified layers.")
+parser.add_argument('--no-layer_feature_vis', dest='layer_feature_vis', action='store_false')
+parser.set_defaults(layer_feature_vis=False)
+parser.add_argument(
+    '--filter_feature_vis', action='store_true',
+    help="Computes filter-level feature visualizations for specified layers and filters."
+         "Requires --all_fiters or --filter_range")
+parser.add_argument('--no-filter_feature_vis', dest='filter_feature_vis', action='store_false')
+parser.set_defaults(filter_feature_vis=False)
+
 args = parser.parse_args()
 
 
@@ -130,6 +143,13 @@ else:
         predictions_dir.mkdir(parents=True, exist_ok=True)
         with open(predictions_path, "wb") as output:
             pickle.dump(predictions, output)
+
+if args.layer_feature_vis:
+    layer_vis_dir = Path("results", model_name)
+    feature_visualization.layer_feature_visualizations(ml_model, layer_vis_dir, layers)
+if args.filter_feature_vis:
+    layer_vis_dir = Path("results", model_name)
+    feature_visualization.filter_feature_visualizations(ml_model, layer_vis_dir, layers, filters)
 
 neural_activation_pattern = nap.NeuralActivationPattern(
     ml_model, layer_aggregation, filter_aggregation, args.minimum_pattern_size,
