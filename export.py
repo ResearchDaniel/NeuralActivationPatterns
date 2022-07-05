@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 
+import shutil
 import numpy as np
 import pandas as pd
 import pyarrow as pa
@@ -12,6 +13,7 @@ import nap.cache
 import util
 
 EXPORT_LOCATION = Path("magnifying_glass/backend/data")
+CACHE_LOCATION = Path("results")
 
 
 def export_config(image_dir, neural_activation, export_name, destination=EXPORT_LOCATION):
@@ -154,6 +156,22 @@ def export_max_activations(
         outfile.close()
 
 
+def export_feature_visualizations(
+        model_name, export_name, layers, src_dir=CACHE_LOCATION, destination=EXPORT_LOCATION):
+    model_dir = Path(src_dir, model_name)
+    layers = [path.name for path in model_dir.iterdir() if path.is_dir()]
+    for layer in layers:
+        feature_vis_path = Path(model_dir, layer, "layer_feature_vis.png")
+        if feature_vis_path.exists():
+            export_path = Path(destination, export_name, "layers",
+                               str(layer), "layer_feature_vis.png")
+            shutil.copy(feature_vis_path, export_path)
+        filter_feature_vis_path = Path(model_dir, layer, "filter_feature_vis")
+        if filter_feature_vis_path.exists():
+            export_path = Path(destination, export_name, "layers", str(layer), "filter_feature_vis")
+            shutil.copytree(filter_feature_vis_path, export_path)
+
+
 def export_all(model_name, input_data, labels, predictions, file_names, layers, filters, image_dir,
                neural_activation, n_max_activations,
                destination=EXPORT_LOCATION):
@@ -171,6 +189,8 @@ def export_all(model_name, input_data, labels, predictions, file_names, layers, 
                     filters, destination)
     export_averages(image_dir, file_names, neural_activation, model_name,
                     export_name, input_data, layers, filters, destination)
+
+    export_feature_visualizations(model_name, export_name, layers)
 
     if n_max_activations > 0:
         export_max_activations(

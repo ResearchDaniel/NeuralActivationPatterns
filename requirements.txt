@@ -10,3 +10,4 @@ pyarrow
 flask
 pylint
 tables
+git+https://github.com/Sparkier/luna.git@feature/deep_dream
