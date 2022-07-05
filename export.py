@@ -1,7 +1,6 @@
 """Export the results of an NAP analysis run."""
 import json
 from pathlib import Path
-import os
 
 import shutil
 import numpy as np
@@ -160,7 +159,7 @@ def export_max_activations(
 def export_feature_visualizations(
         model_name, export_name, layers, src_dir=CACHE_LOCATION, destination=EXPORT_LOCATION):
     model_dir = Path(src_dir, model_name)
-    layers = [f.name for f in os.scandir(model_dir) if f.is_dir()]
+    layers = [path.name for path in model_dir.iterdir() if path.is_dir()]
     for layer in layers:
         feature_vis_path = Path(model_dir, layer, "layer_feature_vis.png")
         if feature_vis_path.exists():
