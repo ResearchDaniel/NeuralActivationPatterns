@@ -108,7 +108,7 @@ export async function fetchMaxActivating(
   if (model === undefined || layer === undefined) return [];
   return fetch(`/api/get_max_activations/${model}/${layer}`)
     .then((response) => response.json())
-    .then((jsonResponse) => jsonResponse["images"] as string[]);
+    .then((jsonResponse) => jsonResponse["max_activations"] as string[]);
 }
 
 export async function fetchPatternsForImages(

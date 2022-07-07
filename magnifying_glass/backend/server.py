@@ -81,24 +81,10 @@ def get_patterns(model, layer):
 
 @app.route('/api/get_max_activations/<model>/<layer>')
 def get_max_activating(model, layer):
-    max_activating = []
-    max_path = Path(DATA_DIR, model, "layers", layer, "max_activations")
-    if Path.exists(max_path):
-        for path in max_path.iterdir():
-            if path.is_file():
-                max_activating.append(path.name)
-        max_activating.sort(key=lambda x: int(x.split("_")[0]))
-    images = {
-        'images': max_activating
-    }
-    return jsonify(images)
-
-
-@app.route('/api/get_max_activation_image/<model>/<layer>/<identifier>')
-def get_max_activation_image(model, layer, identifier):
-    return send_file(
-        Path(DATA_DIR, model, "layers", layer, "max_activations", identifier),
-        mimetype='image/jpeg')
+    max_path = Path(DATA_DIR, model, "layers", layer, "max_activations.json")
+    if not max_path.exists():
+        return jsonify({"max_activations": []})
+    return send_file(max_path, mimetype='application/json')
 
 
 @app.route('/api/get_pattern_info/<model>/<layer>')

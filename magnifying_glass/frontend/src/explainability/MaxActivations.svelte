@@ -1,6 +1,6 @@
 <script lang="ts">
   import SubHeading from "../elements/SubHeading.svelte";
-  import { model, layer } from "../stores";
+  import { model } from "../stores";
 
   export let maxActivating: string[];
 </script>
@@ -12,7 +12,7 @@
       <div class="relative p-1">
         <img
           class="h-32"
-          src={`/api/get_max_activation_image/${$model}/${$layer}/${maxImage}`}
+          src={`/api/get_image/${$model}/${maxImage}`}
           alt="Max Activation Data Sample"
         />
       </div>
