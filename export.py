@@ -61,8 +61,7 @@ def export_patterns(neural_activation, model_name, export_name, input_data, laye
         if layer in filters:
             for model_filter in filters[layer]:
                 path = Path(
-                    destination, export_name, "layers", str(layer),
-                    "filters", neural_activation.filter_aggregation.__class__.__name__,
+                    destination, export_name, "layers", str(layer), "filter_patterns",
                     str(model_filter))
                 patterns, info = nap.cache.get_filter_patterns(
                     input_data, neural_activation, model_name, layer, model_filter)
@@ -109,9 +108,7 @@ def export_filter_averages(
         for model_filter in filters[layer]:
             patterns, _ = nap.cache.get_filter_patterns(
                 input_data, neural_activation, model_name, layer, model_filter)
-            filter_path = Path(layer_path, 'filters',
-                               neural_activation.filter_aggregation.__class__.__name__,
-                               str(model_filter))
+            filter_path = Path(layer_path, 'filter_patterns', str(model_filter))
             export_pattern_averages(filter_path,
                                     patterns, file_names, image_dir, input_data)
 
@@ -148,7 +145,7 @@ def export_max_activations(
 
         if layer in filters:
             for model_filter in filters[layer]:
-                export_activations(Path(layer_path, 'filters', str(model_filter)),
+                export_activations(Path(layer_path, 'filter_max_activations', str(model_filter)),
                                    activation_pattern.filter_max_activations(
                                        layer, model_filter, activations=activations,
                                        samples_per_layer=number),
