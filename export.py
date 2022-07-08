@@ -166,6 +166,8 @@ def export_feature_visualizations(
         filter_feature_vis_path = Path(model_dir, layer, "filter_feature_vis")
         if filter_feature_vis_path.exists():
             export_path = Path(destination, export_name, "layers", str(layer), "filter_feature_vis")
+            if Path(export_path).exists():
+                shutil.rmtree(export_path)
             shutil.copytree(filter_feature_vis_path, export_path)
 
 
