@@ -111,6 +111,15 @@ export async function fetchMaxActivating(
     .then((jsonResponse) => jsonResponse["max_activations"] as string[]);
 }
 
+export async function fetchFeatureVisExists(
+  model: string,
+  layer: string
+): Promise<boolean> {
+  return fetch(`/api/get_layer_feature_vis_exists/${model}/${layer}`).then(
+    (response) => response.json()
+  );
+}
+
 export async function fetchPatternsForImages(
   images: {
     image: string;
