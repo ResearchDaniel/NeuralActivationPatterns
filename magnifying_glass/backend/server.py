@@ -87,6 +87,21 @@ def get_max_activating(model, layer):
     return send_file(max_path, mimetype='application/json')
 
 
+@app.route('/api/get_layer_feature_vis_exists/<model>/<layer>')
+def get_layer_feature_vis_exists(model, layer):
+    vis_path = Path(DATA_DIR, model, "layers", layer, "layer_feature_vis.png")
+    if not vis_path.exists():
+        return jsonify(False)
+    return jsonify(True)
+
+
+@app.route('/api/get_layer_feature_vis/<model>/<layer>')
+def get_layer_feature_vis(model, layer):
+    return send_file(
+        Path(DATA_DIR, model, "layers", layer, "layer_feature_vis.png"),
+        mimetype='image/png')
+
+
 @app.route('/api/get_pattern_info/<model>/<layer>')
 def get_pattern_info(model, layer):
     pickle_path = Path(DATA_DIR, model, "layers", layer, "patterns_info.pkl")

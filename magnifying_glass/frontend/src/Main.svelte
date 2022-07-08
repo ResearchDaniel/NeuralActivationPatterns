@@ -1,13 +1,22 @@
 <script lang="ts">
   import Explainability from "./explainability/Explainability.svelte";
   import PatternsList from "./patterns/Patterns.svelte";
-  import { patternFilter, patternsWidth } from "./stores";
+
+  import {
+    layer,
+    model,
+    patternFilter,
+    patternsWidth,
+    showFeatureVis,
+  } from "./stores";
+  import { fetchFeatureVisExists } from "./api";
 
   import type { PatternForSample, Patterns } from "./types";
 
   export let patterns: Patterns;
   export let maxActivating: string[];
 
+  $: featureVisRequest = fetchFeatureVisExists($model, $layer);
   $: sortedSamples = patterns.samples.sort(
     (a: PatternForSample, b: PatternForSample) => b.probability - a.probability
   );
@@ -39,7 +48,10 @@
   function handleMouseMove(e) {
     if (isMouseDown) {
       patternsWidth.set(
-        Math.max(200, Math.min(e.clientX, window.innerWidth - 200))
+        Math.max(
+          200,
+          Math.min(window.innerWidth - e.clientX, window.innerWidth - 200)
+        )
       );
     }
   }
@@ -51,18 +63,34 @@
   class:select-none={isMouseDown}
   class:cursor-col-resize={isMouseDown}
 >
-  <div class="flex min-h-0" style={`width: ${$patternsWidth}px;`}>
+  <div class="flex flex-1 min-h-0">
     <PatternsList
       {patterns}
       {filteredSamples}
       persistence={patterns.persistence}
     />
   </div>
-  {#if maxActivating.length > 0}
+  {#if $showFeatureVis}
+    {#await featureVisRequest then}
+      <div
+        class="h-full w-1 bg-grey ml-2 mr-2 rounded cursor-col-resize"
+        on:mousedown={handleMouseDown}
+      />
+      <Explainability {maxActivating} featureVis={true} />
+    {:catch}
+      {#if maxActivating.length > 0}
+        <div
+          class="h-full w-1 bg-grey ml-2 mr-2 rounded cursor-col-resize"
+          on:mousedown={handleMouseDown}
+        />
+        <Explainability {maxActivating} featureVis={false} />
+      {/if}
+    {/await}
+  {:else if maxActivating.length > 0}
     <div
       class="h-full w-1 bg-grey ml-2 mr-2 rounded cursor-col-resize"
       on:mousedown={handleMouseDown}
     />
-    <Explainability {maxActivating} />
+    <Explainability {maxActivating} featureVis={false} />
   {/if}
 </div>

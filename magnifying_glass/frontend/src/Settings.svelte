@@ -24,6 +24,7 @@
     showProbability,
     showStatistics,
     showMaxActivating,
+    showFeatureVis,
   } from "./stores";
 </script>
 
@@ -84,6 +85,9 @@
         <SettingHeading title="Additional Explainability" />
         <SettingItem title={"Show Max Activating"}>
           <Switch checked={showMaxActivating} />
+        </SettingItem>
+        <SettingItem title={"Show Feature Vis"}>
+          <Switch checked={showFeatureVis} />
         </SettingItem>
       </div>
     </div>
