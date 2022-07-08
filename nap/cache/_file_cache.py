@@ -306,16 +306,15 @@ def export_filter_patterns_activation_statistics(
         export_activations(input_data, neural_activation, model_name, [layer], destination)
     with h5py.File(act_path, 'r') as f_act:
         for index, pattern in patterns.groupby("patternId"):
-            pattern_statistics = pa.Table.from_arrays(
-                [list(range(neural_activation.layer_num_units(layer)))],
-                names=["unit"])
+            pattern_statistics = pa.Table.from_arrays([[filter_index]],
+                                                      names=["unit"])
             pattern_stats = activation_statistics(
                 f_act["activations"][pattern.index.tolist()]
                 [..., filter_index],
                 axis=None)
             for key, value in pattern_stats.items():
                 pattern_statistics = pattern_statistics.append_column(
-                    f"{index}_{key}", np.array(value).astype(np.float16))
+                    f"{index}_{key}", [np.array(value).astype(np.float16)])
             path = filter_patterns_activation_statistics_path(
                 destination, model_name, layer, filter_index, index, neural_activation)
             writer = pa.ipc.new_file(path, pattern_statistics.schema)
