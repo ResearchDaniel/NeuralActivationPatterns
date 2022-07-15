@@ -34,7 +34,7 @@
   <div class="flex flex-col h-full">
     <Header />
     {#if $selectedPage === "Overview"}
-      <div class="flex flex-row p-2">
+      <div class="flex flex-row p-2 pb-0">
         <Controls bind:patternsRequest bind:maxActivatingRequest />
         {#if patternsRequest !== undefined && $showDistribution}
           {#await patternsRequest then patterns}

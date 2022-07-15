@@ -22,7 +22,6 @@ export const removeZerosStatistics = writable<boolean>(false);
 export const showLabels = writable<boolean>(false);
 export const showPredictions = writable<boolean>(false);
 export const showMaxActivating = writable<boolean>(true);
-export const showFeatureVis = writable<boolean>(true);
 export const selectedPage = writable<string>("Overview");
 export const pinnedPatterns = writable<Record<string, Pattern>>({});
 export const patternFilter = writable<{ label: string; patternId: number }[]>(
@@ -31,7 +30,7 @@ export const patternFilter = writable<{ label: string; patternId: number }[]>(
 export const labelFilter = writable<string[]>([]);
 export const predictionFilter = writable<string[]>([]);
 export const imageFilter = writable<{ image: string; model: string }[]>([]);
-export const layerWidth = writable<number>(50);
+export const layerWidth = writable<number>(80);
 export const layerHeight = writable<number>(80);
 export const patternsWidth = writable<number>(0);
 

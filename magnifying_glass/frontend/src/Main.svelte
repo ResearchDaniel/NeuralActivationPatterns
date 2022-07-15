@@ -2,21 +2,13 @@
   import Explainability from "./explainability/Explainability.svelte";
   import PatternsList from "./patterns/Patterns.svelte";
 
-  import {
-    layer,
-    model,
-    patternFilter,
-    patternsWidth,
-    showFeatureVis,
-  } from "./stores";
-  import { fetchFeatureVisExists } from "./api";
+  import { patternFilter, patternsWidth } from "./stores";
 
   import type { PatternForSample, Patterns } from "./types";
 
   export let patterns: Patterns;
   export let maxActivating: string[];
 
-  $: featureVisRequest = fetchFeatureVisExists($model, $layer);
   $: sortedSamples = patterns.samples.sort(
     (a: PatternForSample, b: PatternForSample) => b.probability - a.probability
   );
@@ -70,27 +62,11 @@
       persistence={patterns.persistence}
     />
   </div>
-  {#if $showFeatureVis}
-    {#await featureVisRequest then}
-      <div
-        class="h-full w-1 bg-grey ml-2 mr-2 rounded cursor-col-resize"
-        on:mousedown={handleMouseDown}
-      />
-      <Explainability {maxActivating} featureVis={true} />
-    {:catch}
-      {#if maxActivating.length > 0}
-        <div
-          class="h-full w-1 bg-grey ml-2 mr-2 rounded cursor-col-resize"
-          on:mousedown={handleMouseDown}
-        />
-        <Explainability {maxActivating} featureVis={false} />
-      {/if}
-    {/await}
-  {:else if maxActivating.length > 0}
+  {#if maxActivating.length > 0}
     <div
       class="h-full w-1 bg-grey ml-2 mr-2 rounded cursor-col-resize"
       on:mousedown={handleMouseDown}
     />
-    <Explainability {maxActivating} featureVis={false} />
+    <Explainability {maxActivating} />
   {/if}
 </div>
