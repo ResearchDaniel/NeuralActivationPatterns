@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { layer, layerWidth, layerHeight } from "../stores";
+  import Layer from "./Layer.svelte";
+  import LayerDivider from "../elements/LayerDivider.svelte";
+
+  import { layer } from "../stores";
+  import LayerDescription from "./LayerDescription.svelte";
 
   export let layers: string[];
   export let maxActivatingRequest: Promise<string[]>;
@@ -18,40 +22,21 @@
   }
 </script>
 
-<svg width="100%" height={$layerHeight + 50}>
-  <g transform="translate(0, 10)">
+<div class="flex flex-col py-2 overflow-x-auto overflow-y-hidden">
+  <div class="flex items-center">
     {#each layers as currentLayer, index}
+      <Layer {currentLayer} {maxActivatingRequest} />
       {#if index < layers.length - 1}
-        <line
-          x1={$layerWidth + index * ($layerWidth + $layerWidth / 2)}
-          y1={$layerHeight / 2}
-          x2={$layerWidth +
-            $layerWidth / 2 +
-            index * ($layerWidth + $layerWidth / 2)}
-          y2={$layerHeight / 2}
-          stroke="black"
-        />
+        <LayerDivider />
       {/if}
-      <rect
-        x={index * ($layerWidth + $layerWidth / 2)}
-        width={$layerWidth}
-        height={$layerHeight}
-        rx={5}
-        fill={$layer === currentLayer ? "#0071e3" : "black"}
-        on:click={() => {
-          maxActivatingRequest = undefined;
-          layer.set(currentLayer);
-        }}
-      />
-      <g
-        transform={`translate(${
-          index * ($layerWidth + $layerWidth / 2) + $layerWidth / 2
-        }, ${$layerHeight + 5 + 12})`}
-      >
-        <text text-anchor="middle" transform="rotate(10)">
-          {currentLayer}
-        </text>
-      </g>
     {/each}
-  </g>
-</svg>
+  </div>
+  <div class="flex items-center">
+    {#each layers as currentLayer, index}
+      <LayerDescription {currentLayer} />
+      {#if index < layers.length - 1}
+        <LayerDivider transparent={true} />
+      {/if}
+    {/each}
+  </div>
+</div>

@@ -11,7 +11,6 @@ import {
   showStatistics,
   showOverviewStatistics,
   showMaxActivating,
-  showFeatureVis,
   removeZerosStatistics,
   compactPatterns,
   model,
@@ -100,8 +99,6 @@ export function setupURLParams(urlParams: URLSearchParams) {
     showMaxActivating.set(
       JSON.parse(urlParams.get("showMaxActivating")) as boolean
     );
-  if (urlParams.has("showFeatureVis"))
-    showFeatureVis.set(JSON.parse(urlParams.get("showFeatureVis")) as boolean);
   if (urlParams.has("numCenters"))
     numCenters.set(JSON.parse(urlParams.get("numCenters")) as number);
   if (urlParams.has("numOutliers"))
@@ -160,9 +157,6 @@ export function setupURLParams(urlParams: URLSearchParams) {
   );
   showMaxActivating.subscribe((setting) =>
     updateURLParams("showMaxActivating", `${setting}`, urlParams)
-  );
-  showFeatureVis.subscribe((setting) =>
-    updateURLParams("showFeatureVis", `${setting}`, urlParams)
   );
   imageFilter.subscribe((setting) =>
     updateURLParams("selectedImages", JSON.stringify(setting), urlParams)
