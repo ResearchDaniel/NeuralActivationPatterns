@@ -174,6 +174,8 @@ class NeuralActivationPattern:
         return self.layer_output_shape(layer)[-1]
 
     def layer_activations(self, layer, input_data):
+        """Compute input data activations for a given layer. Equation 1 in the paper.
+        """
         layer_idx = self.layer_idx(layer)
         layer_output = self.model.layers[layer_idx].output
         # Creates a model that will return these outputs, given the model input
@@ -185,6 +187,8 @@ class NeuralActivationPattern:
         return layer_activations
 
     def layer_patterns(self, layer, input_data=None, agg_activations=None):
+        """ Computes Neural Activation Patterns for the given layer. Equation 3 in the paper.
+        """
         if agg_activations is None:
             activations = self.layer_activations(layer, input_data)
             agg_activations = self.layer_aggregation.aggregate(

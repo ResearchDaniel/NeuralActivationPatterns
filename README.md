@@ -1,6 +1,6 @@
 # Neural Activation Patterns (NAPs): Visual Explainability of Learned Concepts
 This is an open-source framework for extracting and interactively visualizing NAPs from pretrained neural networks. A Neural Activation Pattern is a cluster in the activation space of a layer. 
-The NAP approach is a novel explainability approach for building a fundamental understanding of what neural network layers have learned.
+The NAP approach is a novel explainability method for building a fundamental understanding of what neural network layers have learned.
 
 
 The framework is divided into two parts. The first part, [nap](/nap), finds clusters of activation profiles across different inputs (NAPs).
@@ -27,7 +27,7 @@ yarn install
 Done!
 
 # Usage
-The first step to analyzing NAPs is to compute and them using the `nap` library. The second step is to explore them using the Magnifying Glass.
+The first step to analyzing NAPs is to compute them using the `nap` library. The second step is to explore them using the Magnifying Glass.
 
 ## NAP computation
 We provide a convenience script that downloads datasets, computes NAPs, and exports the results to the Magnifying Glass. 

@@ -1,4 +1,4 @@
-"""Providing differnt models to use for pattern analysis."""
+"""Provides different models to use for pattern analysis."""
 import os
 import pickle
 from pathlib import Path
