@@ -48,7 +48,7 @@ def setup_mnist(data_set):
     data_set = data_set.map(normalize_img,
                             num_parallel_calls=tf.data.AUTOTUNE)
 
-    model_save_name = 'mnist_classifier'
+    model_save_name = 'models/mnist_classifier'
     path = F"{model_save_name}"
     model = tf.keras.models.load_model(path)
     return model, data_set
@@ -63,7 +63,7 @@ def setup_cifar10(data_set):
     data_set = data_set.map(normalize_img,
                             num_parallel_calls=tf.data.AUTOTUNE)
 
-    model_save_name = 'cifar10_classifier'
+    model_save_name = 'models/cifar10_classifier'
     path = F"{model_save_name}"
     model = tf.keras.models.load_model(path)
     model.summary()

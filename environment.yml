@@ -16,3 +16,4 @@ dependencies:
     - tensorflow-datasets
     - pyarrow 
     - tables
+    - luna-fviz==0.3.0
