@@ -1,4 +1,6 @@
-""" Scan backend data dir for models and create a DataFrame with settings and number of patterns. """
+""" Scan backend data dir for models and create a
+DataFrame with settings and number of patterns.
+"""
 from pathlib import Path
 import os
 import re
@@ -31,7 +33,8 @@ for model_dir in dirs:
     # cifar10_cifar10_test_1000_norm_MeanAggregation_min_pattern_5_
     # min_samples_5_cluster_selection_epsilon_1e-01_leaf
     matches = re.match(
-        (r"(inception_v3|resnet50|resnet50v2|cifar10|mnist|.*)_(imagenet_subset|imagenet2012_subset|.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)"
+        (r"(inception_v3|resnet50|resnet50v2|cifar10|mnist|.*)"
+         r"_(imagenet_subset|imagenet2012_subset|.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)"
          r"_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)_(.*)"),
         model_dir.name)
     model = matches.group(1)
@@ -46,6 +49,7 @@ for model_dir in dirs:
     cluster_selection_method = matches.group(17)
 
     layers_path = Path(model_dir.path, "layers")
+    layer_dirs = []
     try:
         layer_dirs = [f.name for f in os.scandir(layers_path) if f.is_dir()]
     except FileNotFoundError as ex:
