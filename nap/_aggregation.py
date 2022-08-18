@@ -1,4 +1,4 @@
-"""Aggregation funcions to reduce dimensionality."""
+"""Location disentanglement functions."""
 import numpy as np
 
 
@@ -15,7 +15,7 @@ class AggregationInterface:
         """Value to normalize aggregations"""
 
     def normalize(self, aggregated_activations, normalization_val) -> np.ndarray:
-        """Normalize aggregated activations"""
+        """Normalize aggregated activations. Equation 2 in the paper."""
 
     @staticmethod
     def should_aggregate(shape):
@@ -46,7 +46,11 @@ class NoAggregation(AggregationInterface):
 
 
 class MeanAggregation(AggregationInterface):
-    """Averages convolutional layers, does nothing for other types."""
+    """Averages convolutional layers, does nothing for other types.
+       Referred to as Feature amount in the paper.
+       The average of all elements of the activation matrix is extracted,
+       thus reflecting the amount of a feature.
+    """
 
     def shape(self, activation_shape) -> list:
         """Return what the resulting shape of the aggragation will be for layer."""
@@ -70,7 +74,11 @@ class MeanAggregation(AggregationInterface):
 
 class MeanStdAggregation(AggregationInterface):
     """Compute average and standard deviation for convolutional layers,
-    does nothing for other types.
+        does nothing for other types.
+        Referred to as Feature amount and spread in the paper.
+        Uses the average in combination with standard deviation to disambiguate cases
+        where a single high activation value would produce the
+        same result as many low activation values.
     """
 
     def shape(self, activation_shape) -> list:
@@ -102,7 +110,12 @@ class MeanStdAggregation(AggregationInterface):
 
 
 class MaxAggregation(AggregationInterface):
-    """Maximum activation for convolutional layers, does nothing for other types."""
+    """ Maximum activation for convolutional layers, does nothing for other types.
+        Referred to as Peak feature strength in the paper.
+        The maximum is extracted across all elements of the activation matrix.
+        The input with highest activation generally tells us what
+        the network considers most important.
+    """
 
     def shape(self, activation_shape) -> list:
         """Return what the resulting shape of the aggragation will be for layer."""
@@ -126,8 +139,12 @@ class MaxAggregation(AggregationInterface):
 
 
 class MinMaxAggregation(AggregationInterface):
-    """Compute minimum and maximum for convolutional layers,
-    does nothing for other types.
+    """ Compute minimum and maximum for convolutional layers, does nothing for other types.
+        Referred to as Feature range in the paper.
+        The minimum and maximum are extracted across all elements of the activation matrix.
+        For layers with negative activations, this allows for taking opposite features into account.
+        However, for layers with activation functions suppressing negative values,
+        the minimum value will in many cases be zero and therefore provide limited value.
     """
 
     def shape(self, activation_shape) -> list:
