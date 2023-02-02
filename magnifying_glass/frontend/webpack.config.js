@@ -82,13 +82,4 @@ module.exports = {
       "/api": "http://127.0.0.1:5000",
     },
   },
-  ignoreWarnings: [
-    (warning) => {
-      // Ignore accessibility warnings (appear in Svelte select for some reason)
-      if (warning.message.startsWith('a11y-')) {
-        return false;
-      }
-      return true;
-    },
-  ],
 };
