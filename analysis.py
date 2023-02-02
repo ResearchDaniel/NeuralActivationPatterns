@@ -33,7 +33,7 @@ def show_image_grid(images, labels, title, images_per_row, img_scale):
     for i, curr_im in enumerate(labels):
         fig.layout.annotations[plotly_annotation_index(
             n_rows, n_cols, i)]['text'] = curr_im
-    fig.update_layout(margin=dict(b=0))
+    fig.update_layout(margin={"b": 0})
     fig.show()
 
 
