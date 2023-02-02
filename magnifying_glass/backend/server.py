@@ -21,7 +21,7 @@ class NpEncoder(json.JSONEncoder):
 
 
 app = Flask(__name__)
-app.json_encoder = NpEncoder
+app.json_provider_class = NpEncoder
 OK_STATUS = 200
 ERROR_STATUS = 400
 TEXT_TYPE = {'ContentType': 'text/plain'}
