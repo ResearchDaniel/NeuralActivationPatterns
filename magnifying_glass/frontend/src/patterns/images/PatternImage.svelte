@@ -64,7 +64,7 @@
   }
 </script>
 
-<div class="relative" on:click={handleSelectionImage}>
+<button class="relative" on:click={handleSelectionImage}>
   <img
     class="h-32"
     src={imagePath}
@@ -98,4 +98,4 @@
       {/if}
     </div>
   {/if}
-</div>
+</button>

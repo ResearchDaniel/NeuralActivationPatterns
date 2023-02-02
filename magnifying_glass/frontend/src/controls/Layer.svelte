@@ -6,7 +6,7 @@
   export let maxActivatingRequest: Promise<string[]>;
 </script>
 
-<div
+<button
   style={`width: ${$layerWidth}px; height: ${$layerHeight}px; background: ${
     $layer === currentLayer ? "#0071e3" : "black"
   }`}
@@ -25,4 +25,4 @@
       />
     {/if}
   {/await}
-</div>
+</button>
