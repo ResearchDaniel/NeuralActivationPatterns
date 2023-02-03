@@ -73,7 +73,7 @@ def create_aggregation_function(name):
         return nap.MinMaxAggregation()
     if name == "none":
         return nap.NoAggregation()
-    raise Exception(f"Invalid aggregation function: {name}")
+    raise ValueError(f"Invalid aggregation function: {name}")
 
 
 def setup_model(model_type, data_path, data_set, data_set_size, split):
@@ -90,7 +90,7 @@ def setup_model(model_type, data_path, data_set, data_set_size, split):
     elif model_type == "resnet50v2":
         model, processing_data = models.setup_resnet50_v2(processing_data)
     else:
-        raise Exception(f"Invalid model: {model}")
+        raise ValueError(f"Invalid model: {model}")
     print(model.summary())
     clean_data_set_name = data_set.replace("/", "-")
     model_string = (f"{model_type}_{clean_data_set_name}_{split}_"

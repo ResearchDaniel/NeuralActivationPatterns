@@ -79,7 +79,7 @@
   }
 </script>
 
-<div
+<button
   class="flex flex-col box-shadow-xl p-2 border-grey border rounded-md min-w-0"
   class:min-h-0={expanded}
   class:shrink-0={expanded}
@@ -140,4 +140,4 @@
       <AllPatternImages samples={filteredSamples} {model} {layer} />
     {/if}
   </div>
-</div>
+</button>
