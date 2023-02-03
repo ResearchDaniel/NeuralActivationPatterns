@@ -44,6 +44,14 @@ parser.add_argument("--n_max_activations", type=int,
                     default=100)
 parser.add_argument("--minimum_pattern_size", type=int,
                     default=5)
+
+parser.add_argument(
+    '--unit_normalization', action='store_true',
+    help="Normalize activations to be in range [-1 1].")
+parser.add_argument('--no-unit_normalization', dest='unit_normalization', action='store_false')
+parser.set_defaults(unit_normalization=True)
+
+parser.add_argument("--distance_metric", default="euclidean")
 parser.add_argument("--cluster_min_samples", type=int, default=5)
 parser.add_argument("--cluster_selection_epsilon", type=float, default=0)
 parser.add_argument("--cluster_selection_method", default="leaf", choices=["leaf", "eom"])
@@ -103,7 +111,7 @@ def setup_model(model_type, data_path, data_set, data_set_size, split):
 data_size = args.size
 ml_model, model_name, X, y, files, data_dir = setup_model(
     args.model, args.data_path, args.data_set, data_size, args.split)
-model_name += '_unitnorm'
+
 if args.layer is None:
     layers = [layer.name for layer in ml_model.layers]
 else:
@@ -154,6 +162,7 @@ if args.filter_feature_vis:
 neural_activation_pattern = nap.NeuralActivationPattern(
     ml_model, layer_aggregation, filter_aggregation, args.minimum_pattern_size,
     min_samples=args.cluster_min_samples, cluster_selection_epsilon=args.cluster_selection_epsilon,
-    cluster_selection_method=args.cluster_selection_method)
+    cluster_selection_method=args.cluster_selection_method, cluster_metric=args.distance_metric,
+    unit_normalization=args.unit_normalization)
 export.export_all(model_name, X, y, predictions, files, layers, filters, str(data_dir),
                   neural_activation_pattern, n_max_activations=args.n_max_activations)
