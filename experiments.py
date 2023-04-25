@@ -53,7 +53,8 @@ for model in models:
                                     cmd = (
                                         f"python model_analysis.py --model {model}"
                                         f" --data_set {data_sets[model]}"
-                                        f" --size {data_set_size} --layer_aggregation {layer_aggregation}"
+                                        f" --size {data_set_size}"
+                                        f" --layer_aggregation {layer_aggregation}"
                                         f" --minimum_pattern_size {minimum_pattern_size}"
                                         f" --cluster_min_samples {cluster_min_sample}"
                                         f" --cluster_selection_epsilon {cluster_selection_epsilon}"
