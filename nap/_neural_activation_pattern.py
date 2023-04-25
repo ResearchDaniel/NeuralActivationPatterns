@@ -75,11 +75,12 @@ def average(samples, indices):
 class NeuralActivationPattern:
     """ Computes neural network activation patterns using clustering.
     """
+    # pylint: disable=R0902
 
     def __init__(
             self, model, layer_aggregation=MeanAggregation, filter_aggregation=NoAggregation,
             min_pattern_size=5, min_samples=5, cluster_selection_epsilon=0,
-            cluster_selection_method="leaf"):
+            cluster_selection_method="leaf", cluster_metric="euclidean", unit_normalization=True):
         self.model = model
         self.layer_aggregation = layer_aggregation
         self.filter_aggregation = filter_aggregation
@@ -87,6 +88,8 @@ class NeuralActivationPattern:
         self.min_samples = min_samples
         self.cluster_selection_epsilon = cluster_selection_epsilon
         self.cluster_selection_method = cluster_selection_method
+        self.metric = cluster_metric
+        self.unit_normalization = unit_normalization
 
     def layer_idx(self, layer):
         """Get layer index given either its layer name or its index.
@@ -197,7 +200,8 @@ class NeuralActivationPattern:
         clusterer = hdbscan.HDBSCAN(
             cluster_selection_method=self.cluster_selection_method,
             min_cluster_size=self.min_pattern_size,
-            cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples)
+            cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples,
+            metric=self.metric)
         agg_2d = np.reshape(
             agg_activations,
             [agg_activations.shape[0],
@@ -226,7 +230,8 @@ class NeuralActivationPattern:
         clusterer = hdbscan.HDBSCAN(
             cluster_selection_method=self.cluster_selection_method,
             min_cluster_size=self.min_pattern_size,
-            cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples)
+            cluster_selection_epsilon=self.cluster_selection_epsilon, min_samples=self.min_samples,
+            metric=self.metric)
         clusterer.fit(agg_2d)
 
         print(

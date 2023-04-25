@@ -12,19 +12,31 @@ CACHE_LOCATION = Path("results")
 
 
 def layer_settings_string(neural_activation):
-    return (f'layer_agg_{neural_activation.layer_aggregation.__class__.__name__}'
+    if neural_activation.unit_normalization:
+        unit_normalization = "_unitnorm_"
+    else:
+        unit_normalization = ""
+    return (f'{unit_normalization}'
+            f'layer_agg_{neural_activation.layer_aggregation.__class__.__name__}'
             f'_min_size_{neural_activation.min_pattern_size}'
             f'_min_samples_{neural_activation.min_samples}'
             f'_cluster_selection_epsilon_{neural_activation.cluster_selection_epsilon:1.0e}'
-            f'_{neural_activation.cluster_selection_method}')
+            f'_{neural_activation.cluster_selection_method}'
+            f'_{neural_activation.metric}')
 
 
 def filter_settings_string(neural_activation):
-    return (f'filter_agg_{neural_activation.filter_aggregation.__class__.__name__}'
+    if neural_activation.unit_normalization:
+        unit_normalization = "_unitnorm_"
+    else:
+        unit_normalization = ""
+    return (f'{unit_normalization}'
+            f'filter_agg_{neural_activation.filter_aggregation.__class__.__name__}'
             f'_min_size_{neural_activation.min_pattern_size}'
             f'_min_samples_{neural_activation.min_samples}'
             f'_cluster_selection_epsilon_{neural_activation.cluster_selection_epsilon:1.0e}'
-            f'_{neural_activation.cluster_selection_method}')
+            f'_{neural_activation.cluster_selection_method}'
+            f'_{neural_activation.metric}')
 
 
 def activations_path(destination, model_name, layer):
@@ -32,9 +44,14 @@ def activations_path(destination, model_name, layer):
 
 
 def activations_agg_path(destination, model_name, layer, neural_activation):
+    if neural_activation.unit_normalization:
+        unit_normalization = "_unitnorm_"
+    else:
+        unit_normalization = ""
     return Path(
         destination, model_name, layer,
-        f'layer_activations_{neural_activation.layer_aggregation.__class__.__name__}.h5')
+        f'layer_activations{unit_normalization}_'
+        f'{neural_activation.layer_aggregation.__class__.__name__}.h5')
 
 
 def activation_statistics_path(destination, model_name, layer):
@@ -168,20 +185,22 @@ def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                     dset_aggregated[i:i+data.shape[0]] = aggregated
                     i += data.shape[0]
 
-                # Normalize aggregated dimensions individually by their absolute max activation
-                if do_aggregation:
-                    norm_val = neural_activation.layer_aggregation.normalization_value(abs_max)
-                    for chunk in dset_aggregated.iter_chunks():
-                        data = dset_aggregated[chunk]
-                        dset_aggregated[chunk] = neural_activation.layer_aggregation.normalize(
-                            data, norm_val)
-                else:
-                    normalization_val = np.max(abs_max, axis=0)
-                    for chunk in dset_aggregated.iter_chunks():
-                        data = dset_aggregated[chunk]
-                        dset_aggregated[chunk] = np.divide(
-                            data, normalization_val, out=np.zeros_like(data),
-                            where=~np.isclose(normalization_val, np.zeros_like(normalization_val)))
+                if neural_activation.unit_normalization:
+                    # Normalize aggregated dimensions individually by their absolute max activation
+                    if do_aggregation:
+                        norm_val = neural_activation.layer_aggregation.normalization_value(abs_max)
+                        for chunk in dset_aggregated.iter_chunks():
+                            data = dset_aggregated[chunk]
+                            dset_aggregated[chunk] = neural_activation.layer_aggregation.normalize(
+                                data, norm_val)
+                    else:
+                        normalization_val = np.max(abs_max, axis=0)
+                        for chunk in dset_aggregated.iter_chunks():
+                            data = dset_aggregated[chunk]
+                            dset_aggregated[chunk] = np.divide(
+                                data, normalization_val, out=np.zeros_like(data),
+                                where=~np.isclose(normalization_val,
+                                                  np.zeros_like(normalization_val)))
 
 
 def activation_statistics(activations, axis):

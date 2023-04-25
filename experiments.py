@@ -19,6 +19,8 @@ cluster_selection_epsilons = [0]  # + [pow(10, exponent) for exponent in range(-
 
 cluster_selection_methods = ["leaf"]
 cluster_min_samples = [5, 10]
+unit_normalizations = [True, False]
+cluster_metrics = ["euclidean", "arccos"]
 
 # FILTERS = " --all_filters "
 #FILTERS = " --filter_range 0 2 "
@@ -46,18 +48,25 @@ for model in models:
                 for cluster_selection_epsilon in cluster_selection_epsilons:
                     for cluster_min_sample in cluster_min_samples:
                         for cluster_selection_method in cluster_selection_methods:
-                            cmd = (
-                                f"python model_analysis.py --model {model}"
-                                f" --data_set {data_sets[model]}"
-                                f" --size {data_set_size} --layer_aggregation {layer_aggregation}"
-                                f" --minimum_pattern_size {minimum_pattern_size}"
-                                f" --cluster_min_samples {cluster_min_sample}"
-                                f" --cluster_selection_epsilon {cluster_selection_epsilon}"
-                                f" --cluster_selection_method {cluster_selection_method}") + FILTERS
-                            if model in splits:
-                                cmd += f" --split {splits[model]}"
-                            if model in layers:
-                                for layer in layers[model]:
-                                    run_command(cmd + f" --layer {layer}")
-                            else:
-                                run_command(cmd)
+                            for unit_normalization in unit_normalizations:
+                                for cluster_metric in cluster_metrics:
+                                    cmd = (
+                                        f"python model_analysis.py --model {model}"
+                                        f" --data_set {data_sets[model]}"
+                                        f" --size {data_set_size}"
+                                        f" --layer_aggregation {layer_aggregation}"
+                                        f" --minimum_pattern_size {minimum_pattern_size}"
+                                        f" --cluster_min_samples {cluster_min_sample}"
+                                        f" --cluster_selection_epsilon {cluster_selection_epsilon}"
+                                        f" --cluster_selection_method {cluster_selection_method}"
+                                        f" --distance_metric {cluster_metric}") + FILTERS
+
+                                    if not unit_normalization:
+                                        cmd += " --no-unit_normalization"
+                                    if model in splits:
+                                        cmd += f" --split {splits[model]}"
+                                    if model in layers:
+                                        for layer in layers[model]:
+                                            run_command(cmd + f" --layer {layer}")
+                                    else:
+                                        run_command(cmd)
