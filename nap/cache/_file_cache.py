@@ -50,7 +50,8 @@ def activations_agg_path(destination, model_name, layer, neural_activation):
         unit_normalization = ""
     return Path(
         destination, model_name, layer,
-        f'layer_activations{unit_normalization}_{neural_activation.layer_aggregation.__class__.__name__}.h5')
+        f'layer_activations{unit_normalization}_'
+        f'{neural_activation.layer_aggregation.__class__.__name__}.h5')
 
 
 def activation_statistics_path(destination, model_name, layer):
@@ -198,7 +199,8 @@ def export_layer_aggregation(input_data, neural_activation, model_name, layers,
                             data = dset_aggregated[chunk]
                             dset_aggregated[chunk] = np.divide(
                                 data, normalization_val, out=np.zeros_like(data),
-                                where=~np.isclose(normalization_val, np.zeros_like(normalization_val)))
+                                where=~np.isclose(normalization_val,
+                                                  np.zeros_like(normalization_val)))
 
 
 def activation_statistics(activations, axis):

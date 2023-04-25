@@ -75,6 +75,7 @@ def average(samples, indices):
 class NeuralActivationPattern:
     """ Computes neural network activation patterns using clustering.
     """
+    # pylint: disable=R0902
 
     def __init__(
             self, model, layer_aggregation=MeanAggregation, filter_aggregation=NoAggregation,

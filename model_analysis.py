@@ -50,7 +50,6 @@ parser.add_argument(
     help="Normalize activations to be in range [-1 1].")
 parser.add_argument('--no-unit_normalization', dest='unit_normalization', action='store_false')
 parser.set_defaults(unit_normalization=True)
-
 parser.add_argument("--distance_metric", default="euclidean")
 parser.add_argument("--cluster_min_samples", type=int, default=5)
 parser.add_argument("--cluster_selection_epsilon", type=float, default=0)

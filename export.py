@@ -25,7 +25,9 @@ def export_config(image_dir, neural_activation, export_name, destination=EXPORT_
         "min_pattern_size": neural_activation.min_pattern_size,
         "min_samples": neural_activation.min_samples,
         "cluster_selection_epsilon": neural_activation.cluster_selection_epsilon,
-        "cluster_selection_method": neural_activation.cluster_selection_method
+        "cluster_selection_method": neural_activation.cluster_selection_method,
+        "metric": neural_activation.metric,
+        "unit_normalization": neural_activation.unit_normalization
     }
     Path(destination, export_name).mkdir(parents=True, exist_ok=True)
     with open(Path(destination, export_name, "config.json"), 'w', encoding="utf8") as outfile:
