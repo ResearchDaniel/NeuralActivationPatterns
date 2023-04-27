@@ -108,6 +108,9 @@ def export_images(image_dir, dataset):
             elif "id" in item:
                 # Exist in CIFAR10
                 file_name = item["id"].numpy().decode("utf-8") + ".jpeg"
+            elif "image/filename" in item:
+                # For tfds.ImageFolder
+                file_name = Path(item['image/filename'].numpy().decode("utf-8")).name
             else:
                 file_name = f"{i}.jpeg"
 
