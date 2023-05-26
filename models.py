@@ -8,10 +8,16 @@ import tensorflow_datasets as tfds
 
 import util
 
-
+# pylint: disable=R0914
 def get_data_set(data_path, data_set, data_set_size, split='test'):
-    data, ds_stats = tfds.load(
-        data_set, split=split, shuffle_files=False, with_info=True, data_dir=data_path)
+    try:
+        data, ds_stats = tfds.load(
+            data_set, split=split, shuffle_files=False, with_info=True, data_dir=data_path)
+    except (ValueError, tfds.core.registered.DatasetNotFoundError):
+        builder = tfds.ImageFolder(Path(data_path, data_set))
+        ds_stats = builder.info
+        data = builder.as_dataset(split=split, shuffle_files=False)
+
     data = data.take(data_set_size)
     image_dir = Path(data_path, data_set, split)
 
@@ -31,6 +37,8 @@ def get_data_set(data_path, data_set, data_set_size, split='test'):
             file_name = item['id'].numpy().decode("utf-8") + ".jpeg"
         elif "file_name" in item:
             file_name = item['file_name'].numpy().decode("utf-8")
+        elif "image/filename" in item:
+            file_name = Path(item['image/filename'].numpy().decode("utf-8")).name
         else:
             file_name = f"{i}.jpeg"
         file_names.append(file_name)

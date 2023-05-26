@@ -34,7 +34,7 @@ def get_models():
     nets = []
     for path in DATA_DIR.iterdir():
         if path.is_dir():
-            nets.append(path.stem)
+            nets.append(path.name)
     networks = {
         'networks': nets
     }
@@ -46,7 +46,7 @@ def get_layers(model):
     layer_dirs = []
     for path in Path(DATA_DIR, model, "layers").iterdir():
         if path.is_dir():
-            layer_dirs.append(path.stem)
+            layer_dirs.append(path.name)
     with open(Path(DATA_DIR, model, 'config.json'), encoding='utf8') as json_file:
         data = json.load(json_file)
     if "layers" in data:
