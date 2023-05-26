@@ -65,6 +65,11 @@ parser.add_argument(
          "Requires --all_fiters or --filter_range")
 parser.add_argument('--no-filter_feature_vis', dest='filter_feature_vis', action='store_false')
 parser.set_defaults(filter_feature_vis=False)
+parser.add_argument(
+    '--projections', action='store_true',
+    help="Export 2D projections of the activations.")
+parser.add_argument('--no-projections', dest='projections', action='store_false')
+parser.set_defaults(projections=False)
 
 args = parser.parse_args()
 
@@ -164,4 +169,5 @@ neural_activation_pattern = nap.NeuralActivationPattern(
     cluster_selection_method=args.cluster_selection_method, cluster_metric=args.distance_metric,
     unit_normalization=args.unit_normalization)
 export.export_all(model_name, X, y, predictions, files, layers, filters, str(data_dir),
-                  neural_activation_pattern, n_max_activations=args.n_max_activations)
+                  neural_activation_pattern, n_max_activations=args.n_max_activations,
+                  export_projections=args.projections)
