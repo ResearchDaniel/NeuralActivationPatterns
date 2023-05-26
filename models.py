@@ -8,12 +8,12 @@ import tensorflow_datasets as tfds
 
 import util
 
-
+# pylint: disable=R0914
 def get_data_set(data_path, data_set, data_set_size, split='test'):
     try:
         data, ds_stats = tfds.load(
             data_set, split=split, shuffle_files=False, with_info=True, data_dir=data_path)
-    except tfds.core.registered.DatasetNotFoundError:
+    except (ValueError, tfds.core.registered.DatasetNotFoundError):
         builder = tfds.ImageFolder(Path(data_path, data_set))
         ds_stats = builder.info
         data = builder.as_dataset(split=split, shuffle_files=False)
