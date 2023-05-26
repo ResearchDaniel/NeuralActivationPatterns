@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 from PIL import Image
+import umap
 
 import nap
 import nap.cache
@@ -154,6 +155,37 @@ def export_max_activations(
                                    file_names)
         outfile.close()
 
+def export_activation_projections(
+        file_names, activation_pattern, model_name, export_name, input_data, layers,
+        filters, destination=EXPORT_LOCATION):
+    ''' Exports the activations of the given layers and filters as umap 2D projections.'''
+    for layer in layers:
+        layer_path = Path(destination, export_name, "layers", str(layer))
+        layer_path.mkdir(parents=True, exist_ok=True)
+
+        activations, outfile = nap.cache.get_layer_activations(
+            input_data, activation_pattern.model, model_name, layer)
+        projector = umap.UMAP()
+        # [()] fetches all data into memory. Needed because slicing the filter is super-slow in hdf5
+        embedding = projector.fit_transform(activations[()])
+
+        table = pa.Table.from_arrays([file_names, embedding[:, 0], embedding[:, 1]],
+                                     names=["file_name", "umap_x", "umap_y"])
+        with pa.ipc.new_file(Path(layer_path, "umap_activations.arrow"), table.schema) as writer:
+            writer.write_table(table)
+
+        if layer in filters:
+            filter_folder = Path(layer_path, 'filter_umap_activations')
+            filter_folder.mkdir(parents=True, exist_ok=True)
+            for model_filter in filters[layer]:
+                embedding = projector.fit_transform(activations[..., model_filter])
+                table = pa.Table.from_arrays([file_names, embedding[:, 0], embedding[:, 1]],
+                                             names=["file_name", "umap_x", "umap_y"])
+                filter_path = Path(filter_folder, f"filter_umap_activations_{model_filter}.arrow")
+                with pa.ipc.new_file(filter_path, table.schema) as writer:
+                    writer.write_table(table)
+        outfile.close()
+
 
 def export_feature_visualizations(
         model_name, export_name, layers, src_dir=CACHE_LOCATION, destination=EXPORT_LOCATION):
@@ -174,7 +206,7 @@ def export_feature_visualizations(
 
 
 def export_all(model_name, input_data, labels, predictions, file_names, layers, filters, image_dir,
-               neural_activation, n_max_activations,
+               neural_activation, n_max_activations, export_projections,
                destination=EXPORT_LOCATION):
     # Differentiate between model and export name to be able to cache activation data
     # between configs.
@@ -203,3 +235,6 @@ def export_all(model_name, input_data, labels, predictions, file_names, layers, 
         export_max_activations(
             file_names, neural_activation, model_name, export_name,
             input_data, layers, filters, number=n_max_activations)
+    if export_projections:
+        export_activation_projections(file_names, neural_activation, model_name, export_name,
+                                      input_data, layers, filters, destination)

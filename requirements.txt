@@ -11,3 +11,4 @@ flask
 pylint
 tables
 luna-fviz==0.3.0
+umap
