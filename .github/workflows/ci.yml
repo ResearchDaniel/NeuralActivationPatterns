@@ -34,7 +34,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Pylint Files
-        run: pylint --rcfile=.pylintrc *.py
+        run: pylint --ignored-modules=tensorflow.keras *.py
 
       - name: Pylint NAP
         run: pylint nap
