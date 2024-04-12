@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 from PIL import Image
-import umap
+import umap.umap_ as umap
 
 import nap
 import nap.cache
