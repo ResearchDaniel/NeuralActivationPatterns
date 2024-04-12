@@ -1,5 +1,5 @@
 tensorflow
-hdbscan==0.8.27
+hdbscan==0.8.33
 numpy
 matplotlib
 plotly
@@ -11,3 +11,4 @@ flask
 pylint
 tables
 luna-fviz==0.3.0
+umap-learn
