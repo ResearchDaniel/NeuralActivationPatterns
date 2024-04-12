@@ -155,6 +155,7 @@ def export_max_activations(
                                    file_names)
         outfile.close()
 
+#pylint: disable=too-many-locals
 def export_activation_projections(
         file_names, activation_pattern, model_name, export_name, input_data, layers,
         filters, destination=EXPORT_LOCATION):
