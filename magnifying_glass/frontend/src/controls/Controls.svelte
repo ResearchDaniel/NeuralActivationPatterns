@@ -4,11 +4,11 @@
 
   import {
     fetchLayers,
+    fetchMaxActivating,
     fetchModels,
     fetchPatterns,
-    fetchMaxActivating,
   } from "../api";
-  import { model, layer, showMaxActivating } from "../stores";
+  import { layer, model, showMaxActivating } from "../stores";
   import type { Patterns } from "../types";
 
   export let patternsRequest: Promise<Patterns> = undefined;
@@ -40,7 +40,7 @@
         placeholder="Model"
         items={models}
         value={getSelectedModel(models)}
-        on:select={(event) => {
+        on:change={(event) => {
           maxActivatingRequest = undefined;
           model.set(event.detail.value);
           layer.set(undefined);
