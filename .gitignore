@@ -134,3 +134,4 @@ dmypy.json
 magnifying_glass/backend/data
 magnifying_glass/backend/images
 results/
+tensorflow_datasets/

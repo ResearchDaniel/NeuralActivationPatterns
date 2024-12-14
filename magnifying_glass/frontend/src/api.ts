@@ -1,7 +1,7 @@
 import { fromArrow } from "arquero";
 
 import type ColumnTable from "arquero/dist/types/table/column-table";
-import type { PatternForSample, Patterns, Pattern } from "./types";
+import type { Pattern, PatternForSample, Patterns } from "./types";
 
 export async function fetchModels(): Promise<string[]> {
   const response = await fetch(`/api/get_models`);
@@ -11,6 +11,7 @@ export async function fetchModels(): Promise<string[]> {
 }
 
 export async function fetchLayers(model: string): Promise<string[]> {
+  if (model === "undefined") return [];
   return fetch(`/api/get_layers/${model}`)
     .then((response) => response.json())
     .then((jsonResponse) => jsonResponse["layers"] as string[]);
@@ -23,12 +24,14 @@ async function fetchDataset(model: string): Promise<
     prediction?: string;
   }[]
 > {
+  if (model === "undefined") return [];
   return fetch(`/api/get_dataset/${model}`)
     .then((response) => response.json())
     .then((jsonResponse) => JSON.parse(jsonResponse));
 }
 
 async function fetchLabels(model: string) {
+  if (model === "undefined") return [];
   return fetch(`/api/get_labels/${model}`).then((response) => response.json());
 }
 
